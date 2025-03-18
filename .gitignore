@@ -1,0 +1,6 @@
+
+# Directorio de otros archivos que no quiero incluir en mi repositorio
+otros/
+
+# Archivo de prueba específico
+pruebas.py

@@ -18,21 +18,11 @@ symbol = 'BTC'
 Estructura data
 ---------------
 data = {symbol: {'current_price': 94000,
-                 'open_orders': [{'price': 92800,
-                                     'amount_usdt': 100,
-                                     'stop_loss': 90000,
-                                     'target': 95000,
-                                     'amount': 0.001077}],
-                 'buy_limits': [{'price': 80800,
-                                     'amount_usdt': 200,
-                                     'stop_loss': 78000,
-                                     'target': 95000,
-                                     'amount': 0.00112}],
-                 'sell_limits': [{'price': 102800,
-                                     'amount_usdt': 100,
-                                     'stop_loss': 90000,
-                                     'target': 95000,
-                                     'amount': 0.001235}]}}
+                 'open_orders': [],
+                 'buy_limits': [],
+                 'sell_limits': []
+                 }
+        }
 
 Estructura de una orden (open_order)
 ------------------------------------
@@ -52,9 +42,8 @@ orden = {
         'amount_usdt': amount_usdt,
         'quantity': quantity,
         'stop_loss': stop_loss,
-        'target': target,
-        'mother_order': mother_order
-    }
+        'target': target
+        }
 """
 
 
@@ -174,7 +163,7 @@ def add_open_order(data_asset, active_symbol):
 
 
 def add_buy_limit(data_asset):
-    """Agrega una 'buy limit' a los datos del activo específico."""
+    """Agrega una 'buy limit' (compra limite) a los datos del activo específico."""
     price = float(input("Precio de entrada para BUY LIMIT: "))
     amount_usdt = float(input("Monto en dólares: "))
     stop_loss = 0
@@ -397,7 +386,6 @@ def plot_open_orders(data_asset, current_price, active_symbol):
         non_mother_amounts_usdt = []
         non_mother_percentages = []
         non_mother_profits = []
-
 
     # Calcular profits
     total_mother_profits = round(sum(mother_profits), 2)
@@ -838,8 +826,8 @@ def remove_sell_limit(data, data_asset, active_symbol, filename ):
 
     return data_asset  # Asegúrate de devolver el objeto actualizado
 
-
 def draw_amounts_and_calculate_total_open_amount(data):
+    # trabajando para actualizar montos mas exactos, basados en cantidad de activo (cant.activo * current_price)
     """Muestra los montos de órdenes madres abiertas,
     en un gráfico de barras y devuelve el total_open_amount"""
 
@@ -854,8 +842,13 @@ def draw_amounts_and_calculate_total_open_amount(data):
             for order in data_asset['open_orders']:
                 if order.get('mother_order', False):
                     list_symbol.append(symbol)
-                    list_amount.append(order['amount_usdt'])
-                    total_open_amount += order['amount_usdt']
+                    # Obtenemos el precio actual para el activo
+                    current_price = get_price(symbol)
+                    # Calculamos monto en base a la cantidad de activo de la orden madre
+                    amount = round(order['quantity'] * current_price)
+                    # Agregamos el monto del activo a la lista 'list_amount'
+                    list_amount.append(amount)
+                    total_open_amount += amount
 
     if not list_amount:
         print(f"\nNo hay ninguna orden madre guardada!\n")
@@ -1663,7 +1656,7 @@ def main():  # Función principal para ejecutar el flujo del programa
                 print("14. Generate SALES CLOUD")
                 print("15. Render OPEN ORDERS")
                 print("16. Update CURRENT PRICE")
-                print("17. Volver al menú principal")
+                print("17. Volver")
                 opcion = input("Selecciona una opción (1-17): ")
 
                 if opcion == '1':

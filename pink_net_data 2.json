@@ -1,66 +1,12 @@
 {
-    "LTC": {
-        "current_price": 0,
-        "margin": 166,
-        "open_orders": [
-            {
-                "price": 91.89,
-                "amount_usdt": 150.0,
-                "quantity": 1.63238655,
-                "stop_loss": 0,
-                "target": 0,
-                "mother_order": true
-            }
-        ],
-        "buy_limits": [],
-        "sell_limits": []
-    },
-    "ADA": {
-        "current_price": 0.7355,
-        "margin": 111,
-        "open_orders": [
-            {
-                "price": 0.741,
-                "amount_usdt": 100.0,
-                "quantity": 139.58,
-                "stop_loss": 0,
-                "target": 0,
-                "mother_order": true
-            }
-        ],
-        "buy_limits": [
-            {
-                "price": 0.524,
-                "amount_usdt": 100.0,
-                "quantity": 190.80328,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 0.573,
-                "amount_usdt": 100.0,
-                "quantity": 174.62674,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 0.621,
-                "amount_usdt": 100.0,
-                "quantity": 160.97875,
-                "stop_loss": 0,
-                "target": 0
-            }
-        ],
-        "sell_limits": []
-    },
     "XRP": {
         "current_price": 0,
-        "margin": 0,
+        "margin": 136,
         "open_orders": [
             {
-                "price": 2.598,
-                "amount_usdt": 400.0,
-                "quantity": 168.338,
+                "price": 2.587,
+                "amount_usdt": 500.0,
+                "quantity": 207.7038,
                 "stop_loss": 0,
                 "target": 0,
                 "mother_order": true
@@ -76,9 +22,9 @@
         ],
         "buy_limits": [
             {
-                "price": 2.16,
+                "price": 1.78,
                 "amount_usdt": 100.0,
-                "quantity": 46.2963,
+                "quantity": 56.17978,
                 "stop_loss": 0,
                 "target": 0
             },
@@ -90,9 +36,96 @@
                 "target": 0
             },
             {
-                "price": 1.78,
+                "price": 2.16,
                 "amount_usdt": 100.0,
-                "quantity": 56.17978,
+                "quantity": 46.2963,
+                "stop_loss": 0,
+                "target": 0
+            }
+        ],
+        "sell_limits": []
+    },
+    "SOL": {
+        "current_price": 0,
+        "margin": 27,
+        "open_orders": [
+            {
+                "price": 217.947,
+                "amount_usdt": 100.0,
+                "quantity": 0.757305,
+                "stop_loss": 0,
+                "target": 0,
+                "mother_order": true
+            }
+        ],
+        "buy_limits": [
+            {
+                "price": 114.2,
+                "amount_usdt": 100.0,
+                "quantity": 0.87565674,
+                "stop_loss": 0,
+                "target": 0
+            }
+        ],
+        "sell_limits": []
+    },
+    "HBAR": {
+        "current_price": 0,
+        "margin": 54,
+        "open_orders": [
+            {
+                "price": 0.205,
+                "amount_usdt": 200.0,
+                "quantity": 1069.36,
+                "stop_loss": 0,
+                "target": 0,
+                "mother_order": true
+            },
+            {
+                "price": 0.19104,
+                "amount_usdt": 100.0,
+                "quantity": 523.45058626,
+                "stop_loss": 0,
+                "target": 0,
+                "mother_order": false
+            }
+        ],
+        "buy_limits": [
+            {
+                "price": 0.167,
+                "amount_usdt": 200.0,
+                "quantity": 1197.60479042,
+                "stop_loss": 0,
+                "target": 0
+            },
+            {
+                "price": 0.1774,
+                "amount_usdt": 300.0,
+                "quantity": 1691.09357384,
+                "stop_loss": 0,
+                "target": 0
+            }
+        ],
+        "sell_limits": []
+    },
+    "BTC": {
+        "current_price": 85755.57,
+        "margin": 54,
+        "open_orders": [
+            {
+                "price": 122751.587,
+                "amount_usdt": 200.0,
+                "quantity": 0.00236836,
+                "stop_loss": 0,
+                "target": 0,
+                "mother_order": true
+            }
+        ],
+        "buy_limits": [
+            {
+                "price": 76659.0,
+                "amount_usdt": 200.0,
+                "quantity": 0.00260896,
                 "stop_loss": 0,
                 "target": 0
             }

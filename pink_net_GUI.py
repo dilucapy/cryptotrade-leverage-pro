@@ -16,9 +16,9 @@ def add_new_symbol(asset_symbols, data, filename):
     (Crear los elementos de la interfaz necesarios para que el usuario
     introduzca el nuevo símbolo (etiqueta y campo de entrada)"""
 
-    Label(asset_menu, text="Nuevo Símbolo:", font=('Dosis', 12)).pack(pady=5)
+    Label(asset_menu, text="Nuevo Símbolo:", font=('Dosis', 12)).pack(pady=2)
     entry_symbol = Entry(asset_menu, font=('Dosis', 12, 'bold'), bd=1, width=15)
-    entry_symbol.pack(pady=5)
+    entry_symbol.pack(pady=2)
 
     def obtener_y_validar():
         """Función anidada para obtener y validar el nuevo símbolo."""
@@ -54,14 +54,14 @@ def add_new_symbol(asset_symbols, data, filename):
                                    bg='azure4',
                                    width=24,
                                    relief=RAISED,
-                                   pady=5,
+                                   pady=1,
                                    cursor='hand2',
                                    command=lambda: GUI_functions_module.select_asset(data, new_symbol))
 
         new_symbol_button.pack(side=BOTTOM, pady=10)
 
     agregar_button = Button(asset_menu, text="Agregar", font=('Dosis', 12), command=obtener_y_validar)
-    agregar_button.pack(pady=10)
+    agregar_button.pack(pady=2)
 
 
 # Iniciar Tkinter
@@ -97,13 +97,17 @@ title_label.pack()
 left_panel = Frame(app, bd=1, relief=FLAT)
 left_panel.pack(side=LEFT)
 
-# Menu Primario (panel izquierdo)
+# Menu Primario (en panel izquierdo)
 primary_menu = Frame(left_panel, bd=1, relief=FLAT)
 primary_menu.pack(side=BOTTOM)
 
-# Símbolos de activos (panel izquierdo)
-asset_menu = Frame(left_panel, bd=1, relief=FLAT)
-asset_menu.pack(side=TOP)
+# Panel Central
+center_panel = Frame(app, bd=1, relief=FLAT)
+center_panel.pack(side=LEFT)
+
+# Panel de activos (en panel central)
+asset_menu = Frame(center_panel, bd=1, relief=FLAT)
+asset_menu.pack(side=LEFT)
 
 # Panel Derecho
 right_panel = Frame(app, bd=1, relief=FLAT)
@@ -124,6 +128,7 @@ primary_buttons_config = [
     {"text": "EXIT", "command": app.quit}
 ]
 
+# bucle para creacion de botones del menu primario
 for config in primary_buttons_config:
     button = Button(primary_menu,
                     text=config["text"].title(),
@@ -140,6 +145,22 @@ for config in primary_buttons_config:
     button.pack(pady=2) # Usar pack para una disposición vertical simple
 
 
+# Creacion de Botones para los activos presentes en data
+list_symbols = GUI_functions_module.get_symbols_for_buttons(data)
+for symbol in list_symbols:
+    button = Button(asset_menu,
+                    text=symbol,
+                    font=('Dosis', 12, 'bold'),
+                    bd=1,
+                    fg='white',
+                    bg='azure4',
+                    width=24,
+                    relief=RAISED,
+                    pady=2,
+                    cursor='hand2',
+                    command=lambda s=symbol: GUI_functions_module.select_asset(data, s))
+
+    button.pack(pady=2)  # Usar pack para una disposición vertical simple
 
 
 

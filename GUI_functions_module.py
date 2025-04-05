@@ -1261,6 +1261,16 @@ def create_list_with_mother_order(data):
 
     return list_symbol
 
+def get_symbols_for_buttons(data):
+    """crea una lista de los simbolos de los activos que se encuentran en data
+    para crear los botones en el panel asset_menu"""
+
+    list_symbol = []
+    for symbol, data_asset in data.items():
+        list_symbol.append(symbol)
+
+    return list_symbol
+
 
 def show_margins_and_total(data):
     # calcular total de margenes almacenados

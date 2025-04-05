@@ -1,10 +1,77 @@
+from tkinter import messagebox
+import tkinter as tk
 from tkinter import *
+import GUI_functions_module
+
+
+# Archivo JSON (se encuentra en el directorio: C:\DFX -C\PYTHON - UDEMY\PROYECTOS PROPIOS\PINK NET)
+filename = 'pink_net_data_3_GUI.json'
+
+data = GUI_functions_module.load_data(filename)
+data = GUI_functions_module.order_orders(data)
+
+
+def add_new_symbol(asset_symbols, data, filename):
+    """Crea elementos para agregar un nuevo símbolo en la GUI.
+    (Crear los elementos de la interfaz necesarios para que el usuario
+    introduzca el nuevo símbolo (etiqueta y campo de entrada)"""
+
+    Label(asset_menu, text="Nuevo Símbolo:", font=('Dosis', 12)).pack(pady=5)
+    entry_symbol = Entry(asset_menu, font=('Dosis', 12, 'bold'), bd=1, width=15)
+    entry_symbol.pack(pady=5)
+
+    def obtener_y_validar():
+        """Función anidada para obtener y validar el nuevo símbolo."""
+        new_symbol = entry_symbol.get().strip().upper()
+        if not new_symbol:
+            messagebox.showerror("Error", "Por favor introduce un símbolo.")
+
+            return
+        if new_symbol in data:
+            messagebox.showerror("Error", f"El símbolo '{new_symbol}' ya existe.")
+            return
+
+        # Lógica para agregar el símbolo a 'data'
+        data[new_symbol] = {
+            "current_price": 0,
+            "margin": 0,
+            "open_orders": [],
+            "buy_limits": [],
+            "sell_limits": []
+        }
+
+        # Guardamos el nuevo símbolo inicializado en el archivo JSON
+        GUI_functions_module.save_data_asset(data, data[new_symbol], new_symbol, filename)
+        messagebox.showinfo("Éxito", f"Símbolo '{new_symbol}' agregado!")
+        entry_symbol.delete(0, tk.END)  # Limpiar el Entry
+
+        # Agregamos el botón del nuevo símbolo en el contenedor asset_symbols
+        new_symbol_button = Button(asset_menu,
+                                   text=f"{new_symbol}",
+                                   font=('Dosis', 12),
+                                   bd=1,
+                                   fg='white',
+                                   bg='azure4',
+                                   width=24,
+                                   relief=RAISED,
+                                   pady=5,
+                                   cursor='hand2',
+                                   command=lambda: GUI_functions_module.select_asset(data, new_symbol))
+
+        new_symbol_button.pack(side=BOTTOM, pady=10)
+
+    agregar_button = Button(asset_menu, text="Agregar", font=('Dosis', 12), command=obtener_y_validar)
+    agregar_button.pack(pady=10)
+
 
 # Iniciar Tkinter
 app = Tk()
 
-# Tamaño de la ventana
-app.geometry('1020x630+0+0')
+"""# Tamaño de la ventana
+app.geometry('1020x630+0+0')"""
+
+# Maximizar la ventana
+app.state('zoomed')
 
 # Evitar maximizar la ventana
 app.resizable(False, False)
@@ -24,44 +91,17 @@ title_label = Label(top_panel,
                     bg='burlywood',
                     width=30)
 
-title_label.grid(row=0, column=0)
+title_label.pack()
 
 # Panel Izquierdo
 left_panel = Frame(app, bd=1, relief=FLAT)
 left_panel.pack(side=LEFT)
 
-# Menu Primario
+# Menu Primario (panel izquierdo)
 primary_menu = Frame(left_panel, bd=1, relief=FLAT)
 primary_menu.pack(side=BOTTOM)
 
-# Botones Menu Primario
-primary_buttons = ["ADD new symbol",
-                   "Show MARGINS",
-                   "Update MARGINS",
-                   "Mostrar POSICIONES ABIERTAS",
-                   "Calcular LEVERAGE",
-                   "Calculate BURN PRICE",
-                   "EXIT"]
-
-row_number = 0
-for button in primary_buttons:
-    button = Button(primary_menu,
-                    text=button.title(),
-                    font=('Dosis', 12, 'bold'),
-                    bd=1,
-                    fg='white',
-                    bg='azure4',
-                    width=24,
-                    relief=RAISED,
-                    pady=5,
-                    cursor='hand2')
-
-    button.grid(row=row_number,
-                column=0)
-
-    row_number += 1
-
-# Menu Assets
+# Símbolos de activos (panel izquierdo)
 asset_menu = Frame(left_panel, bd=1, relief=FLAT)
 asset_menu.pack(side=TOP)
 
@@ -71,12 +111,33 @@ right_panel.pack(side=RIGHT)
 
 # Menu secundario
 secondary_menu = Frame(right_panel, bd=1, relief=FLAT)
-secondary_menu.pack()
+secondary_menu.pack(side=TOP)
 
+# Botones Menu Primario
+primary_buttons_config = [
+    {"text": "ADD new symbol", "command": lambda: add_new_symbol(right_panel, data, filename)},
+    {"text": "Show MARGINS", "command": None},
+    {"text": "Update MARGINS", "command": None},
+    {"text": "Mostrar POSICIONES ABIERTAS", "command": None},
+    {"text": "Calcular LEVERAGE", "command": None},
+    {"text": "Calculate BURN PRICE", "command": None},
+    {"text": "EXIT", "command": app.quit}
+]
 
+for config in primary_buttons_config:
+    button = Button(primary_menu,
+                    text=config["text"].title(),
+                    font=('Dosis', 12, 'bold'),
+                    bd=1,
+                    fg='white',
+                    bg='azure4',
+                    width=24,
+                    relief=RAISED,
+                    pady=5,
+                    cursor='hand2',
+                    command=config["command"])  # Asignar el comando desde la configuración
 
-
-
+    button.pack(pady=2) # Usar pack para una disposición vertical simple
 
 
 

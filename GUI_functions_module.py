@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import time
 import matplotlib.gridspec as gridspec
+from tkinter import messagebox
 
 
 filename = 'pink_net_data_3_GUI.json'
@@ -529,7 +530,7 @@ def select_asset(data, symbol):
         asset_data = data[symbol]
         return asset_data, symbol
     else:
-        print(f"El símbolo '{symbol}' no se encuentra en los datos.")
+        messagebox.showinfo("Info", f"El símbolo '{symbol}' no se encuentra en los datos")
         return None
 
 

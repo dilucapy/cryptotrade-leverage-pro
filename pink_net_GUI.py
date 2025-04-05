@@ -101,13 +101,21 @@ left_panel.pack(side=LEFT)
 primary_menu = Frame(left_panel, bd=1, relief=FLAT)
 primary_menu.pack(side=BOTTOM)
 
-# Panel Central
-center_panel = Frame(app, bd=1, relief=FLAT)
-center_panel.pack(side=LEFT)
+# Panel Central izquierdo
+center_left_panel = Frame(app, bd=1, relief=FLAT)
+center_left_panel.pack(side=LEFT)
 
 # Panel de activos (en panel central)
-asset_menu = Frame(center_panel, bd=1, relief=FLAT)
+asset_menu = Frame(center_left_panel, bd=1, relief=FLAT)
 asset_menu.pack(side=LEFT)
+
+# Panel Central derecho (para mostrar asset seleccionado)
+center_right_panel = Frame(app, bd=1, relief=FLAT)
+center_right_panel.pack(side=LEFT)
+
+# Etiqueta de asset seleccionado
+selected_asset =
+Label(asset_menu, text="Nuevo Símbolo:", font=('Dosis', 12)).pack(pady=2)
 
 # Panel Derecho
 right_panel = Frame(app, bd=1, relief=FLAT)

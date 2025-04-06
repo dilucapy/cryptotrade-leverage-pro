@@ -1539,11 +1539,6 @@ def update_burn_prices(data, list_symbol):
 data = load_data(filename)
 data = order_orders(data)
 
-#### FUNCIONES PARA BOTONES DE GUI
-
-
-
-
 
 
 def main():  # Función principal para ejecutar el flujo del programa

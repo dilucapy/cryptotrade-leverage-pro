@@ -33,7 +33,6 @@ class AssetManagerGUI:
         # Crear los widgets de la GUI
         self.create_widgets()
 
-
         self.selected_asset = tk.StringVar()
         self.active_asset_button = None  # Para rastrear el botón activo
         self.default_button_bg = 'azure4'  # Color de fondo por defecto
@@ -66,12 +65,13 @@ class AssetManagerGUI:
         self.create_primary_menu_buttons()
 
         # Panel Derecho (para mostrar información del activo y otras funciones)
-        self.right_panel = Frame(self.master, bd=1, relief=FLAT)
+        self.right_panel = Frame(self.master, bd=1, relief=FLAT, padx=10, pady=10)
         self.right_panel.pack(side=RIGHT, fill=X, padx=10, pady=10, expand=True)
-        self.info_label = Label(self.right_panel,
-                                text="Seleccione un activo para ver su información.",
-                                font=('Arial', 12, 'bold'))
-        self.info_label.pack(pady=10)
+
+        self.create_asset_info_section()  # crea seccion de iformación del activo (símbolo, precio, margi)
+        self.create_asset_orders_section()  # crea seccion de ordenes del activo
+        #self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
+
 
     def create_primary_menu_buttons(self):
         """Método para crear los botones del menús primario.
@@ -92,62 +92,6 @@ class AssetManagerGUI:
             button = Button(self.primary_menu, text=config["text"].title(), font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=5, cursor='hand2', command=config["command"])
             button.pack(pady=2, fill=X)
 
-    # en un principio habia creado botones para los activos, pero luego implemente radio buttons
-    """def create_asset_buttons(self):
-        Métodos para crear los botones de los activos.
-        Para los botones de los activos, el command utiliza lambda para llamar
-        al método self.select_asset_handler(symbol).
-        Aquí, symbol se pasa como argumento al método de la clase.
-
-        list_symbols = GUI_functions_module.get_symbols_for_buttons(self.data)
-        num_columns = 6  # Define el número máximo de botones por fila (ajusta según tu preferencia)
-        row = 1
-        column = 0
-
-        for symbol in list_symbols:
-            button = Button(self.top_panel,
-                            text=symbol, font=('Dosis', 12, 'bold'),
-                            bd=1, fg='white', bg='azure4', width=24,
-                            relief=RAISED, pady=2, cursor='hand2',
-                            command=lambda s=symbol: self.select_asset_handler(s))
-            button.grid(row=row, column=column, padx=2, pady=2,
-                        sticky="ew")  # sticky="ew" hace que el botón se expanda horizontalmente
-
-            column += 1
-            if column >= num_columns:
-                column = 0
-                row += 1
-"""
-
-    """def select_asset_handler(self, symbol):
-        esta función se encarga de manejar la selección de un activo.
-        self.selected_asset.set(symbol)  # se establece el valor de la variable de control self.selected_asset con el symbol del activo que el usuario acaba de seleccionar al hacer clic en su Radiobutton
-        print(f"Activo seleccionado: {self.selected_asset.get()}")
-        # Aquí podrías habilitar o mostrar el menú secundario"""
-
-
-    """def create_asset_radiobutton(self):
-        list_symbols = GUI_functions_module.get_symbols_for_buttons(self.data)
-        row = 1
-        column = 0
-        num_columns = 5
-        for symbol in list_symbols:
-            rb = tk.Radiobutton(self.top_panel,
-                                text=symbol,
-                                variable=self.selected_asset,
-                                value=symbol,
-                                font=('Dosis', 16, 'bold'),
-                                padx=10,
-                                pady=5,
-                                command=lambda s=symbol: self.select_asset_handler(s))
-            rb.grid(row=row, column=column, padx=5, pady=5, sticky="w")
-            column += 1
-            if column >= num_columns:
-                column = 0
-                row += 1
-
-        print(f"Valor inicial de self.selected_asset: '{self.selected_asset.get()}'")"""
-
     def create_asset_buttons(self):
         list_symbols = GUI_functions_module.get_symbols_for_buttons(self.data)
         row = 1
@@ -164,7 +108,6 @@ class AssetManagerGUI:
                             bd=1,
                             relief=RAISED,
                             cursor='hand2')
-            #button.config(command=partial(self.select_asset, symbol, button))
             button.config(command=lambda s=symbol, btn=button: self.select_asset(s, btn))
             button.grid(row=row, column=column, padx=5, pady=5, sticky="ew")
             column += 1
@@ -219,24 +162,6 @@ class AssetManagerGUI:
     def calculate_burn_price(self):
         pass
 
-    """def select_asset_handler(self, symbol):
-        Maneja la selección de un activo.
-        Este método se encarga de:
-        Llamar a GUI_functions_module.select_asset(self.data, symbol)
-        para obtener la información del activo.
-        Actualizar el estado de la GUI (almacena la información del activo seleccionado
-        en self.selected_asset_data y self.selected_symbol
-        Llamar a self.update_asset_info_display() para mostrar la información del activo
-        en la interfaz (en este ejemplo, en la self.info_label del right_panel).
-        asset_info = GUI_functions_module.select_asset(self.data, symbol)
-        if asset_info:
-            self.selected_asset_data, self.selected_symbol = asset_info
-            print(f"Activo seleccionado: {self.selected_symbol}")
-            print(f"Datos del activo: {self.selected_asset_data}")
-            self.update_asset_info_display()
-        else:
-            print(f"Error al seleccionar el activo '{symbol}'.")"""
-
     def update_asset_info_display(self):
         """Actualiza la información del activo seleccionado en la GUI.
         Este método actualiza el contenido de un widget
@@ -267,6 +192,117 @@ class AssetManagerGUI:
 
         else:
             self.info_label.config(text="Seleccione un activo para ver su información.")
+
+    def create_asset_info_section(self):
+        # asset_info_frame (contiene nformación del activo como símbolo, precio y margin)
+        self.asset_info_frame = Frame(self.right_panel)  # Empaquetar este frame en right_panel
+        self.asset_info_frame.pack(pady=5, fill=X)
+
+        self.info_label = Label(self.asset_info_frame,  # El Label ahora va dentro del asset_info_frame
+                                text="Seleccione un activo para ver su información.",
+                                font=('Arial', 12, 'bold'))
+        self.info_label.pack()
+
+        self.update_asset_info_display()  # llama a este metodo que actualiza la info en el label del activo seleccionado
+
+    def populate_orders(self, parent_frame, order_type):
+        """Llena el frame con la información de las órdenes del tipo especificado."""
+        # Aquí iría la lógica para obtener las órdenes del activo seleccionado
+        # (usando self.selected_asset.get()) y crear Labels y Buttons
+        # dentro del parent_frame.
+
+        symbol = self.selected_asset.get()
+        # **TODO: Implementar la lógica para obtener las órdenes de self.data
+        #        filtrando por el símbolo y el tipo de orden (order_type).**
+        orders = self.get_orders_for_asset(symbol, order_type)  # Ejemplo de llamada a una función que debes implementar
+
+        for order in orders:
+            order_info = f"ID: {order['id']}, Precio: {order['price']}, Cantidad: {order['quantity']}"
+            order_label = Label(parent_frame, text=order_info)
+            order_label.pack(anchor='w')
+
+            edit_button = Button(parent_frame, text="Editar", command=lambda oid=order['id']: self.edit_order(oid))
+            edit_button.pack(side=LEFT, padx=2)
+
+            delete_button = Button(parent_frame, text="Borrar", command=lambda oid=order['id']: self.delete_order(oid))
+            delete_button.pack(side=LEFT, padx=2)
+
+    def add_open_order(self):
+        pass
+
+    def add_pending_buy(self):
+        pass
+
+    def add_pending_sell(self):
+        pass
+
+    def create_asset_orders_section(self):
+        """Crea la sección para mostrar las órdenes del activo y los botones de creación."""
+        self.asset_orders_frame = Frame(self.right_panel, bd=1, relief=SUNKEN)
+        self.asset_orders_frame.pack(pady=10, fill=BOTH, expand=True)
+
+        Label(self.asset_orders_frame, text="Órdenes del Activo", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
+
+        # Sección para las listas de órdenes (abiertas, compras pendientes y ventas pendientes)
+        self.open_orders_frame = Frame(self.asset_orders_frame)
+        self.open_orders_frame.pack(fill=X, pady=2)
+        Label(self.open_orders_frame, text="Órdenes Abiertas").pack(anchor='w')
+        self.populate_orders(self.open_orders_frame, "open")
+
+        self.pending_buy_orders_frame = Frame(self.asset_orders_frame)
+        self.pending_buy_orders_frame.pack(fill=X, pady=2)
+        Label(self.pending_buy_orders_frame, text="Compras Pendientes").pack(anchor='w')
+        self.populate_orders(self.pending_buy_orders_frame, "pending_buy")
+
+        self.pending_sell_orders_frame = Frame(self.asset_orders_frame)
+        self.pending_sell_orders_frame.pack(fill=X, pady=2)
+        Label(self.pending_sell_orders_frame, text="Ventas Pendientes").pack(anchor='w')
+        self.populate_orders(self.pending_sell_orders_frame, "pending_sell")
+
+        # Sección para los botones de creación de nuevas órdenes
+        new_order_label = Label(self.asset_orders_frame, text="Crear Nueva Orden:", font=('Dosis', 12, 'italic'))
+        new_order_label.pack(anchor='w', pady=(10, 2))
+
+        actions = [
+            {"text": "Orden Abierta", "command": self.add_open_order},
+            {"text": "Compra Pendiente", "command": self.add_pending_buy},
+            {"text": "Venta Pendiente", "command": self.add_pending_sell},
+            # Agrega aquí más botones de creación si es necesario
+        ]
+
+        for action in actions:
+            button = Button(self.asset_orders_frame, text=action["text"], command=action["command"])
+            button.pack(fill=X, pady=2)
+
+
+    def get_orders_for_asset(self, symbol, order_type):
+        """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
+        if symbol in self.data:
+            if order_type == "open":
+                return self.data[symbol].get('open_orders', [])
+            elif order_type == "pending_buy":
+                return self.data[symbol].get('buy_limits', [])
+            elif order_type == "pending_sell":
+                return self.data[symbol].get('sell_limits', [])
+        return []
+
+    def populate_orders(self, parent_frame, order_type):
+        """Llena el frame con la información de las órdenes del tipo especificado."""
+        symbol = self.selected_asset.get()
+        orders = self.get_orders_for_asset(symbol, order_type)
+
+        for order in orders:
+            order_info = f"Precio: {order.get('price', 'N/A')} ---> {order.get('amount_usdt', 'N/A')} USDT, " \
+                         f"SL: {order.get('stop_loss', 'N/A')}, TP: {order.get('target', 'N/A')}, " \
+                         f"Cant: {order.get('quantity', 'N/A')}, MO: {order.get('mother_order', False)}"
+            order_label = Label(parent_frame, text=order_info)
+            order_label.pack(anchor='w')
+
+            delete_button = Button(parent_frame, text="Borrar",
+                                   command=lambda oid=order.get('id'): self.delete_order(oid))
+            delete_button.pack(side=LEFT, padx=2)
+
+
 
 
 if __name__ == "__main__":

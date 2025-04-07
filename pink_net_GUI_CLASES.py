@@ -82,7 +82,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         a métodos de la clase (por ej., self.add_new_symbol_ui)."""
 
         primary_buttons_config = [
-            {"text": "ADD new symbol", "command": self.add_new_symbol_ui},
+            {"text": "ADD new symbol", "command": self.add_new_symbol},
             {"text": "Show MARGINS", "command": self.show_margins},
             {"text": "Update MARGINS", "command": self.update_margins},
             {"text": "Mostrar POSICIONES ABIERTAS", "command": self.show_open_positions},
@@ -138,17 +138,52 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # se llama a este metodo para mostrar informacion del activo
         self.update_asset_info_display()
-        self.create_asset_orders_section()
-        #self.show_orders()  # metodo para mostrar las ordenes relacionas con el activo
+        self.create_asset_orders_section()  # Crea la sección para mostrar las órdenes del activo y los botones de creación de ordenes
+        # self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
 
 
     # (El resto de tus métodos: create_asset_info_section, create_asset_actions_section,
     # update_asset_info_display, show_asset_orders, y los métodos de acción del activo
     # permanecen similares, pero ahora se basan en self.selected_asset.get())
 
-    def add_new_symbol_ui(self):
-        # Implementa la lógica para mostrar la interfaz de agregar nuevo símbolo aquí
-        pass
+    def add_new_symbol(self):
+        """Muestra una ventana de nivel superior (encimna de la ventana princiapla)
+        para agregar un nuevo símbolo de activo."""
+        add_symbol_window = Toplevel(self)
+        add_symbol_window.title("Agregar Nuevo Símbolo")
+
+        symbol_label = Label(add_symbol_window, text="Nuevo Símbolo:")
+        symbol_label.pack(padx=10, pady=5)
+
+        symbol_entry = Entry(add_symbol_window)
+        symbol_entry.pack(padx=10, pady=5)
+        symbol_entry.focus_set()  # Enfocar el campo de entrada al abrir la ventana
+
+        def save_new_symbol():
+            new_symbol = symbol_entry.get().strip().upper()
+            if new_symbol:
+                if new_symbol in self.data:
+                    messagebox.showerror("Error", f"El símbolo '{new_symbol}' ya existe.")
+                else:
+                    self.data[new_symbol] = {
+                        "current_price": 0,  # O cualquier otro valor inicial
+                        "margin": 0,
+                        "open_orders": [],
+                        "buy_limits": [],
+                        "sell_limits": []
+                    }
+                    self.save_data()  # Guarda todos los datos, incluyendo el nuevo símbolo
+                    self.create_asset_buttons()  # Actualiza los botones de activos en el 'top panel'
+                    messagebox.showinfo("Éxito", f"Símbolo '{new_symbol}' agregado.")
+                    add_symbol_window.destroy()  # llama al metodo para destruir la instacia de toplevel
+            else:
+                messagebox.showerror("Error", "Por favor, introduce un símbolo.")
+
+        save_button = Button(add_symbol_window, text="Guardar Símbolo", command=save_new_symbol)
+        save_button.pack(pady=10)
+
+        cancel_button = Button(add_symbol_window, text="Cancelar", command=add_symbol_window.destroy)
+        cancel_button.pack(pady=5)
 
     def show_margins(self):
         pass
@@ -258,6 +293,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         else:
             print(f"Error: Activo '{active_symbol}' no encontrado en los datos.")
 
+    def save_data(self):
+        try:
+            with open(self.filename, 'w') as file:
+                json.dump(self.data, file, indent=4)
+            print("Datos guardados correctamente.")
+        except Exception as e:
+            print(f"Error al guardar los datos: {e}")
+
 
     def handle_add_new_order(self, order_type):
         """
@@ -269,7 +312,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         active_symbol = self.selected_asset.get()
         if active_symbol in self.data and self.new_order_data:
             self.data[active_symbol] = self.add_new_order(self.data[active_symbol], active_symbol, order_type, self.new_order_data)
-            self.save_data_asset(self.data, self.data[active_symbol], active_symbol)  # Guardar los datos
+            #self.save_data_asset(self.data, self.data[active_symbol], active_symbol)  # Guardar los datos
             self.show_orders(self.open_orders_frame, "open")
             self.show_orders(self.pending_buy_orders_frame, "pending_buy")
             self.show_orders(self.pending_sell_orders_frame, "pending_sell")
@@ -368,18 +411,30 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             tk.messagebox.showerror("Error", "Por favor, ingrese valores numéricos válidos.")
 
     def delete_order(self, order_id):
-        # ... (tu código para eliminar la orden) ...
-        pass
+        """Elimina una orden del activo seleccionado basándose en su ID."""
+        symbol = self.selected_asset.get()
 
+        if symbol in self.data:
+            # este bucle asegura que intentemos eliminar la orden de la lista correcta.
+            for order_type_key in ['open_orders', 'buy_limits', 'sell_limits']:
+                if order_type_key in self.data[symbol]:  # verifica si esa clave existe dentro del diccionario de datos del activo seleccionado
+                    # guardamos la longitud original de la lista de órdenes del tipo actual.
+                    # Esto nos permitirá verificar más tarde si realmente se eliminó alguna orden.
+                    original_length = len(self.data[symbol][order_type_key])
+                    # creando una nueva lista sin la orden que queremos borrar (order_id)
+                    self.data[symbol][order_type_key] = [
+                        order for order in self.data[symbol][order_type_key] if order.get('id') != order_id
+                    ]
+                    if len(self.data[symbol][order_type_key]) < original_length:
+                        print(f"Orden con ID '{order_id}' eliminada de {order_type_key} para {symbol}.")
+                        self.save_data_asset(self.data, self.data[symbol], symbol)
+                        # Recargar y mostrar las órdenes actualizadas
+                        self.show_orders(self.open_orders_frame, "open")
+                        self.show_orders(self.pending_buy_orders_frame, "pending_buy")
+                        self.show_orders(self.pending_sell_orders_frame, "pending_sell")
+                        return  # Salir de la función una vez que se elimina la orden
 
-    def add_open_order(self):
-        pass
-
-    def add_pending_buy(self):
-        pass
-
-    def add_pending_sell(self):
-        pass
+        print(f"No se encontró ninguna orden con ID '{order_id}' para eliminar.")
 
     def create_asset_orders_section(self):
         """Crea la sección para mostrar las órdenes del activo y los botones de creación."""
@@ -436,10 +491,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             button.pack(side=LEFT, padx=5, pady=2)  # Empaquetamos los botones a la izquierda
 
 
-    def delete_order(self):
-        # funcion para eliminar una orden
-        pass
-
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
         if symbol in self.data:
@@ -454,6 +505,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def show_orders(self, parent_frame, order_type):
         """Llena el frame con la información de las órdenes del tipo especificado."""
+        # Limpiar los widgets existentes en el parent_frame
+        for widget in parent_frame.winfo_children():
+            widget.destroy()
+
         symbol = self.selected_asset.get()
         orders = self.get_orders_for_asset(symbol, order_type)
 
@@ -477,6 +532,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             edit_button = Button(order_row_frame, text="Editar",
                                  command=lambda oid=order.get('id'): self.edit_order(oid))
             edit_button.pack(side=RIGHT, padx=2)"""
+
+    def create_secondary_menu_buttons_section(self):
+        """Crea seccion de menu secundario en panel derecho,
+        con botones para llamar a otros metodos (menú secundario)"""
+        pass
 
 
 

@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import *
 import GUI_functions_module
-from functools import partial
+import uuid
+import json
+
 
 """ Utilizar clases para gestionar el estado y la lógica de tu GUI es una práctica
  fundamental para construir aplicaciones más complejas y mantenibles:"""
@@ -29,6 +31,7 @@ class AssetManagerGUI:
         self.selected_button_bg = 'green'  # Color de fondo cuando está seleccionado
 
         self.selected_asset_data = None  # Inicialización de self.selected_asset_data
+        self.new_order_data = None  # Para almacenar los datos del formulario
 
         # Crear los widgets de la GUI
         self.create_widgets()
@@ -69,7 +72,7 @@ class AssetManagerGUI:
         self.right_panel.pack(side=RIGHT, fill=X, padx=10, pady=10, expand=True)
 
         self.create_asset_info_section()  # crea seccion de iformación del activo (símbolo, precio, margi)
-        self.create_asset_orders_section()  # crea seccion de ordenes del activo
+        #self.create_asset_orders_section()  # crea seccion de ordenes del activo
         #self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
 
 
@@ -136,8 +139,9 @@ class AssetManagerGUI:
 
         # se llama a este metodo para mostrar informacion del activo
         self.update_asset_info_display()
-        #self.show_asset_orders()  # metodo para mostrar las ordenes relacionas con el activo
-        """crear la funcion show_asset_order """
+        self.create_asset_orders_section()
+        #self.show_orders()  # metodo para mostrar las ordenes relacionas con el activo
+
 
     # (El resto de tus métodos: create_asset_info_section, create_asset_actions_section,
     # update_asset_info_display, show_asset_orders, y los métodos de acción del activo
@@ -205,27 +209,173 @@ class AssetManagerGUI:
 
         self.update_asset_info_display()  # llama a este metodo que actualiza la info en el label del activo seleccionado
 
-    def populate_orders(self, parent_frame, order_type):
-        """Llena el frame con la información de las órdenes del tipo especificado."""
-        # Aquí iría la lógica para obtener las órdenes del activo seleccionado
-        # (usando self.selected_asset.get()) y crear Labels y Buttons
-        # dentro del parent_frame.
+    def add_new_order(self, data_asset, active_symbol, order_type, order_details):
+        """Agrega una nueva orden del tipo especificado a los datos del activo."""
 
-        symbol = self.selected_asset.get()
-        # **TODO: Implementar la lógica para obtener las órdenes de self.data
-        #        filtrando por el símbolo y el tipo de orden (order_type).**
-        orders = self.get_orders_for_asset(symbol, order_type)  # Ejemplo de llamada a una función que debes implementar
+        order = {
+            'id': order_details.get('id'),
+            'price': order_details.get('price'),
+            'amount_usdt': order_details.get('amount_usdt'),
+            'quantity': round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
+                              8) if order_details.get('price', 1) != 0 else 0,
+            'stop_loss': order_details.get('stop_loss'),
+            'target': order_details.get('target'),
+        }
 
-        for order in orders:
-            order_info = f"ID: {order['id']}, Precio: {order['price']}, Cantidad: {order['quantity']}"
-            order_label = Label(parent_frame, text=order_info)
-            order_label.pack(anchor='w')
+        if order_type == 'open':
+            order['mother_order'] = order_details.get('mother_order', False)
+            if 'open_orders' not in data_asset:
+                data_asset['open_orders'] = []
+            data_asset['open_orders'].append(order)
+            print("Orden abierta agregada!")
+        elif order_type == 'pending_buy':
+            if 'buy_limits' not in data_asset:
+                data_asset['buy_limits'] = []
+            data_asset['buy_limits'].append(order)
+            print("Orden de compra pendiente agregada!")
+        elif order_type == 'pending_sell':
+            if 'sell_limits' not in data_asset:
+                data_asset['sell_limits'] = []
+            data_asset['sell_limits'].append(order)
+            print("Orden de venta pendiente agregada!")
+        else:
+            print(f"Tipo de orden '{order_type}' no válido.")
+            return data_asset
 
-            edit_button = Button(parent_frame, text="Editar", command=lambda oid=order['id']: self.edit_order(oid))
-            edit_button.pack(side=LEFT, padx=2)
+        # Actualizar los datos del activo en el objeto data y guardar
+        self.save_data_asset(self.data, data_asset, active_symbol)
+        return data_asset
 
-            delete_button = Button(parent_frame, text="Borrar", command=lambda oid=order['id']: self.delete_order(oid))
-            delete_button.pack(side=LEFT, padx=2)
+    def save_data_asset(self, data, data_asset, active_symbol):
+        """Guarda los datos actualizados del activo en el objeto data y en el archivo."""
+        if active_symbol in data:
+            data[active_symbol] = data_asset
+            try:
+                with open(self.filename, 'w') as f:
+                    json.dump(data, f, indent=4)
+                print(f"Datos para '{active_symbol}' guardados correctamente en '{self.filename}'.")
+            except Exception as e:
+                print(f"Error al guardar los datos en '{self.filename}': {e}")
+        else:
+            print(f"Error: Activo '{active_symbol}' no encontrado en los datos.")
+
+
+    def handle_add_new_order(self, order_type):
+        """
+        Toma la información de la nueva orden recopilada del formulario
+        (almacenada en self.new_order_data) y la agrega a la estructura
+        de datos para el activo seleccionado. Luego, actualiza la
+        visualización de las órdenes.
+        """
+        active_symbol = self.selected_asset.get()
+        if active_symbol in self.data and self.new_order_data:
+            self.data[active_symbol] = self.add_new_order(self.data[active_symbol], active_symbol, order_type, self.new_order_data)
+            self.save_data_asset(self.data, self.data[active_symbol], active_symbol)  # Guardar los datos
+            self.show_orders(self.open_orders_frame, "open")
+            self.show_orders(self.pending_buy_orders_frame, "pending_buy")
+            self.show_orders(self.pending_sell_orders_frame, "pending_sell")
+            self.update_asset_info_display()
+            self.new_order_data = None  # Resetear los datos del formulario
+        elif not active_symbol:
+            tk.messagebox.showerror("Error", "Por favor, seleccione un activo primero.")
+        elif not self.new_order_data:
+            tk.messagebox.showerror("Error", "No se ingresaron datos en el formulario.")
+
+    def show_new_order_form(self, order_type):
+        """Esta función es llamada cuando el usuario hace clic en uno de los botones de
+        "Crear Nueva Orden".
+        Crea una nueva ventana secundaria (Toplevel) que es el formulario.
+        Se encarga de procesar los datos ingresados por el usuario en el formulario
+        para crear una nueva orden.
+        Recibe el tipo de orden ('order_type') como argumento, y los valores de los
+        campos de entrada (precio, monto, stop loss, target, y si es una orden madre).
+        Intenta convertir los valores de precio, monto, stop loss ytarget a números de punto flotante.
+        Si la conversión es exitosa, almacena estos valores
+        (junto con el booleano de 'mother_order') en el atributo 'self.new_order_data' de la clase.
+        Luego, llama a la función 'self.handle_add_new_order' para que se agregue la
+        orden a los datos y se actualice la interfaz.
+        Finalmente, cierra la ventana del formulario.
+        Si ocurre un error durante la conversión a número (por ejemplo, si el usuario ingresó texto),
+        muestra un cuadro de mensaje de error al usuario pidiéndole que ingrese valores numéricos válidos."""
+        form = Toplevel(self)
+        form.title(f"Nueva Orden de {order_type.capitalize()}")
+
+        price_label = Label(form, text="Precio:")
+        price_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        price_entry = Entry(form)
+        price_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        amount_label = Label(form, text="Monto (USDT):")
+        amount_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        amount_entry = Entry(form)
+        amount_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        sl_label = Label(form, text="Stop Loss (0 para ninguno):")
+        sl_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        sl_entry = Entry(form)
+        sl_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        tp_label = Label(form, text="Target (0 para ninguno):")
+        tp_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
+        tp_entry = Entry(form)
+        tp_entry.grid(row=3, column=1, padx=5, pady=5)
+
+        mother_var = BooleanVar()
+        if order_type == 'open':
+            mother_check = Checkbutton(form, text="¿Orden Madre?", variable=mother_var)
+            mother_check.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="w")
+
+        submit_button = Button(form, text="Crear Orden",
+                               command=lambda: self.get_form_data(form, order_type, price_entry.get(),
+                                                                  amount_entry.get(), sl_entry.get(),
+                                                                  tp_entry.get(),
+                                                                  mother_var.get() if order_type == 'open' else False))
+        submit_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+        cancel_button = Button(form, text="Cancelar", command=form.destroy)
+        cancel_button.grid(row=6, column=0, columnspan=2, pady=5)
+
+        form.wait_window()  # Pausa la ejecución de la ventana principal hasta que el formulario se cierre.
+
+    def get_form_data(self, form, order_type, price, amount, sl, tp, mother_order):
+        """
+        Recupera los datos ingresados por el usuario en el formulario de nueva orden,
+        genera un 'id' único para la orden, valida los datos convirtiéndolos a sus
+        tipos numéricos correspondientes, almacena todos los detalles (incluyendo el 'id')
+        en el atributo self.new_order_data como un diccionario, llama a la función
+        para manejar la adición de la nueva orden (self.handle_add_new_order), y
+        finalmente destruye la ventana del formulario. En caso de que la conversión
+        a número falle (ValueError), muestra un mensaje de error al usuario.
+        """
+        try:
+            price_val = float(price)
+            amount_val = float(amount)
+            sl_val = float(sl)
+            tp_val = float(tp)
+
+            order_id = str(uuid.uuid4())  # Generar el 'id' único aquí
+
+            self.new_order_data = {
+                'id': order_id,  # Incluir el 'id' en los datos de la orden
+                'price': price_val,
+                'amount_usdt': amount_val,
+                'stop_loss': sl_val,
+                'target': tp_val,
+                'mother_order': mother_order
+            }
+            self.handle_add_new_order(order_type)  # llama al metodo manejar la adición de la nueva orden
+            form.destroy()  # destruye la ventana del formulario
+        except ValueError:
+            tk.messagebox.showerror("Error", "Por favor, ingrese valores numéricos válidos.")
+
+    def show_orders(self, parent_frame, order_type):
+        # ... (tu código para mostrar las órdenes) ...
+        pass
+
+    def delete_order(self, order_id):
+        # ... (tu código para eliminar la orden) ...
+        pass
+
 
     def add_open_order(self):
         pass
@@ -238,6 +388,19 @@ class AssetManagerGUI:
 
     def create_asset_orders_section(self):
         """Crea la sección para mostrar las órdenes del activo y los botones de creación."""
+        # Si ya existe el frame de las órdenes, lo destruimos
+        if hasattr(self, 'asset_orders_frame'):  # verifica si la instancia actual de la clase AssetManagerGUI (self) tiene un atributo llamado 'asset_orders_frame'
+            self.asset_orders_frame.destroy()
+
+        # Destruir los frames de las órdenes antiguas si existen
+        if hasattr(self, 'open_orders_frame'):
+            self.open_orders_frame.destroy()
+        if hasattr(self, 'pending_buy_orders_frame'):
+            self.pending_buy_orders_frame.destroy()
+        if hasattr(self, 'pending_sell_orders_frame'):
+            self.pending_sell_orders_frame.destroy()
+
+        # Crear los nuevos frames para las órdenes
         self.asset_orders_frame = Frame(self.right_panel, bd=1, relief=SUNKEN)
         self.asset_orders_frame.pack(pady=10, fill=BOTH, expand=True)
 
@@ -247,33 +410,40 @@ class AssetManagerGUI:
         self.open_orders_frame = Frame(self.asset_orders_frame)
         self.open_orders_frame.pack(fill=X, pady=2)
         Label(self.open_orders_frame, text="Órdenes Abiertas").pack(anchor='w')
-        self.populate_orders(self.open_orders_frame, "open")
+        self.show_orders(self.open_orders_frame, "open")
 
         self.pending_buy_orders_frame = Frame(self.asset_orders_frame)
         self.pending_buy_orders_frame.pack(fill=X, pady=2)
         Label(self.pending_buy_orders_frame, text="Compras Pendientes").pack(anchor='w')
-        self.populate_orders(self.pending_buy_orders_frame, "pending_buy")
+        self.show_orders(self.pending_buy_orders_frame, "pending_buy")
 
         self.pending_sell_orders_frame = Frame(self.asset_orders_frame)
         self.pending_sell_orders_frame.pack(fill=X, pady=2)
         Label(self.pending_sell_orders_frame, text="Ventas Pendientes").pack(anchor='w')
-        self.populate_orders(self.pending_sell_orders_frame, "pending_sell")
+        self.show_orders(self.pending_sell_orders_frame, "pending_sell")
 
         # Sección para los botones de creación de nuevas órdenes
         new_order_label = Label(self.asset_orders_frame, text="Crear Nueva Orden:", font=('Dosis', 12, 'italic'))
         new_order_label.pack(anchor='w', pady=(10, 2))
 
         actions = [
-            {"text": "Orden Abierta", "command": self.add_open_order},
-            {"text": "Compra Pendiente", "command": self.add_pending_buy},
-            {"text": "Venta Pendiente", "command": self.add_pending_sell},
+            {"text": "Orden Abierta", "command": lambda: self.show_new_order_form('open')},
+            {"text": "Compra Pendiente", "command": lambda: self.show_new_order_form('pending_buy')},
+            {"text": "Venta Pendiente", "command": lambda: self.show_new_order_form('pending_sell')},
             # Agrega aquí más botones de creación si es necesario
         ]
 
-        for action in actions:
-            button = Button(self.asset_orders_frame, text=action["text"], command=action["command"])
-            button.pack(fill=X, pady=2)
+        buttons_frame = Frame(self.asset_orders_frame)  # Frame contenedor para los botones
+        buttons_frame.pack(fill=tk.X)
 
+        for action in actions:
+            button = Button(buttons_frame, text=action["text"], command=action["command"])
+            button.pack(side=LEFT, padx=5, pady=2)  # Empaquetamos los botones a la izquierda
+
+
+    def delete_order(self):
+        # funcion para eliminar una orden
+        pass
 
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
@@ -286,16 +456,19 @@ class AssetManagerGUI:
                 return self.data[symbol].get('sell_limits', [])
         return []
 
-    def populate_orders(self, parent_frame, order_type):
+    def show_orders(self, parent_frame, order_type):
         """Llena el frame con la información de las órdenes del tipo especificado."""
         symbol = self.selected_asset.get()
         orders = self.get_orders_for_asset(symbol, order_type)
+        print(orders)
+        print(type(orders))
 
         for order in orders:
-            order_info = f"Precio: {order.get('price', 'N/A')} ---> {order.get('amount_usdt', 'N/A')} USDT, " \
-                         f"SL: {order.get('stop_loss', 'N/A')}, TP: {order.get('target', 'N/A')}, " \
-                         f"Cant: {order.get('quantity', 'N/A')}, MO: {order.get('mother_order', False)}"
-            order_label = Label(parent_frame, text=order_info)
+            order_info = f"Price: {order.get('price', 'N/A')} ---> {order.get('amount_usdt', 'N/A')} USDT, " \
+                         f"SL: {order.get('stop_loss', 'N/A')}, Target: {order.get('target', 'N/A')}, " \
+                         f"Quanttity: {order.get('quantity', 'N/A')}, MO: {order.get('mother_order', False)}"
+
+            order_label = Label(parent_frame, text=order_info, font=('Dosis', 12, 'bold'))
             order_label.pack(anchor='w')
 
             delete_button = Button(parent_frame, text="Borrar",

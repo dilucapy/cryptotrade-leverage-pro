@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import time
 import matplotlib.gridspec as gridspec
 from tkinter import messagebox
+import uuid
 
 
 filename = 'pink_net_data_3_GUI.json'
@@ -132,7 +133,7 @@ def get_current_price(symbol):
 
 def add_open_order(data_asset, active_symbol):
     """Agrega una 'open order' a los datos del activo específico."""
-    print(f" ADD OPEN ORDER for {active_symbol} ".center(75, '*'))
+
     price = float(input("\nPrecio de entrada para la orden abierta: "))
     amount_usdt = float(input("Monto en dólares: "))
     response = input("¿Es esta una orden madre? (s/n, por defecto 'n'): ").strip().lower()
@@ -152,6 +153,7 @@ def add_open_order(data_asset, active_symbol):
 
     # se inicializa estructura de una open orden
     orden = {
+        'id': str(uuid.uuid4()),  # El 'id' es local a esta orden
         'price': price,
         'amount_usdt': amount_usdt,
         'quantity': quantity,

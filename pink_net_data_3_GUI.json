@@ -156,9 +156,27 @@
     "ADA": {
         "current_price": 0,
         "margin": 0,
-        "open_orders": [],
+        "open_orders": [
+            {
+                "id": "34c30e43-50f3-45e0-983e-4a6ddbb908d6",
+                "price": 0.55,
+                "amount_usdt": 100.0,
+                "quantity": 181.81818182,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": true
+            },
+            {
+                "id": "2f107d70-42c5-4a02-b6f8-c4cef9fa06aa",
+                "price": 0.4,
+                "amount_usdt": 50.0,
+                "quantity": 125.0,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": false
+            }
+        ],
         "buy_limits": [],
         "sell_limits": []
     }
-    
 }

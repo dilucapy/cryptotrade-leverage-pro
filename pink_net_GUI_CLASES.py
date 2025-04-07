@@ -3,22 +3,22 @@ from tkinter import *
 import GUI_functions_module
 import uuid
 import json
+from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox
 
+# ruta del archivo JSON
+filename = 'pink_net_data_3_GUI.json'
 
 """ Utilizar clases para gestionar el estado y la lógica de tu GUI es una práctica
  fundamental para construir aplicaciones más complejas y mantenibles:"""
 
 
-class AssetManagerGUI:
+class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
-    def __init__(self, master):
-        """Este es el constructor de la clase. Recibe la ventana principal (master).
-        Inicializa el estado de la GUI
-        (carga los datos, inicializa variables para el activo seleccionado).
-        Llama a self.create_widgets() para construir la interfaz."""
-        self.master = master
-        master.title("Gestión de Operaciones Apalancadas")
+    def __init__(self, data, filename):
+        super().__init__()  # Llama al constructor de la clase padre (tk.Tk)
+        self.data = data
+        self.filename = filename
 
         # Inicializar el estado de la GUI
         self.data = GUI_functions_module.load_data('pink_net_data_3_GUI.json')
@@ -40,7 +40,6 @@ class AssetManagerGUI:
         self.active_asset_button = None  # Para rastrear el botón activo
         self.default_button_bg = 'azure4'  # Color de fondo por defecto
         self.selected_button_bg = 'green'  # Color de fondo cuando está seleccionado
-
 
 
     def create_widgets(self):
@@ -89,7 +88,7 @@ class AssetManagerGUI:
             {"text": "Mostrar POSICIONES ABIERTAS", "command": self.show_open_positions},
             {"text": "Calcular LEVERAGE", "command": self.calculate_leverage},
             {"text": "Calculate BURN PRICE", "command": self.calculate_burn_price},
-            {"text": "EXIT", "command": self.master.quit}
+            {"text": "EXIT", "command": self.quit}
         ]
         for config in primary_buttons_config:
             button = Button(self.primary_menu, text=config["text"].title(), font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=5, cursor='hand2', command=config["command"])
@@ -368,10 +367,6 @@ class AssetManagerGUI:
         except ValueError:
             tk.messagebox.showerror("Error", "Por favor, ingrese valores numéricos válidos.")
 
-    def show_orders(self, parent_frame, order_type):
-        # ... (tu código para mostrar las órdenes) ...
-        pass
-
     def delete_order(self, order_id):
         # ... (tu código para eliminar la orden) ...
         pass
@@ -456,40 +451,54 @@ class AssetManagerGUI:
                 return self.data[symbol].get('sell_limits', [])
         return []
 
+
     def show_orders(self, parent_frame, order_type):
         """Llena el frame con la información de las órdenes del tipo especificado."""
         symbol = self.selected_asset.get()
         orders = self.get_orders_for_asset(symbol, order_type)
-        print(orders)
-        print(type(orders))
 
         for order in orders:
+            # Crear un Frame para contener la información de la orden y el botón
+            order_row_frame = Frame(parent_frame)
+            order_row_frame.pack(fill=X, pady=2)  # Empaquetar el frame de la fila
+
             order_info = f"Price: {order.get('price', 'N/A')} ---> {order.get('amount_usdt', 'N/A')} USDT, " \
                          f"SL: {order.get('stop_loss', 'N/A')}, Target: {order.get('target', 'N/A')}, " \
                          f"Quanttity: {order.get('quantity', 'N/A')}, MO: {order.get('mother_order', False)}"
 
-            order_label = Label(parent_frame, text=order_info, font=('Dosis', 12, 'bold'))
-            order_label.pack(anchor='w')
+            order_label = Label(order_row_frame, text=order_info, font=('Dosis', 12, 'bold'))
+            order_label.pack(side=LEFT, anchor='w')  # Empaquetar la etiqueta a la izquierda
 
-            delete_button = Button(parent_frame, text="Borrar",
+            delete_button = Button(order_row_frame, text="Delete",
                                    command=lambda oid=order.get('id'): self.delete_order(oid))
-            delete_button.pack(side=LEFT, padx=2)
+            delete_button.pack(side=RIGHT, padx=5)  # Empaquetar el botón a la derecha
 
+            """# Botón de Editar (opcional, pero lo coloco como ejemplo)
+            edit_button = Button(order_row_frame, text="Editar",
+                                 command=lambda oid=order.get('id'): self.edit_order(oid))
+            edit_button.pack(side=RIGHT, padx=2)"""
 
 
 
 if __name__ == "__main__":
-    # Iniciar Tkinter creando la ventana principal
-    app = tk.Tk()
+    try:
+        with open(filename, 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
 
-    # Crear una instancia de la clase de GUI,pasándole la ventana principal (app) como el 'master'
-    gui = AssetManagerGUI(app)
+    # Crear una instancia de la clase de GUI
+    gui = AssetManagerGUI(data, filename)
 
     # Configurar la ventana principal (tamaño, resizable, etc.)
-    app.state('zoomed')  # Maximizar la ventana
-    app.resizable(False, False)
-    app.config(bg='burlywood')
+    gui.state('zoomed')  # Maximizar la ventana
+    gui.resizable(False, False)
+    gui.config(bg='burlywood')
 
-    # Iniciar el bucle principal de Tkinter,que mantiene la ventana abierta y responde a los eventos
-    app.mainloop()
+    # Iniciar el loop principal de Tkinter (mantiene la ventana abierta y responde a los eventos)
+    gui.mainloop()
+
+
+
+
 

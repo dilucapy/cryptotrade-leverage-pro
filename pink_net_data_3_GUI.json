@@ -115,28 +115,20 @@
             }
         ]
     },
-    "XRP": {
-        "current_price": 0,
-        "margin": 0,
-        "open_orders": [
-            {
-                "id": "70538e0c-ae01-4bc2-8d7a-31da12021e53",
-                "price": 5.0,
-                "amount_usdt": 100.0,
-                "quantity": 20.0,
-                "stop_loss": 0.0,
-                "target": 0.0,
-                "mother_order": false
-            }
-        ],
-        "buy_limits": [],
-        "sell_limits": []
-    },
-    "HBAR": {
+    "BTC": {
         "current_price": 0,
         "margin": 0,
         "open_orders": [],
-        "buy_limits": [],
+        "buy_limits": [
+            {
+                "id": "a055b618-eda2-49ed-a831-ae6f4bb6c4c0",
+                "price": 73000.0,
+                "amount_usdt": 500.0,
+                "quantity": 0.00684932,
+                "stop_loss": 0.0,
+                "target": 0.0
+            }
+        ],
         "sell_limits": []
     }
 }

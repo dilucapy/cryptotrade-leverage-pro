@@ -70,7 +70,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.right_panel = Frame(self.master, bd=1, relief=FLAT, padx=10, pady=10)
         self.right_panel.pack(side=RIGHT, fill=X, padx=10, pady=10, expand=True)
 
-        self.create_asset_info_section()  # crea seccion de iformación del activo (símbolo, precio, margi)
+        self.create_asset_info_section()  # crea seccion de iformación del activo (símbolo, precio, margin)
         #self.create_asset_orders_section()  # crea seccion de ordenes del activo
         #self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
 
@@ -156,7 +156,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Crear y mostrar los botones del menú secundario en el panel izquierdo
         self.create_left_secondary_menu_buttons()
-
 
     def add_new_symbol(self):
         """Muestra una ventana de nivel superior (encimna de la ventana princiapla)
@@ -502,8 +501,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         Label(self.pending_sell_orders_frame, text="Ventas Pendientes").pack(anchor='w')
         self.show_orders(self.pending_sell_orders_frame, "pending_sell")
 
-
-
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
         if symbol in self.data:
@@ -569,8 +566,43 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         else:
             messagebox.showerror("Error", f"El símbolo '{symbol}' no existe en los datos.")
 
+    def clear_asset_buttons(self):
+        """Elimina todos los botones de activos del panel superior."""
+        if hasattr(self, 'top_panel'):
+            for widget in self.top_panel.winfo_children():
+                widget.destroy()
+
     def delete_asset(self):
-        pass
+        """Pregunta al usuario si desea eliminar el activo seleccionado y lo elimina,
+        recreando los widgets para actualizar la lista de activos."""
+        symbol = self.selected_asset.get()
+
+        if symbol:
+            confirmation = messagebox.askyesno("Confirmar Eliminación", f"¿Está seguro de que desea eliminar el activo '{symbol}'?")
+            if confirmation:
+                if symbol in self.data:
+                    del self.data[symbol]
+                    self.save_data()  # Guardar los cambios en el archivo JSON
+
+                    # Destruir los widgets para actualizar la lista de activos
+                    for widget in self.winfo_children():
+                        widget.destroy()
+
+                    # Limpiar el estado de selección del activo
+                    self.selected_asset.set("")
+                    self.selected_asset_data = None
+                    self.active_asset_button = None
+
+                    # Recrear los widgets con la lista de activos actualizada
+                    self.create_widgets()
+
+                    messagebox.showinfo("Acción Exitosa", f"El activo '{symbol}' ha sido eliminado.")
+                else:
+                    messagebox.showerror("Error", f"El activo '{symbol}' no existe en los datos.")
+            else:
+                messagebox.showinfo("Eliminación Cancelada", f"Se mantuvo el activo '{symbol}'.")
+        else:
+            messagebox.showerror("Error", "Por favor, seleccione un activo para eliminar.")
 
     def calculate_mother_order(self):
         pass

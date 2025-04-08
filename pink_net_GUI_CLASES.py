@@ -58,12 +58,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.create_asset_buttons()
 
         # Panel Izquierdo (para el menu primario)
-        self.left_panel = Frame(self.master, bd=1, relief=FLAT)
+        self.left_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
         self.left_panel.pack(side=LEFT, fill=Y)
 
         # Menu Primario
-        self.primary_menu = Frame(self.left_panel, bd=1, relief=FLAT)
-        self.primary_menu.pack(side=TOP, padx=10, pady=10)
+        self.primary_menu = Frame(self.left_panel, bd=1, relief=FLAT, bg='burlywood')
+        self.primary_menu.pack(side=LEFT, padx=10, pady=10)
         self.create_primary_menu_buttons()
 
         # Panel Derecho (para mostrar información del activo y otras funciones)
@@ -91,8 +91,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "EXIT", "command": self.quit}
         ]
         for config in primary_buttons_config:
-            button = Button(self.primary_menu, text=config["text"].title(), font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=5, cursor='hand2', command=config["command"])
-            button.pack(pady=2, fill=X)
+            button = Button(self.primary_menu, text=config["text"].title(), font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=10, cursor='hand2', command=config["command"])
+            button.pack(pady=4, fill=X)
 
     def create_asset_buttons(self):
         list_symbols = GUI_functions_module.get_symbols_for_buttons(self.data)
@@ -144,10 +144,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             if widget != self.asset_info_frame:
                 widget.destroy()
 
+        # linea para depuracion
         print(f"Hijos del right_panel antes de crear botones secundarios: {self.right_panel.winfo_children()}")
 
-        self.create_asset_orders_section()  # Crea la sección para mostrar las órdenes del activo y los botones de creación de ordenes
-        self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
+        # Crea la sección para mostrar las órdenes del activo y los botones de creación de ordenes
+        self.create_asset_orders_section()
+
+        # Destruir todos los widgets del panel izquierdo (menú primario)
+        for widget in self.left_panel.winfo_children():
+            widget.destroy()
+
+        # Crear y mostrar los botones del menú secundario en el panel izquierdo
+        self.create_left_secondary_menu_buttons()
 
 
     def add_new_symbol(self):
@@ -562,8 +570,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def update_current_price(self):
         pass
 
+    # Funcion obsoleta, create_secondary_menu_buttons_section(self) (eliminar en un futuro)
+    """
     def create_secondary_menu_buttons_section(self):
-        """Crea la sección de botones del menú secundario en el panel derecho."""
+        
         secondary_menu_frame = tk.Frame(self.right_panel, bd=1, relief=tk.SUNKEN)
         secondary_menu_frame.pack(pady=10, fill=tk.X)
 
@@ -599,7 +609,42 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             col_num += 1
             if col_num == 4:  # Pasar a la siguiente fila después de 4 botones
                 col_num = 0
-                row_num += 1
+                row_num += 1 """
+
+    def volver_menu_principal(self):
+        pass
+
+    def create_left_secondary_menu_buttons(self):
+        """Crea y empaqueta los botones del menú secundario en el panel izquierdo."""
+        self.secondary_menu = Frame(self.left_panel, bd=1, relief=FLAT, bg='burlywood')
+        self.secondary_menu.pack(side=LEFT, padx=10, pady=10)
+
+        buttons_config = [
+            {"text": "MENU PRINCIPAL", "command": self.volver_menu_principal},
+            {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
+            {"text": "Borrar Activo", "command": self.delete_asset},
+            {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
+            {"text": "Generar PINK NET", "command": self.generate_pink_net},
+            {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
+            {"text": "Generar Nube de Ventas", "command": self.generate_sales_cloud},
+            {"text": "Renderizar Órdenes Abiertas", "command": self.render_open_orders},
+            {"text": "Actualizar Precio Actual", "command": self.update_current_price},
+        ]
+
+        for button_info in buttons_config:
+            button = tk.Button(self.secondary_menu,
+                               text=button_info["text"],
+                               font=('Dosis', 12, 'bold'),
+                               padx=10,
+                               pady=10,
+                               bg=self.default_button_bg,
+                               fg='white',
+                               bd=1,
+                               relief=RAISED,
+                               cursor='hand2',
+                               command=button_info["command"])
+
+            button.pack(pady=4, padx=2, fill=X)
 
 
 if __name__ == "__main__":

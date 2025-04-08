@@ -48,8 +48,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Panel Superior (para etiqueta de titulo y Panel de activos)
         self.top_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
         self.top_panel.pack(side=TOP, fill=X)
-        self.title_label = Label(self.top_panel, text='Gestión de Operaciones Apalancadas', fg='azure4', font=('Dosis', 30), bg='burlywood', width=30)
-        self.title_label.grid(row=0, column=0, columnspan=5, pady=10, sticky="ew")
+        self.title_label = Label(self.top_panel, text='Gestión de Operaciones Apalancadas', fg='azure4', font=('Dosis', 20), bg='burlywood', width=30)
+        self.title_label.grid(row=0, column=0, columnspan=5, pady=5, sticky="ew")
 
         # Panel de Activos (para los botones de activos)
         self.asset_menu = Frame(self.top_panel, bd=1, relief=FLAT)
@@ -138,13 +138,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # se llama a este metodo para mostrar informacion del activo
         self.update_asset_info_display()
+
+        # Destruir todos los widgets hijos del right_panel excepto self.asset_info_frame
+        for widget in self.right_panel.winfo_children():
+            if widget != self.asset_info_frame:
+                widget.destroy()
+
+        print(f"Hijos del right_panel antes de crear botones secundarios: {self.right_panel.winfo_children()}")
+
         self.create_asset_orders_section()  # Crea la sección para mostrar las órdenes del activo y los botones de creación de ordenes
-        # self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
+        self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
 
-
-    # (El resto de tus métodos: create_asset_info_section, create_asset_actions_section,
-    # update_asset_info_display, show_asset_orders, y los métodos de acción del activo
-    # permanecen similares, pero ahora se basan en self.selected_asset.get())
 
     def add_new_symbol(self):
         """Muestra una ventana de nivel superior (encimna de la ventana princiapla)
@@ -197,7 +201,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def calculate_leverage(self):
         pass
 
-    def calculate_burn_price(self):
+    def calculate_burning_price_of_all(self):
+        """calcula el precio de quema de todos los activos.
+        Se ejecuta desde el menu primario"""
         pass
 
     def update_asset_info_display(self):
@@ -234,11 +240,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def create_asset_info_section(self):
         # asset_info_frame (contiene nformación del activo como símbolo, precio y margin)
         self.asset_info_frame = Frame(self.right_panel)  # Empaquetar este frame en right_panel
-        self.asset_info_frame.pack(pady=5, fill=X)
+        self.asset_info_frame.pack(pady=2, fill=X)
 
         self.info_label = Label(self.asset_info_frame,  # El Label ahora va dentro del asset_info_frame
                                 text="Seleccione un activo para ver su información.",
-                                font=('Arial', 12, 'bold'))
+                                font=('Arial', 11, 'bold'))
         self.info_label.pack()
 
         self.update_asset_info_display()  # llama a este metodo que actualiza la info en el label del activo seleccionado
@@ -300,7 +306,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             print("Datos guardados correctamente.")
         except Exception as e:
             print(f"Error al guardar los datos: {e}")
-
 
     def handle_add_new_order(self, order_type):
         """
@@ -438,7 +443,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def create_asset_orders_section(self):
         """Crea la sección para mostrar las órdenes del activo y los botones de creación."""
-        # Si ya existe el frame de las órdenes, lo destruimos
+        """# Si ya existe el frame de las órdenes, lo destruimos
         if hasattr(self, 'asset_orders_frame'):  # verifica si la instancia actual de la clase AssetManagerGUI (self) tiene un atributo llamado 'asset_orders_frame'
             self.asset_orders_frame.destroy()
 
@@ -448,13 +453,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         if hasattr(self, 'pending_buy_orders_frame'):
             self.pending_buy_orders_frame.destroy()
         if hasattr(self, 'pending_sell_orders_frame'):
-            self.pending_sell_orders_frame.destroy()
+            self.pending_sell_orders_frame.destroy()"""
 
         # Crear los nuevos frames para las órdenes
         self.asset_orders_frame = Frame(self.right_panel, bd=1, relief=SUNKEN)
         self.asset_orders_frame.pack(pady=10, fill=BOTH, expand=True)
 
-        Label(self.asset_orders_frame, text="Órdenes del Activo", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
+        #Label(self.asset_orders_frame, text="Órdenes del Activo", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
 
         # Sección para las listas de órdenes (abiertas, compras pendientes y ventas pendientes)
         self.open_orders_frame = Frame(self.asset_orders_frame)
@@ -490,7 +495,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             button = Button(buttons_frame, text=action["text"], command=action["command"])
             button.pack(side=LEFT, padx=5, pady=2)  # Empaquetamos los botones a la izquierda
 
-
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
         if symbol in self.data:
@@ -502,13 +506,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 return self.data[symbol].get('sell_limits', [])
         return []
 
-
     def show_orders(self, parent_frame, order_type):
         """Llena el frame con la información de las órdenes del tipo especificado."""
-        # Limpiar los widgets existentes en el parent_frame
+        # Limpiar los widgets existentes en el parent_frame, excepto los Label
         for widget in parent_frame.winfo_children():
-            widget.destroy()
-
+            if not isinstance(widget, tk.Label):
+                widget.destroy()
+        
         symbol = self.selected_asset.get()
         orders = self.get_orders_for_asset(symbol, order_type)
 
@@ -533,11 +537,69 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                  command=lambda oid=order.get('id'): self.edit_order(oid))
             edit_button.pack(side=RIGHT, padx=2)"""
 
-    def create_secondary_menu_buttons_section(self):
-        """Crea seccion de menu secundario en panel derecho,
-        con botones para llamar a otros metodos (menú secundario)"""
+    def delete_all_asset_data(self):
+        """borra todo los datos del activo pero lo deja inicializado"""
         pass
 
+    def delete_asset(self):
+        pass
+
+    def calculate_mother_order(self):
+        pass
+
+    def generate_pink_net(self):
+        pass
+
+    def calculate_burn_price(self):
+        pass
+
+    def generate_sales_cloud(self):
+        pass
+
+    def render_open_orders(self):
+        pass
+
+    def update_current_price(self):
+        pass
+
+    def create_secondary_menu_buttons_section(self):
+        """Crea la sección de botones del menú secundario en el panel derecho."""
+        secondary_menu_frame = tk.Frame(self.right_panel, bd=1, relief=tk.SUNKEN)
+        secondary_menu_frame.pack(pady=10, fill=tk.X)
+
+        #tk.Label(secondary_menu_frame, text="Acciones Adicionales", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
+
+        buttons_config = [
+            {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
+            {"text": "Borrar Activo", "command": self.delete_asset},
+            {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
+            {"text": "Generar PINK NET", "command": self.generate_pink_net},
+            {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
+            {"text": "Generar Nube de Ventas", "command": self.generate_sales_cloud},
+            {"text": "Renderizar Órdenes Abiertas", "command": self.render_open_orders},
+            {"text": "Actualizar Precio Actual", "command": self.update_current_price},
+        ]
+
+        row_num = 0
+        col_num = 0
+        for button_info in buttons_config:
+            button = tk.Button(secondary_menu_frame,
+                               text=button_info["text"],
+                               font=('Dosis', 12, 'bold'),
+                               padx=10,
+                               pady=5,
+                               bg=self.default_button_bg,
+                               fg='white',
+                               bd=1,
+                               relief=RAISED,
+                               cursor='hand2',
+                               command=button_info["command"])
+
+            button.grid(row=row_num, column=col_num, padx=5, pady=2, sticky="ew")
+            col_num += 1
+            if col_num == 4:  # Pasar a la siguiente fila después de 4 botones
+                col_num = 0
+                row_num += 1
 
 
 if __name__ == "__main__":

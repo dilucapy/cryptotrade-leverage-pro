@@ -13,6 +13,42 @@
                 "mother_order": true
             },
             {
+                "id": "02a414e2-561a-429c-ad35-8d0672f1fc22",
+                "price": 0.05,
+                "amount_usdt": 100.0,
+                "quantity": 2000.0,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": false
+            },
+            {
+                "id": "1e68b562-ba7c-4ed4-a85e-ac08fa232439",
+                "price": 0.08,
+                "amount_usdt": 50.0,
+                "quantity": 625.0,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": false
+            },
+            {
+                "id": "1a5d13de-1acd-4b96-a2a9-b306d9b33049",
+                "price": 0.1,
+                "amount_usdt": 200.0,
+                "quantity": 2000.0,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": false
+            },
+            {
+                "id": "c0c0b7c9-fe2e-4a3b-a637-e62acc606a8e",
+                "price": 0.2,
+                "amount_usdt": 111.0,
+                "quantity": 555.0,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": false
+            },
+            {
                 "id": "4f62272e-1e54-4488-b1a3-c06e46579c58",
                 "price": 0.4,
                 "amount_usdt": 200.0,
@@ -20,9 +56,62 @@
                 "stop_loss": 0.2,
                 "target": 1.1,
                 "mother_order": false
+            },
+            {
+                "id": "dfcac7c6-0342-4035-8726-cb02648510b4",
+                "price": 0.25,
+                "amount_usdt": 80.0,
+                "quantity": 320.0,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": false
             }
         ],
         "buy_limits": [],
+        "sell_limits": [
+            {
+                "id": "305fb5f2-16a7-4694-ab15-ef8756d2dc22",
+                "price": 2.0,
+                "amount_usdt": 100.0,
+                "quantity": 50.0,
+                "stop_loss": 0.0,
+                "target": 0.0
+            }
+        ]
+    },
+    "XRP": {
+        "current_price": 0,
+        "margin": 0,
+        "open_orders": [
+            {
+                "id": "c258d5a6-519a-4935-b855-e79d603bfbf7",
+                "price": 0.5,
+                "amount_usdt": 50.0,
+                "quantity": 100.0,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": true
+            },
+            {
+                "id": "bb347d38-c1f5-4e1b-b12f-75f2d5b6b0f9",
+                "price": 0.3,
+                "amount_usdt": 100.0,
+                "quantity": 333.33333333,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": false
+            }
+        ],
+        "buy_limits": [
+            {
+                "id": "f6e0b75e-2f66-4743-9afe-ec5bd02e081a",
+                "price": 1.7,
+                "amount_usdt": 200.0,
+                "quantity": 117.64705882,
+                "stop_loss": 0.0,
+                "target": 0.0
+            }
+        ],
         "sell_limits": []
     }
 }

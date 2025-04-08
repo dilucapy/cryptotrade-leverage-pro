@@ -663,8 +663,21 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 col_num = 0
                 row_num += 1 """
 
-    def volver_menu_principal(self):
-        pass
+    def return_to_primary_menu(self):
+        """Destruye todos los widgets, restablece la selección del activo y muestra el menú primario."""
+        # Destruir todos los widgets de la ventana principal
+        for widget in self.winfo_children():
+            widget.destroy()
+
+        # Restablecer el estado de selección del activo
+        self.selected_asset.set("")
+        self.selected_asset_data = None
+        self.active_asset_button = None
+
+        # Volver a crear los widgets, lo que incluirá el menú primario en el panel izquierdo
+        self.create_widgets()
+
+        print("Retorno al menú primario.")
 
     def create_left_secondary_menu_buttons(self):
         """Crea y empaqueta los botones del menú secundario en el panel izquierdo."""
@@ -672,7 +685,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.secondary_menu.pack(side=LEFT, padx=10, pady=10)
 
         buttons_config = [
-            {"text": "MENU PRINCIPAL", "command": self.volver_menu_principal},
+            {"text": "MENU PRINCIPAL", "command": self.return_to_primary_menu},
             {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
             {"text": "Borrar Activo", "command": self.delete_asset},
             {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},

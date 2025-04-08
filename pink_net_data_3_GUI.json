@@ -120,43 +120,23 @@
         "margin": 0,
         "open_orders": [
             {
-                "id": "c258d5a6-519a-4935-b855-e79d603bfbf7",
-                "price": 0.5,
-                "amount_usdt": 50.0,
-                "quantity": 100.0,
-                "stop_loss": 0.0,
-                "target": 0.0,
-                "mother_order": true
-            },
-            {
-                "id": "bb347d38-c1f5-4e1b-b12f-75f2d5b6b0f9",
-                "price": 0.3,
+                "id": "70538e0c-ae01-4bc2-8d7a-31da12021e53",
+                "price": 5.0,
                 "amount_usdt": 100.0,
-                "quantity": 333.33333333,
+                "quantity": 20.0,
                 "stop_loss": 0.0,
                 "target": 0.0,
                 "mother_order": false
             }
         ],
-        "buy_limits": [
-            {
-                "id": "f6e0b75e-2f66-4743-9afe-ec5bd02e081a",
-                "price": 1.7,
-                "amount_usdt": 200.0,
-                "quantity": 117.64705882,
-                "stop_loss": 0.0,
-                "target": 0.0
-            }
-        ],
-        "sell_limits": [
-            {
-                "id": "a1c6fd37-3970-4609-a1f5-32a22121a698",
-                "price": 5.0,
-                "amount_usdt": 100.0,
-                "quantity": 20.0,
-                "stop_loss": 0.0,
-                "target": 0.0
-            }
-        ]
+        "buy_limits": [],
+        "sell_limits": []
+    },
+    "HBAR": {
+        "current_price": 0,
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_limits": []
     }
 }

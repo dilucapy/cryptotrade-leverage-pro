@@ -547,8 +547,27 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             edit_button.pack(side=RIGHT, padx=2)"""
 
     def delete_all_asset_data(self):
-        """borra todo los datos del activo pero lo deja inicializado"""
-        pass
+        """Borra todos los datos del activo seleccionado, mantiene el símbolo y actualiza la interfaz de órdenes."""
+        symbol = self.selected_asset.get()
+
+        if symbol in self.data:
+            # Destruir la sección de órdenes actual para una actualización visual instantánea
+            if hasattr(self, 'asset_orders_frame'):
+                self.asset_orders_frame.destroy()
+
+            self.data[symbol] = {
+                "current_price": 0,
+                "margin": 0,
+                "open_orders": [],
+                "buy_limits": [],
+                "sell_limits": []
+            }
+            self.save_data()
+            self.update_asset_info_display()
+            self.create_asset_orders_section() # Volver a crear la sección de órdenes vacía
+            messagebox.showinfo("Acción Exitosa", f"Los datos del activo '{symbol}' han sido restablecidos.")
+        else:
+            messagebox.showerror("Error", f"El símbolo '{symbol}' no existe en los datos.")
 
     def delete_asset(self):
         pass

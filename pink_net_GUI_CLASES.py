@@ -450,22 +450,39 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         print(f"No se encontró ninguna orden con ID '{order_id}' para eliminar.")
 
     def create_asset_orders_section(self):
-        """Crea la sección para mostrar las órdenes del activo y los botones de creación."""
-        """# Si ya existe el frame de las órdenes, lo destruimos
-        if hasattr(self, 'asset_orders_frame'):  # verifica si la instancia actual de la clase AssetManagerGUI (self) tiene un atributo llamado 'asset_orders_frame'
-            self.asset_orders_frame.destroy()
-
-        # Destruir los frames de las órdenes antiguas si existen
-        if hasattr(self, 'open_orders_frame'):
-            self.open_orders_frame.destroy()
-        if hasattr(self, 'pending_buy_orders_frame'):
-            self.pending_buy_orders_frame.destroy()
-        if hasattr(self, 'pending_sell_orders_frame'):
-            self.pending_sell_orders_frame.destroy()"""
+        """Crea la sección para mostrar los botones de creación de ordenes y las órdenes del activo."""
 
         # Crear los nuevos frames para las órdenes
         self.asset_orders_frame = Frame(self.right_panel, bd=1, relief=SUNKEN)
         self.asset_orders_frame.pack(pady=10, fill=BOTH, expand=True)
+
+        # Sección para los botones de creación de nuevas órdenes
+        # new_order_label = Label(self.asset_orders_frame, text="Crear Nueva Orden:", font=('Dosis', 12, 'italic'))
+        # new_order_label.pack(anchor='w', pady=(10, 2))
+
+        actions = [
+            {"text": "Add OPEN ORDER", "command": lambda: self.show_new_order_form('open')},
+            {"text": "Add BUY LIMIT", "command": lambda: self.show_new_order_form('pending_buy')},
+            {"text": "Add SELL LIMIT", "command": lambda: self.show_new_order_form('pending_sell')},
+            # Agrega aquí más botones de creación si es necesario
+        ]
+
+        buttons_frame = Frame(self.asset_orders_frame)  # Frame contenedor para los botones
+        buttons_frame.pack(fill=tk.X)
+
+        for action in actions:
+            button = Button(buttons_frame,
+                            text=action["text"],
+                            font=('Dosis', 10, 'italic', 'bold'),
+                            padx=10,
+                            pady=10,
+                            bg=self.default_button_bg,
+                            fg='white',
+                            bd=1,
+                            relief=RAISED,
+                            cursor='hand2',
+                            command=action["command"])
+            button.pack(side=LEFT, padx=5, pady=2)  # Empaquetamos los botones a la izquierda
 
         #Label(self.asset_orders_frame, text="Órdenes del Activo", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
 
@@ -485,23 +502,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         Label(self.pending_sell_orders_frame, text="Ventas Pendientes").pack(anchor='w')
         self.show_orders(self.pending_sell_orders_frame, "pending_sell")
 
-        # Sección para los botones de creación de nuevas órdenes
-        new_order_label = Label(self.asset_orders_frame, text="Crear Nueva Orden:", font=('Dosis', 12, 'italic'))
-        new_order_label.pack(anchor='w', pady=(10, 2))
 
-        actions = [
-            {"text": "Orden Abierta", "command": lambda: self.show_new_order_form('open')},
-            {"text": "Compra Pendiente", "command": lambda: self.show_new_order_form('pending_buy')},
-            {"text": "Venta Pendiente", "command": lambda: self.show_new_order_form('pending_sell')},
-            # Agrega aquí más botones de creación si es necesario
-        ]
-
-        buttons_frame = Frame(self.asset_orders_frame)  # Frame contenedor para los botones
-        buttons_frame.pack(fill=tk.X)
-
-        for action in actions:
-            button = Button(buttons_frame, text=action["text"], command=action["command"])
-            button.pack(side=LEFT, padx=5, pady=2)  # Empaquetamos los botones a la izquierda
 
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""

@@ -622,7 +622,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         if not symbol:
             messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
             return
-
+        # muestra el formulario para ingresar los datos necesarios para calcular la orden madre
         self.show_calculate_mother_order_form(symbol)
 
     def show_calculate_mother_order_form(self, symbol):
@@ -655,7 +655,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                           entry_open_position.get(),
                                           entry_profits_taken.get(),
                                           entry_quantity.get(),
-                                          top  # Pasar la ventana Toplevel para cerrarla
+                                          top  # se pasa la ventana Toplevel para cerrarla
                                       ))
         calculate_button.grid(row=4, column=0, columnspan=2, pady=10)
 
@@ -700,14 +700,113 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         messagebox.showinfo("Orden Guardada", "La orden madre ha sido guardada en órdenes abiertas.")
                     else:
                         messagebox.showerror("Error", f"El símbolo '{symbol}' ya no existe en los datos.")
-                form_window.destroy() # Cerrar el formulario después del cálculo y (opcional) guardado
+                form_window.destroy()  # Cerrar el formulario después del cálculo y (opcional) guardado de la orden
             else:
                 messagebox.showerror("Error", "La cantidad de la orden madre no puede ser cero.")
         except ValueError:
             messagebox.showerror("Error", "Por favor, introduce valores numéricos válidos en todos los campos.")
 
     def generate_pink_net(self):
-        pass
+        """Abre el formulario para generar la PINK NET (Ordenes de compras pendientes)"""
+        symbol = self.selected_asset.get()
+
+        if not symbol:
+            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            return
+
+        self.show_generate_pink_net_form(symbol)
+
+    def show_generate_pink_net_form(self, symbol):
+        """Crea y muestra el formulario para generar la PINK NET."""
+        top = tk.Toplevel(self)
+        top.title(f"Generar PINK NET para {symbol}")
+
+        # --- Etiquetas y campos de entrada ---
+        tk.Label(top, text="Cantidad de Niveles:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        entry_levels = tk.Entry(top)
+        entry_levels.grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(top, text="Precio del Nivel Inicial:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        entry_initial_level = tk.Entry(top)
+        entry_initial_level.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(top, text="Precio del Nivel Final:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        entry_final_level = tk.Entry(top)
+        entry_final_level.grid(row=2, column=1, padx=5, pady=5)
+
+        tk.Label(top, text="Monto Total a Invertir (USDT):").grid(row=3, column=0, padx=5, pady=5, sticky="w")
+        entry_investment_amount = tk.Entry(top)
+        entry_investment_amount.grid(row=3, column=1, padx=5, pady=5)
+
+        # --- Botones ---
+        generate_button = tk.Button(top, text="Generar",
+                                       command=lambda: self.calculate_pink_net_and_ask_save(
+                                           symbol,
+                                           entry_levels.get(),
+                                           entry_initial_level.get(),
+                                           entry_final_level.get(),
+                                           entry_investment_amount.get(),
+                                           top  # Pasar la ventana Toplevel para cerrarla
+                                       ))
+        generate_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+        cancel_button = tk.Button(top, text="Cancelar", command=top.destroy)
+        cancel_button.grid(row=5, column=0, columnspan=2, pady=5)
+
+    def calculate_pink_net_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, investment_amount_str, form_window):
+        """Realiza el cálculo de la PINK NET y pregunta si se guarda."""
+        try:
+            levels = int(levels_str)
+            initial_level = float(initial_level_str)
+            final_level = float(final_level_str)
+            investment_amount = float(investment_amount_str)
+
+            if levels <= 0 or investment_amount <= 0:
+                messagebox.showerror("Error", "La cantidad de niveles y el monto de inversión deben ser mayores que cero.")
+                return
+
+            pink_net = []
+            price_range = initial_level - final_level
+            increment = price_range / (levels - 1) if levels > 1 else 0
+            amount_per_level = investment_amount / levels
+
+            for i in range(levels):
+                price = initial_level - i * increment
+                quantity = amount_per_level / price if price > 0 else 0
+                level_pink_net = {
+                    'price': round(price, 3),
+                    'amount_usdt': round(amount_per_level, 2),
+                    'quantity': round(quantity, 5),
+                    'stop_loss': 0,  # se puede agregar campos al formulario si se desea
+                    'target': 0,  # se puede agregar campos al formulario si se desea
+                }
+                pink_net.append(level_pink_net)
+
+            result_message = "PINK NET Generada:\n"
+            for level in pink_net:
+                result_message += f"Precio: {level['price']}, Monto: {level['amount_usdt']} USDT, Cantidad: {level['quantity']}\n"
+
+            messagebox.showinfo("PINK NET Generada", result_message)
+
+            save_confirmation = messagebox.askyesno("Guardar PINK NET", "¿Desea guardar estos niveles como órdenes límite de compra?")
+            if save_confirmation:
+                if symbol in self.data:
+                    # Advertir al usuario sobre la sobreescritura
+                    overwrite = messagebox.askyesno("Advertencia", "Guardar la PINK NET sobreescribirá las órdenes límite de compra existentes. ¿Continuar?")
+                    if overwrite:
+                        self.data[symbol]["buy_limits"] = pink_net
+                        self.save_data()
+                        self.create_asset_orders_section()  # Actualizar la sección de órdenes
+                        messagebox.showinfo("PINK NET Guardada", "La PINK NET ha sido guardada en órdenes límite de compra.")
+                else:
+                    messagebox.showerror("Error", f"El símbolo '{symbol}' ya no existe en los datos.")
+
+            form_window.destroy()
+
+        except ValueError:
+            messagebox.showerror("Error", "Por favor, introduce valores numéricos válidos en todos los campos.")
+        except ZeroDivisionError:
+            messagebox.showerror("Error", "El precio del nivel no puede ser cero.")
 
     def calculate_burn_price(self):
         pass
@@ -720,47 +819,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def update_current_price(self):
         pass
-
-    # Funcion obsoleta, create_secondary_menu_buttons_section(self) (eliminar en un futuro)
-    """
-    def create_secondary_menu_buttons_section(self):
-        
-        secondary_menu_frame = tk.Frame(self.right_panel, bd=1, relief=tk.SUNKEN)
-        secondary_menu_frame.pack(pady=10, fill=tk.X)
-
-        #tk.Label(secondary_menu_frame, text="Acciones Adicionales", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
-
-        buttons_config = [
-            {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
-            {"text": "Borrar Activo", "command": self.delete_asset},
-            {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
-            {"text": "Generar PINK NET", "command": self.generate_pink_net},
-            {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
-            {"text": "Generar Nube de Ventas", "command": self.generate_sales_cloud},
-            {"text": "Renderizar Órdenes Abiertas", "command": self.render_open_orders},
-            {"text": "Actualizar Precio Actual", "command": self.update_current_price},
-        ]
-
-        row_num = 0
-        col_num = 0
-        for button_info in buttons_config:
-            button = tk.Button(secondary_menu_frame,
-                               text=button_info["text"],
-                               font=('Dosis', 12, 'bold'),
-                               padx=10,
-                               pady=5,
-                               bg=self.default_button_bg,
-                               fg='white',
-                               bd=1,
-                               relief=RAISED,
-                               cursor='hand2',
-                               command=button_info["command"])
-
-            button.grid(row=row_num, column=col_num, padx=5, pady=2, sticky="ew")
-            col_num += 1
-            if col_num == 4:  # Pasar a la siguiente fila después de 4 botones
-                col_num = 0
-                row_num += 1 """
 
     def return_to_primary_menu(self):
         """Destruye todos los widgets, restablece la selección del activo y muestra el menú primario."""

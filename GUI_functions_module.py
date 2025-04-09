@@ -1797,8 +1797,8 @@ def main():  # Función principal para ejecutar el flujo del programa
                     for sell_level in sales_cloud:
                         print(sell_level)
 
-                    # Preguntar al usuario si desea guardar los niveles de compra
-                    save_choice = input("¿Deseas guardar los niveles de compra? (s/n): ").strip().lower()
+                    # Preguntar al usuario si desea guardar los niveles de venta
+                    save_choice = input("¿Deseas guardar los niveles de venta? (s/n): ").strip().lower()
 
                     if save_choice == 's':
                         """RECORDATORIO: Cuando se crea una SALES CLOUD nueva y se decide guardarla,

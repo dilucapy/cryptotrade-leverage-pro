@@ -117,50 +117,26 @@
     },
     "BTC": {
         "current_price": 0,
-        "margin": 0,
+        "margin": 200,
         "open_orders": [
             {
-                "id": "148e1e57-8118-4d6c-8fdd-d8ae4ad8e371",
-                "type": "open",
-                "price": 247630.651,
-                "amount_usdt": 50.0,
-                "quantity": 0.00059209,
-                "stop_loss": "N/A",
-                "target": "N/A",
-                "mother_order": true
-            },
-            {
-                "id": "c0987455-f6ce-454c-851c-2ab68273782e",
-                "type": "open",
-                "price": 247655.459,
-                "amount_usdt": 50.0,
-                "quantity": 0.000592,
-                "stop_loss": "N/A",
-                "target": "N/A",
+                "id": "e2f739f6-028a-4be2-983e-5b0f0da7e370",
+                "price": 82200.0,
+                "amount_usdt": 500.0,
+                "quantity": 0.00608273,
+                "stop_loss": 0.0,
+                "target": 0.0,
                 "mother_order": true
             }
         ],
         "buy_limits": [
             {
+                "id": "85fc7c5f-47ca-4e64-b923-8023374a6c95",
                 "price": 70000.0,
                 "amount_usdt": 200.0,
-                "quantity": 0.00286,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 65000.0,
-                "amount_usdt": 200.0,
-                "quantity": 0.00308,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 60000.0,
-                "amount_usdt": 200.0,
-                "quantity": 0.00333,
-                "stop_loss": 0,
-                "target": 0
+                "quantity": 0.00285714,
+                "stop_loss": 0.0,
+                "target": 0.0
             }
         ],
         "sell_limits": []

@@ -4,6 +4,7 @@ import GUI_functions_module
 import uuid
 import json
 from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox, simpledialog
+import requests
 
 # ruta del archivo JSON
 filename = 'pink_net_data_3_GUI.json'
@@ -221,7 +222,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         if self.selected_asset and self.selected_asset_data:
             # obtener precio actual del activo
             symbol = self.selected_asset.get()  # Obtiene el valor del StringVar como string
-            current_price = GUI_functions_module.get_price(symbol)
+            current_price = self.get_price(symbol)
+
             info_text = f"Símbolo: {symbol}\n"
 
             if current_price is None:
@@ -808,8 +810,86 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         except ZeroDivisionError:
             messagebox.showerror("Error", "El precio del nivel no puede ser cero.")
 
+    def get_price(self, symbol):
+        """
+        Obtiene el precio actual de un activo en Binance.
+
+        Parámetros:
+        symbol (str): El símbolo del activo en formato por ej. 'HBAR'
+
+        Retorna:
+        float: El precio actual del activo, o None si hay un error.
+        """
+        quote = 'USDT'
+        full_symbol = f'{symbol}{quote}'
+        try:
+            response = requests.get(f'https://api.binance.com/api/v3/ticker/price', params={'symbol': full_symbol})
+            response.raise_for_status()
+            data = response.json()
+            return float(data['price'])
+        except requests.exceptions.RequestException as e:
+            messagebox.showerror("Error de API", f"Error al obtener el precio de {symbol}: {e}")
+            return None
+
     def calculate_burn_price(self):
-        pass
+        """Calcula el precio de quema del activo seleccionado, obteniendo el precio actual de Binance."""
+        symbol = self.selected_asset.get()
+
+        if not symbol:
+            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            return
+
+        current_price = self.get_price(symbol)
+
+        if current_price is not None:
+            if symbol in self.data:
+                data_asset = self.data[symbol]
+                margin = data_asset.get("margin", 0)
+
+                burn_price_message = f" BURN PRICE SUMMARY {symbol} ".center(50, '*') + "\n"
+                burn_price_message += "Advertencia: tener actualizada la orden madre y el MARGIN!\n\n"
+                burn_price_message += f"CURRENT PRICE: {current_price}\n"
+                burn_price_message += f"MARGIN: {margin} USDT\n\n"
+
+                quantity_mother_order = 0
+                mother_order_found = False
+                if 'open_orders' in data_asset:
+                    for order in data_asset['open_orders']:
+                        if order.get('mother_order', False):
+                            quantity_mother_order = order['quantity']
+                            mother_order_found = True
+                            break
+
+                if not mother_order_found:
+                    burn_price_message += "No hay MOTHER ORDER!\n"
+                else:
+                    burn_price_message += f"Cantidad Mother Order: {quantity_mother_order}\n"
+
+                total_amount_buy_limits = 0
+                total_quantity_buy_limits = 0
+                if 'buy_limits' in data_asset and data_asset['buy_limits']:
+                    for order in data_asset['buy_limits']:
+                        total_amount_buy_limits += order['amount_usdt']
+                        total_quantity_buy_limits += order['quantity']
+                    burn_price_message += f"Total cantidad buy limits: {total_quantity_buy_limits}\n"
+                    burn_price_message += f"Total monto buy limits: {total_amount_buy_limits} USDT\n"
+                else:
+                    burn_price_message += "No hay BUY LIMITS!\n"
+
+                total_quantity = quantity_mother_order + total_quantity_buy_limits
+                if total_quantity == 0:
+                    messagebox.showerror("Error",
+                                         "No se puede calcular BURN PRICE porque la cantidad total de activo es CERO.")
+                else:
+                    burn_price = ((current_price * quantity_mother_order) + total_amount_buy_limits - margin) / total_quantity
+                    burn_price_message += f"\nBURN PRICE: {round(burn_price, 3)} USDT\n"
+                    messagebox.showinfo("Resultado Burn Price", burn_price_message)
+
+            else:
+                messagebox.showerror("Error", f"No se encontraron datos para el activo '{symbol}'.")
+        else:
+            # Manejar el caso en que no se pudo obtener el precio de la API
+            pass  # El error ya se mostró en get_price()
 
     def generate_sales_cloud(self):
         pass

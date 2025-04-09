@@ -139,6 +139,35 @@
                 "target": 0.0
             }
         ],
-        "sell_limits": []
+        "sell_limits": [
+            {
+                "price": 101440.0,
+                "amount_usdt": 200.0,
+                "quantity": 0.00197,
+                "stop_loss": 0,
+                "target": 0
+            },
+            {
+                "price": 104275.667,
+                "amount_usdt": 200.0,
+                "quantity": 0.00192,
+                "stop_loss": 0,
+                "target": 0
+            },
+            {
+                "price": 107111.333,
+                "amount_usdt": 200.0,
+                "quantity": 0.00187,
+                "stop_loss": 0,
+                "target": 0
+            },
+            {
+                "price": 109947.0,
+                "amount_usdt": 200.0,
+                "quantity": 0.00182,
+                "stop_loss": 0,
+                "target": 0
+            }
+        ]
     }
 }

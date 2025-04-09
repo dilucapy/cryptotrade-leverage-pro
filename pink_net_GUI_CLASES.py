@@ -3,7 +3,7 @@ from tkinter import *
 import GUI_functions_module
 import uuid
 import json
-from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox
+from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox, simpledialog
 
 # ruta del archivo JSON
 filename = 'pink_net_data_3_GUI.json'
@@ -450,6 +450,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def create_asset_orders_section(self):
         """Crea la sección para mostrar los botones de creación de ordenes y las órdenes del activo."""
+        # Destruir los frames de las órdenes antiguas si existen
+        if hasattr(self, 'asset_orders_frame'):
+            self.asset_orders_frame.destroy()
+        if hasattr(self, 'open_orders_frame'):
+            self.open_orders_frame.destroy()
+        if hasattr(self, 'pending_buy_orders_frame'):
+            self.pending_buy_orders_frame.destroy()
+        if hasattr(self, 'pending_sell_orders_frame'):
+            self.pending_sell_orders_frame.destroy()
+        if hasattr(self, 'buttons_frame_orders'):  # Destruir el frame de los botones también si existe
+            self.buttons_frame_orders.destroy()
 
         # Crear los nuevos frames para las órdenes
         self.asset_orders_frame = Frame(self.right_panel, bd=1, relief=SUNKEN)
@@ -605,7 +616,95 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             messagebox.showerror("Error", "Por favor, seleccione un activo para eliminar.")
 
     def calculate_mother_order(self):
-        pass
+        """Abre el formulario para calcular la orden madre."""
+        symbol = self.selected_asset.get()
+
+        if not symbol:
+            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            return
+
+        self.show_calculate_mother_order_form(symbol)
+
+    def show_calculate_mother_order_form(self, symbol):
+        """Crea y muestra el formulario para calcular la orden madre."""
+        top = tk.Toplevel(self)
+        top.title(f"Calcular Orden Madre para {symbol}")
+
+        # --- Etiquetas y campos de entrada ---
+        tk.Label(top, text="Precio Promedio de Compra:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        entry_average_price = tk.Entry(top)
+        entry_average_price.grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(top, text="Monto de Posición Abierta (USDT):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        entry_open_position = tk.Entry(top)
+        entry_open_position.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(top, text="Beneficio Tomado:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        entry_profits_taken = tk.Entry(top)
+        entry_profits_taken.grid(row=2, column=1, padx=5, pady=5)
+
+        tk.Label(top, text="Cantidad:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
+        entry_quantity = tk.Entry(top)
+        entry_quantity.grid(row=3, column=1, padx=5, pady=5)
+
+        # --- Botones ---
+        calculate_button = tk.Button(top, text="Calcular",
+                                      command=lambda: self.perform_mother_order_calculation(
+                                          symbol,
+                                          entry_average_price.get(),
+                                          entry_open_position.get(),
+                                          entry_profits_taken.get(),
+                                          entry_quantity.get(),
+                                          top  # Pasar la ventana Toplevel para cerrarla
+                                      ))
+        calculate_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+        cancel_button = tk.Button(top, text="Cancelar", command=top.destroy)
+        cancel_button.grid(row=5, column=0, columnspan=2, pady=5)
+
+    def perform_mother_order_calculation(self, symbol, avg_price_str, open_pos_str, profit_str, qty_str, form_window):
+        """Realiza el cálculo de la orden madre y pregunta si se guarda."""
+        try:
+            average_purchase_price = float(avg_price_str)
+            open_position_usdt = float(open_pos_str)
+            profits_taken = float(profit_str)
+            quantity_mother_order = float(qty_str)
+
+            if quantity_mother_order != 0:
+                price_mother_order = average_purchase_price - (profits_taken / quantity_mother_order)
+                price_mother_order_rounded = round(price_mother_order, 3)
+
+                result_message = (
+                    f"AMOUNT Mother Order {symbol}: {open_position_usdt} USDT\n"
+                    f"PRICE Mother Order {symbol}: {price_mother_order_rounded}\n"
+                    f"QUANTITY Mother Order: {quantity_mother_order}"
+                )
+                messagebox.showinfo("Resultado Orden Madre", result_message)
+
+                save_confirmation = messagebox.askyesno("Guardar Orden Madre", "¿Desea guardar esta orden madre en OPEN ORDERS?")
+                if save_confirmation:
+                    if symbol in self.data:
+                        new_order = {
+                            "id": str(uuid.uuid4()),
+                            "type": "open",
+                            "price": price_mother_order_rounded,
+                            "amount_usdt": open_position_usdt,
+                            "quantity": quantity_mother_order,
+                            "stop_loss": "N/A",
+                            "target": "N/A",
+                            "mother_order": True
+                        }
+                        self.data[symbol]["open_orders"].append(new_order)
+                        self.save_data()
+                        self.create_asset_orders_section()
+                        messagebox.showinfo("Orden Guardada", "La orden madre ha sido guardada en órdenes abiertas.")
+                    else:
+                        messagebox.showerror("Error", f"El símbolo '{symbol}' ya no existe en los datos.")
+                form_window.destroy() # Cerrar el formulario después del cálculo y (opcional) guardado
+            else:
+                messagebox.showerror("Error", "La cantidad de la orden madre no puede ser cero.")
+        except ValueError:
+            messagebox.showerror("Error", "Por favor, introduce valores numéricos válidos en todos los campos.")
 
     def generate_pink_net(self):
         pass

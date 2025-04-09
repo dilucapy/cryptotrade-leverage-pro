@@ -118,7 +118,28 @@
     "BTC": {
         "current_price": 0,
         "margin": 0,
-        "open_orders": [],
+        "open_orders": [
+            {
+                "id": "148e1e57-8118-4d6c-8fdd-d8ae4ad8e371",
+                "type": "open",
+                "price": 247630.651,
+                "amount_usdt": 50.0,
+                "quantity": 0.00059209,
+                "stop_loss": "N/A",
+                "target": "N/A",
+                "mother_order": true
+            },
+            {
+                "id": "c0987455-f6ce-454c-851c-2ab68273782e",
+                "type": "open",
+                "price": 247655.459,
+                "amount_usdt": 50.0,
+                "quantity": 0.000592,
+                "stop_loss": "N/A",
+                "target": "N/A",
+                "mother_order": true
+            }
+        ],
         "buy_limits": [
             {
                 "id": "a055b618-eda2-49ed-a831-ae6f4bb6c4c0",

@@ -5,6 +5,9 @@ import uuid
 import json
 from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox, simpledialog
 import requests
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+import matplotlib.gridspec as gridspec
 
 # ruta del archivo JSON
 filename = 'pink_net_data_3_GUI.json'
@@ -993,8 +996,149 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         except ZeroDivisionError:
             messagebox.showerror("Error", "El precio del nivel no puede ser cero.")
 
+    def plot_open_orders_window(self, data_asset, current_price, active_symbol):
+        """Genera y muestra el gráfico de órdenes abiertas en una ventana Toplevel maximizada."""
+
+        open_orders = data_asset.get('open_orders', [])
+
+        if not open_orders:
+            messagebox.showinfo("Órdenes Abiertas", f"No hay órdenes abiertas para '{active_symbol}'.")
+            return
+
+        mother_orders = [order for order in open_orders if order.get('mother_order', False)]
+        non_mother_orders = [order for order in open_orders if not order.get('mother_order', False)]
+
+        if len(mother_orders) > 1:
+            messagebox.showerror("Error", "Hay más de una orden madre. Solo se permite una.")
+            return
+
+        mother_profits = []
+        mother_prices = []
+        mother_amounts_usdt = []
+        mother_percentages = []
+        if mother_orders:
+            mother_prices = [order['price'] for order in mother_orders]
+            mother_amounts_usdt = [order['amount_usdt'] for order in mother_orders]
+            mother_percentages = [(current_price - price) / price for price in mother_prices]
+            mother_profits = [amount_usdt * percentage for amount_usdt, percentage in
+                              zip(mother_amounts_usdt, mother_percentages)]
+
+        non_mother_profits = []
+        non_mother_prices = []
+        non_mother_amounts_usdt = []
+        non_mother_percentages = []
+        if non_mother_orders:
+            non_mother_prices = [order['price'] for order in non_mother_orders]
+            non_mother_amounts_usdt = [order['amount_usdt'] for order in non_mother_orders]
+            non_mother_percentages = [(current_price - price) / price for price in non_mother_prices]
+            non_mother_profits = [amount_usdt * percentage for amount_usdt, percentage in
+                                  zip(non_mother_amounts_usdt, non_mother_percentages)]
+
+        total_mother_profits = round(sum(mother_profits), 2)
+        total_non_mother_profits = round(sum(non_mother_profits), 2)
+
+        x1 = list(range(1, len(mother_orders) + 1))
+        x2 = list(range(1, len(non_mother_orders) + 1))
+        colors1 = ['red' if distance <= 0 else 'forestgreen' for distance in mother_profits]
+        colors2 = ['red' if distance <= 0 else 'forestgreen' for distance in non_mother_profits]
+
+        fig = plt.figure(figsize=(14, 6))
+        gs = gridspec.GridSpec(1, 2, width_ratios=[1, 3])
+        ax1 = fig.add_subplot(gs[0])
+        ax2 = fig.add_subplot(gs[1])
+
+        # --- Gráfico de la orden madre ---
+        if mother_profits:
+            bars = ax1.bar(x1, mother_profits, color=colors1)
+            for bar, profit, percentage, price, amount_usdt in zip(bars, mother_profits, mother_percentages,
+                                                                   mother_prices, mother_amounts_usdt):
+                yval = bar.get_height()
+                ax1.text(bar.get_x() + bar.get_width() / 2, yval,
+                         f"Price: {price}\nInitial: {amount_usdt} USDT\nProfits: {round(yval, 2)} USDT\n({round(percentage * 100, 2)}%)",
+                         ha='center', va='bottom', fontsize=11)
+            ax1.set_xticks(x1)
+            ax1.set_xticklabels(['M.O.'])
+            min_profit_mother = min(mother_profits)
+            max_profit_mother = max(mother_profits)
+            ax1.set_ylim(min_profit_mother - (abs(min_profit_mother) * 0.5),
+                         max_profit_mother + (max_profit_mother * 0.5))
+            ax1.set_ylabel('Profits USDT')
+            ax1.set_title(f'MOTHER ORDER for {active_symbol}')
+            ax1.grid(axis='y', linestyle='--', alpha=0.7)
+            ax1.axhline(y=total_mother_profits, color='red' if total_mother_profits <= 0 else 'forestgreen',
+                        linestyle='--', label=f'PROFIT: {total_mother_profits} USDT', alpha=0.7)
+            ax1.legend(loc='upper right', fontsize=12)
+            ax1.axhline(y=0, color='black', linestyle='-', linewidth=1)
+        else:
+            ax1.set_ylim(-50, 50)  # Valores predeterminados si no hay orden madre
+            ax1.set_title(f'MOTHER ORDER for {active_symbol}')
+
+        # --- Gráfico de las órdenes no madre ---
+        ax2.set_xlabel('O P E N   O R D E R S   N O N   M O T H E R')
+        ax2.set_ylabel('Profits USDT')
+        ax2.set_title(f'OPEN ORDERS for {active_symbol}')
+        if non_mother_profits:
+            bars2 = ax2.bar(x2, non_mother_profits, color=colors2)
+            for bar, profit, percentage, price, amount_usdt in zip(bars2, non_mother_profits, non_mother_percentages,
+                                                                   non_mother_prices, non_mother_amounts_usdt):
+                yval = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width() / 2, yval,
+                         f"Price: {price}\nInitial: {amount_usdt} USDT\nProfits: {round(yval, 2)} USDT\n({round(percentage * 100, 2)}%)",
+                         ha='center', va='bottom', fontsize=11)
+            ax2.set_xticks(x2)
+            ax2.set_xticklabels(x2)
+            ax2.axhline(y=0, color='black', linestyle='-', linewidth=1)
+            ax2.grid(axis='y', linestyle='--', alpha=0.7)
+            ax2.axhline(y=total_non_mother_profits, color='red' if total_non_mother_profits <= 0 else 'forestgreen',
+                        linestyle='--', label=f'TOTAL PROFIT OPEN ORDERS: {total_non_mother_profits} USDT', alpha=0.7)
+            ax2.legend(loc='upper right', fontsize=12)
+            min_profit_non_mother = min(non_mother_profits)
+            max_profit_non_mother = max(non_mother_profits)
+            ax2.set_ylim(min_profit_non_mother - (abs(min_profit_non_mother) * 0.1),
+                         max_profit_non_mother + (max_profit_non_mother * 0.1))
+        elif mother_profits:  # Si no hay no-madre, pero sí madre, usa límites similares
+            min_profit_mother = min(mother_profits)
+            max_profit_mother = max(mother_profits)
+            ax2.set_ylim(min_profit_mother - (abs(min_profit_mother) * 0.1),
+                         max_profit_mother + (max_profit_mother * 0.1))
+            ax2.text(0.5, 0.5, "No Open Orders (Non-Mother)", ha='center', va='center', fontsize=14, color='blue',
+                     weight='bold')
+            ax2.set_xticks([])
+        else:
+            ax2.set_ylim(-50, 50)  # Valores predeterminados si no hay órdenes no madre
+            ax2.text(0.5, 0.5, "No Open Orders (Non-Mother)", ha='center', va='center', fontsize=14, color='blue',
+                     weight='bold')
+            ax2.set_xticks([])
+
+        fig.text(0.22, 0.98, f'CURRENT PRICE {active_symbol}: {current_price}', ha='center', fontsize=12, color='blue',
+                 weight='bold')
+        fig.tight_layout()
+
+        top_level = tk.Toplevel(self)
+        top_level.title(f"Gráfico de Órdenes Abiertas para {active_symbol}")
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        canvas = FigureCanvasTkAgg(fig, master=top_level)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(fill=tk.BOTH, expand=True)
+        canvas.draw()
+        top_level.state('zoomed')
+
     def render_open_orders(self):
-        pass
+        """Obtiene los datos necesarios y llama a la función para mostrar el gráfico en una ventana maximizada."""
+        symbol = self.selected_asset.get()
+
+        if not symbol:
+            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            return
+
+        if symbol in self.data:
+            data_asset = self.data[symbol]
+            current_price = self.get_price(symbol)
+            #current_price = data_asset.get("current_price", 0)
+            self.plot_open_orders_window(data_asset, current_price, symbol)
+        else:
+            messagebox.showerror("Error", f"No se encontraron datos para el activo '{symbol}'.")
+
 
     def update_current_price(self):
         pass

@@ -196,27 +196,112 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button.pack(pady=5)
 
     def show_margins(self):
+        for symbol, data_asset in self.data.items():
+            margin = data_asset.get('margin', 0)
+            print(margin)
         """Muestra los márgenes individuales de cada activo y el total en un cuadro de diálogo."""
         total_margin = 0
         margins_report = "  Symbol        MARGIN (USDT)   Weight\n"
         margins_report += "  " + "-" * 45 + "\n"
 
+        # Primer bucle: Se itera sobre todos los activos para calcular la suma total de los márgenes
         for symbol, data_asset in self.data.items():
             margin = data_asset.get('margin', 0)  # Usamos .get() para evitar errores si la clave no existe (con valor predeterminado de '0')
             total_margin += margin
+
+        # Segundo bucle: se calcula la ponderación de cada activo
+        for symbol, data_asset in self.data.items():
+            margin = data_asset.get('margin', 0)
             if total_margin > 0:
                 ponderacion = round(margin / total_margin, 3)
             else:
                 ponderacion = 0.0
+
             margins_report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
 
         margins_report += f"\n\n  TOTAL MARGINS: {total_margin:.2f} USDT"
 
         messagebox.showinfo("Márgenes y Total", margins_report)
 
-
     def update_margins(self):
-        pass
+        """Permite al usuario actualizar los márgenes de los activos
+        mediante división equitativa o ponderación."""
+        if not self.data:
+            messagebox.showinfo("Información", "No hay activos guardados!")
+            return
+
+        top = tk.Toplevel(self)
+        top.title("Actualizar Márgenes de Activos")
+
+        tk.Label(top, text="Elige una opción para calcular los márgenes:").pack(pady=10)
+
+        def calculate_equitable_margin():
+            top_equitable = tk.Toplevel(top)
+            top_equitable.title("División Equitativa")
+            trading_account = simpledialog.askfloat("Monto Cuenta de Trading",
+                                                    "Ingrese el monto total de la cuenta de trading:",
+                                                    parent=top_equitable)
+            if trading_account is not None and trading_account > 0:
+                num_assets = len(self.data)
+                if num_assets > 0:
+                    margin = round(trading_account / num_assets, 2)
+                    ponderacion = round(margin / trading_account, 3) if trading_account > 0 else 0.0
+                    report = "  Symbol        MARGIN (USDT)   Weight\n"
+                    report += "  " + "-" * 45 + "\n"
+                    for symbol, data_asset in self.data.items():
+                        data_asset['margin'] = margin
+                        report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
+                    messagebox.showinfo("Márgenes Actualizados (Equitativo)", report)
+                    self.save_data()
+                    #self.create_asset_info_section()  # Actualizar la sección de información del activo
+                else:
+                    messagebox.showerror("Error", "No hay activos para calcular el margen.")
+            elif trading_account is not None:
+                messagebox.showerror("Error", "El monto de la cuenta de trading debe ser mayor que cero.")
+
+        def calculate_weighted_margin():
+            top_weighted = tk.Toplevel(top)
+            top_weighted.title("Ponderación NO Equitativa")
+            trading_account = simpledialog.askfloat("Monto Cuenta de Trading",
+                                                    "Ingrese el monto total de la cuenta de trading:",
+                                                    parent=top_weighted)
+            if trading_account is not None and trading_account > 0:
+                amounts = {}
+                total_usdt_open_positions = 0
+                for symbol in self.data:
+                    amount_asset = simpledialog.askfloat(f"Posición Abierta de {symbol}",
+                                                         f"Ingrese la posición abierta en USDT para {symbol}:",
+                                                         parent=top_weighted)
+                    if amount_asset is None:
+                        return  # El usuario canceló la entrada de algún monto
+                    amounts[symbol] = amount_asset
+                    total_usdt_open_positions += amount_asset
+
+                if total_usdt_open_positions > 0:
+                    report = "  Symbol        MARGIN (USDT)   Weight\n"
+                    report += "  " + "-" * 45 + "\n"
+                    for symbol, data_asset in self.data.items():
+                        amount_asset = amounts.get(symbol, 0)
+                        weight = round(amount_asset / total_usdt_open_positions, 3)
+                        margin = round(trading_account * weight)
+                        data_asset['margin'] = margin
+                        report += f"  {symbol:<13}      {margin:<17.2f}         {weight:<10}\n"
+                    messagebox.showinfo("Márgenes Actualizados (Ponderado)", report)
+                    self.save_data()
+                    #self.create_asset_info_section()  # Actualizar la sección de información del activo
+                else:
+                    messagebox.showerror("Error", "El total de las posiciones abiertas debe ser mayor que cero.")
+            elif trading_account is not None:
+                messagebox.showerror("Error", "El monto de la cuenta de trading debe ser mayor que cero.")
+
+        equitable_button = tk.Button(top, text="División Equitativa", command=calculate_equitable_margin)
+        equitable_button.pack(pady=5)
+
+        weighted_button = tk.Button(top, text="Ponderación NO Equitativa", command=calculate_weighted_margin)
+        weighted_button.pack(pady=5)
+
+        cancel_button = tk.Button(top, text="Volver", command=top.destroy)
+        cancel_button.pack(pady=10)
 
     def show_open_positions(self):
         pass

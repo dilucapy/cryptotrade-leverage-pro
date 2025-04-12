@@ -40,11 +40,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Crear los widgets de la GUI
         self.create_widgets()
 
-        self.selected_asset = tk.StringVar()
-        self.active_asset_button = None  # Para rastrear el botón activo
-        self.default_button_bg = 'azure4'  # Color de fondo por defecto
-        self.selected_button_bg = 'green'  # Color de fondo cuando está seleccionado
-
 
     def create_widgets(self):
         """Este método crea todos los widgets de tu GUI
@@ -201,7 +196,24 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button.pack(pady=5)
 
     def show_margins(self):
-        pass
+        """Muestra los márgenes individuales de cada activo y el total en un cuadro de diálogo."""
+        total_margin = 0
+        margins_report = "  Symbol        MARGIN (USDT)   Weight\n"
+        margins_report += "  " + "-" * 45 + "\n"
+
+        for symbol, data_asset in self.data.items():
+            margin = data_asset.get('margin', 0)  # Usamos .get() para evitar errores si la clave no existe (con valor predeterminado de '0')
+            total_margin += margin
+            if total_margin > 0:
+                ponderacion = round(margin / total_margin, 3)
+            else:
+                ponderacion = 0.0
+            margins_report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
+
+        margins_report += f"\n\n  TOTAL MARGINS: {total_margin:.2f} USDT"
+
+        messagebox.showinfo("Márgenes y Total", margins_report)
+
 
     def update_margins(self):
         pass

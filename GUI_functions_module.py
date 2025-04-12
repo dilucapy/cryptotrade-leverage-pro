@@ -831,7 +831,8 @@ def remove_sell_limit(data, data_asset, active_symbol, filename):
     return data_asset  # Asegúrate de devolver el objeto actualizado
 
 
-def draw_amounts_and_calculate_total_open_amount(data):
+# original
+def draw_amounts_and_calculate_total_open_amount2(data):
     # trabajando para actualizar montos mas exactos, basados en cantidad de activo (cant.activo * current_price)
     """Muestra los montos de órdenes madres abiertas,
     en un gráfico de barras y devuelve el total_open_amount"""
@@ -854,6 +855,82 @@ def draw_amounts_and_calculate_total_open_amount(data):
                     # Agregamos el monto del activo a la lista 'list_amount'
                     list_amount.append(amount)
                     total_open_amount += amount
+
+    if not list_amount:
+        print(f"\nNo hay ninguna orden madre guardada!\n")
+        return
+
+    # Ordenar símbolos y montos de menor a mayor
+    sorted_data = sorted(zip(list_symbol, list_amount), key=lambda x: x[1])
+    sorted_symbols, sorted_amounts = zip(*sorted_data)  # Desempaquetar
+
+    # Crear gráfico
+    plt.figure(figsize=(10, 6))
+    bar_width = 0.35
+    x = range(len(sorted_amounts))
+
+    # Gráficos de barras
+    bars_amounts = plt.bar(x, sorted_amounts, width=bar_width, label='Amount', color='orange', alpha=0.7)
+
+    # Añadir etiquetas sobre cada barra
+    for bar in bars_amounts:
+        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
+                 f"{bar.get_height()} USDT",
+                 ha='center', va='bottom', fontsize=11, weight='bold')
+
+    # Etiquetas y título
+    plt.xlabel('ASSETS')
+    plt.ylabel('Amount (USDT)')
+    plt.title(f'TOTAL OPEN AMOUNT: {total_open_amount} USDT', ha='center', weight='bold')
+
+    # Configurar marcas en el eje x con los símbolos
+    plt.xticks(x, sorted_symbols, weight='bold', rotation=45)
+
+    plt.legend()
+
+    plt.tight_layout()
+
+    # Mostrar la cuadrícula de fondo
+    plt.grid(axis='y', linestyle='--', alpha=0.7)  # Cuadrícula horizontal
+
+    # Mostrar gráfico maximizado
+    mng = plt.get_current_fig_manager()
+    try:
+        mng.window.state('zoomed')  # Maximiza la ventana del gráfico en Windows
+    except AttributeError:
+        pass  # Si no se puede maximizar, simplemente continúa
+
+    # Mostrar gráfico
+    plt.show()
+
+    return int(total_open_amount)
+
+
+# modificando ok! falta probar que funcione correctamente y adaptar para un metodo de la clase GUI
+def draw_amounts_and_calculate_total_open_amount(data):
+    # trabajando para actualizar montos mas exactos, basados en cantidad de activo (cant.activo * current_price)
+    """Muestra los montos de órdenes abiertas (orden madre + ordenes no madres),
+    en un gráfico de barras y devuelve el total_open_amount"""
+
+    total_open_amount = 0
+    list_amount = []
+    list_symbol = []
+
+    # Filtrar órdenes madres en el data
+    for symbol, data_asset in data.items():
+        if data_asset['open_orders']:
+            total_quantity = 0
+            # bucle para calcular la cantidad total del activo
+            for order in data_asset['open_orders']:
+                quantity = order.get('quantity', 0)
+                total_quantity += quantity
+
+            # Obtenemos el precio actual para el activo
+            current_price = get_price(symbol)
+            # Calculamos monto total del activo en base a la cantidad total de activo
+            amount = round(total_quantity * current_price, 2)
+            list_amount.append(amount)
+            total_open_amount += amount
 
     if not list_amount:
         print(f"\nNo hay ninguna orden madre guardada!\n")

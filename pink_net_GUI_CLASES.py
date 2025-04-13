@@ -303,8 +303,88 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button = tk.Button(top, text="Volver", command=top.destroy)
         cancel_button.pack(pady=10)
 
+
     def show_open_positions(self):
-        pass
+        """Muestra los montos totales por activo de todas las órdenes abiertas
+        en un gráfico de barras y devuelve el total_open_amount."""
+
+        total_open_amount = 0
+        list_amount = []
+        list_symbol = []
+
+        for symbol, data_asset in self.data.items():
+            if data_asset.get('open_orders'):
+                total_quantity = 0
+                for order in data_asset['open_orders']:
+                    quantity = order.get('quantity', 0)
+                    total_quantity += quantity
+
+                # Obtenemos el precio actual para el activo
+                current_price = self.get_price(symbol)
+
+                if current_price is not None:
+                    amount = int(total_quantity * current_price)  # redondeamos a entero
+                    list_amount.append(amount)
+                    list_symbol.append(symbol)
+                    total_open_amount += amount
+                else:
+                    print(f"No se pudo obtener el precio para {symbol}.")
+                    # Si no se pudo obtener el precio (con la API), se agrega el monto de apertura total de todas las ordenes abiertas
+                    sum_amount = 0
+                    for order in data_asset['open_orders']:
+                        amount = order['amount_usdt']
+                        sum_amount += amount
+
+                    list_amount.append(int(sum_amount))
+                    total_open_amount += sum_amount
+                    list_symbol.append(symbol)
+                    # messagebox.showerror("Error de Precio",
+                                     #    f"No se pudo obtener el precio para {symbol}. Se mostrará con monto 0")
+
+
+        if not list_amount:
+            messagebox.showinfo("Información", "No hay órdenes abiertas guardadas para mostrar los montos.")
+            return 0  # Devuelve 0 si no hay datos
+
+        # Se crea una lista, con tuplas creadas con zip (symbol, monto), por el segundo elemento (monto), de menor a mayor.
+        sorted_data = sorted(zip(list_symbol, list_amount), key=lambda x: x[1])
+        sorted_symbols, sorted_amounts = zip(*sorted_data)  # el asterisco que precede a sorted_data tiene la función de desempaquetar la lista
+
+        # Crear gráfico
+        plt.figure(figsize=(10, 6))
+        bar_width = 0.35
+        x = range(len(sorted_amounts))
+
+        # Gráficos de barras
+        bars_amounts = plt.bar(x, sorted_amounts, width=bar_width, label='Amount', color='orange', alpha=0.7)
+
+        # Añadir etiquetas sobre cada barra
+        for bar in bars_amounts:
+            plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
+                     f"{bar.get_height()} USDT",
+                     ha='center', va='bottom', fontsize=11, weight='bold')
+
+        # Etiquetas y título
+        plt.xlabel('ASSETS')
+        plt.ylabel('Amount (USDT)')
+        plt.title(f'TOTAL OPEN AMOUNT: {total_open_amount} USDT', ha='center', weight='bold')
+
+        # Configurar marcas en el eje x con los símbolos
+        plt.xticks(x, sorted_symbols, weight='bold', rotation=45)
+
+        plt.legend()
+        plt.tight_layout()
+
+        # Mostrar gráfico maximizado (si es lo deseado)
+        mng = plt.get_current_fig_manager()
+        try:
+            mng.window.state('zoomed')
+        except AttributeError:
+            pass
+
+        plt.show()
+
+        return total_open_amount  # Devuelve el total
 
     def calculate_leverage(self):
         pass

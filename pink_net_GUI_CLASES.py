@@ -16,6 +16,67 @@ filename = 'pink_net_data_3_GUI.json'
  fundamental para construir aplicaciones más complejas y mantenibles:"""
 
 
+class CustomInfoDialog(tk.Toplevel):
+    """
+        Una ventana de diálogo personalizada para mostrar mensajes informativos al usuario.
+
+        Esta clase hereda de tk.Toplevel y proporciona una alternativa a los messagebox.showinfo()
+        estándar, permitiendo un mayor control sobre la apariencia del diálogo, incluyendo la
+        fuente del mensaje.
+
+        Atributos:
+            parent (tk.Tk o tk.Toplevel): La ventana padre de este diálogo.
+            title (str): El título de la ventana del diálogo (por defecto: "Información").
+            message (str): El mensaje de texto que se mostrará en el diálogo (por defecto: "").
+            message_label (tk.Label): El widget Label que contiene el mensaje.
+            ok_button (tk.Button): El botón "Aceptar" para cerrar el diálogo.
+
+        Métodos:
+            __init__(self, parent, title="Información", message=""):
+                Inicializa una nueva instancia de CustomInfoDialog. Configura la ventana,
+                crea y empaqueta el Label del mensaje y el botón "Aceptar". También
+                establece la modalidad y centra la ventana sobre su padre (opcional).
+        """
+    def __init__(self, parent, title="Información", message=""):
+        super().__init__(parent)
+        self.title(title)
+        self.resizable(False, False)
+
+        self.message_label = tk.Label(self, text=message, font=("Arial", 12, "bold"), padx=20, pady=20)
+        self.message_label.pack()
+
+        self.ok_button = tk.Button(self, text="Aceptar", command=self.destroy, padx=10, pady=5)
+        self.ok_button.pack(pady=10)
+
+        self.transient(parent)
+        self.grab_set()
+        parent.wait_window(self)
+
+
+class CustomErrorDialog(tk.Toplevel):
+    def __init__(self, parent, message):
+        super().__init__(parent)
+        self.title("Error")
+        self.resizable(False, False)
+
+        self.message_label = tk.Label(self, text=message, fg="red", font=("Arial", 14, "bold"), padx=20, pady=20)
+        self.message_label.pack()
+
+        self.ok_button = tk.Button(self, text="Aceptar", command=self.destroy, padx=10, pady=5)
+        self.ok_button.pack(pady=10)
+
+        self.transient(parent)
+        self.grab_set()
+        parent.wait_window(self)
+
+        try:
+            pass
+            # self.error_icon = tk.PhotoImage(file="ruta/al/icono_error.png") # Reemplaza con tu ruta
+            # self.iconphoto(False, self.error_icon)
+        except tk.TclError as e:
+            print(f"Error al cargar el icono: {e}")
+
+
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
@@ -40,6 +101,15 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Crear los widgets de la GUI
         self.create_widgets()
 
+    def show_info_messagebox(self, parent, titulo, mensaje):
+        """Este metodo es una alternativa a 'messagebox.showinfo'
+        se llama a la clase que personaliza la ventana de informacion"""
+        CustomInfoDialog(parent, titulo, mensaje)
+
+    def show_error_messagebox(self, parent, mensaje):
+        """Este metodo es una alternativa a 'messagebox.showerror'
+        llama a la clase que personaliza la ventana de error"""
+        CustomErrorDialog(parent, mensaje)
 
     def create_widgets(self):
         """Este método crea todos los widgets de tu GUI
@@ -72,7 +142,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.create_asset_info_section()  # crea seccion de iformación del activo (símbolo, precio, margin)
         #self.create_asset_orders_section()  # crea seccion de ordenes del activo
         #self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
-
 
     def create_primary_menu_buttons(self):
         """Método para crear los botones del menús primario.
@@ -1087,6 +1156,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             messagebox.showerror("Error de API", f"Error al obtener el precio de {symbol}: {e}")
             return None
 
+
+
     def calculate_burn_price(self):
         """Calcula el precio de quema del activo seleccionado, obteniendo el precio actual de Binance.
         El cambio que hicimos con esta funcion es que ahora obtiene la cantidad total del activo en vez
@@ -1096,6 +1167,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
 
         if not symbol:
+            self.show_error_messagebox(self, "Por favor, selecciona un activo primero.")
             messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
             return
 
@@ -1106,7 +1178,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 data_asset = self.data[symbol]
                 margin = data_asset.get("margin", 0)
 
-                burn_price_message = f" BURN PRICE SUMMARY {symbol} ".center(50, '*') + "\n"
+                burn_price_message = f" BURN PRICE {symbol} ".center(60, '*') + "\n"
                 burn_price_message += "Advertencia: tener actualizada las OPEN ORDERS y el MARGIN!\n\n"
                 burn_price_message += f"CURRENT PRICE: {current_price}\n"
                 burn_price_message += f"MARGIN: {margin} USDT\n\n"
@@ -1130,21 +1202,23 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         total_amount_buy_limits += order['amount_usdt']
                         total_quantity_buy_limits += order['quantity']
                     burn_price_message += f"Total cantidad buy limits: {total_quantity_buy_limits}\n"
-                    burn_price_message += f"Total monto buy limits: {total_amount_buy_limits} USDT\n"
+                    #burn_price_message += f"Total monto buy limits: {total_amount_buy_limits} USDT\n"
                 else:
                     burn_price_message += "No hay BUY LIMITS!\n"
 
                 total_quantity = quantity_open_orders + total_quantity_buy_limits
                 if total_quantity == 0:
-                    messagebox.showerror("Error",
-                                         "No se puede calcular BURN PRICE porque no existen OPEN ORDERS ni BUY LIMITS")
+                    self.show_error_messagebox(self, "No se puede calcular BURN PRICE\n No existen OPEN ORDERS ni BUY LIMITS")
+
                 else:
                     burn_price = ((current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity
                     burn_price_message += f"\nBURN PRICE: {round(burn_price, 3)} USDT\n"
-                    messagebox.showinfo("Resultado Burn Price", burn_price_message)
+                    self.show_info_messagebox(self, "Resultado Burn Price", burn_price_message)
+                    #messagebox.showinfo("Resultado Burn Price", burn_price_message)
 
             else:
-                messagebox.showerror("Error", f"No se encontraron datos para el activo '{symbol}'.")
+                self.show_error_messagebox(self, f"No se pudo obtener el precio actual de '{symbol}'.")
+                #messagebox.showerror("Error", f"No se encontraron datos para el activo '{symbol}'.")
         else:
             # Manejar el caso en que no se pudo obtener el precio de la API
             pass  # El error ya se mostró en get_price()

@@ -1250,7 +1250,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             messagebox.showerror("Error", "El precio del nivel no puede ser cero.")
 
     def plot_open_orders_window(self, data_asset, current_price, active_symbol):
-        """Genera y muestra el gráfico de órdenes abiertas en una ventana Toplevel maximizada."""
+        """Genera y muestra el gráfico de órdenes abiertas para el activo seleccionado
+        en una ventana Toplevel maximizada."""
 
         open_orders = data_asset.get('open_orders', [])
 
@@ -1377,7 +1378,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         top_level.state('zoomed')
 
     def render_open_orders(self):
-        """Obtiene los datos necesarios y llama a la función para mostrar el gráfico en una ventana maximizada."""
+        """Obtiene los datos necesarios y llama a la función para mostrar el gráfico
+        de ordenes abiertas del activo seleccionado, en una ventana maximizada."""
         symbol = self.selected_asset.get()
 
         if not symbol:
@@ -1391,10 +1393,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.plot_open_orders_window(data_asset, current_price, symbol)
         else:
             messagebox.showerror("Error", f"No se encontraron datos para el activo '{symbol}'.")
-
-
-    def update_current_price(self):
-        pass
 
     def return_to_primary_menu(self):
         """Destruye todos los widgets, restablece la selección del activo y muestra el menú primario."""
@@ -1426,7 +1424,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
             {"text": "Generar Nube de Ventas", "command": self.generate_sales_cloud},
             {"text": "Renderizar Órdenes Abiertas", "command": self.render_open_orders},
-            {"text": "Actualizar Precio Actual", "command": self.update_current_price},
         ]
 
         for button_info in buttons_config:

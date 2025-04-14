@@ -391,7 +391,79 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         return total_open_amount  # Devuelve el total
 
     def calculate_leverage(self):
-        pass
+        """Calcula y muestra el apalancamiento y el monto a reducir por nivel de apalancamiento."""
+
+        total_open_amount, _, _ = self.calculate_total_open_amount()
+
+        top = tk.Toplevel(self)
+        top.title("Calcular Apalancamiento")
+
+        tk.Label(top, text=f"Total OPEN AMOUNT: {total_open_amount:.2f} USDT").pack(pady=5)
+
+        trading_account = simpledialog.askfloat("Cuenta de Trading", "Ingrese el monto de su cuenta de trading:", parent=top)
+
+        if trading_account is None:
+            return  # El usuario canceló la entrada
+
+        if trading_account <= 0:
+            messagebox.showerror("Error", "La cuenta de trading debe ser mayor que cero.", parent=top)
+            return
+
+        leveragex = round(total_open_amount / trading_account, 2)  # Se calcula el apalancamiento actual
+
+        # Cálculo de montos apalancados y reducción de posición
+        leverage_levels = [2, 3, 4, 5, 6, 7, 8]
+        leveraged_amounts = []
+        reduce_positions = []
+
+        for leverage in leverage_levels:
+            amount = int(trading_account * leverage)
+            leveraged_amounts.append(amount)
+            reduce_usdt = int(amount - total_open_amount)
+            reduce_positions.append(reduce_usdt)
+
+        # Crear figura de Matplotlib y embeberla en Tkinter
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bar_width = 0.35
+        x = range(len(leverage_levels))
+
+        # Gráficos de barras
+        bars1 = ax.bar(x, leveraged_amounts, width=bar_width, label='Leveraged Amount', color='blue', alpha=0.6)
+
+        bars2 = ax.bar([i + bar_width for i in x], reduce_positions, width=bar_width,
+                       label='Reduce Position USDT',
+                       color=['red' if reduce <= 0 else 'forestgreen' for reduce in reduce_positions], alpha=0.6)
+
+        # Añadir etiquetas sobre cada barra
+        for bar1, bar2, leverage in zip(bars1, bars2, leverage_levels):
+            ax.text(bar1.get_x() + bar1.get_width() / 2, bar1.get_height(),
+                    f"X {leverage}\n{bar1.get_height()} USDT",
+                    ha='center', va='bottom', fontsize=9, weight='bold')
+
+            ax.text(bar2.get_x() + bar2.get_width() / 2, bar2.get_height(),
+                    f"{bar2.get_height()} USDT",
+                    ha='center', va='bottom', fontsize=9, weight='bold')
+
+        # Etiquetas y título
+        ax.set_xlabel('Leverage')
+        ax.set_ylabel('Amount (USDT)')
+        ax.set_title(
+            f'Leveraged Amount and Reduce Position by Leverage Level\nTOTAL OPEN AMOUNT: {total_open_amount:.2f}\nTRADING ACCOUNT: {trading_account:.2f}\nLEVERAGE: {leveragex:.2f}')
+        ax.set_xticks([i + bar_width / 2 for i in x])
+        ax.set_xticklabels(leverage_levels)
+        ax.legend()
+        ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+        fig.tight_layout()
+
+        # Insertar el gráfico en la ventana Toplevel
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        canvas = FigureCanvasTkAgg(fig, master=top)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(fill=tk.BOTH, expand=True)
+        canvas.draw()
+
+        top.state('zoomed')  # Maximizar la ventana del gráfico
 
     def calculate_burning_price_of_all(self):
         """calcula el precio de quema de todos los activos.

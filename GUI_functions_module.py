@@ -995,8 +995,9 @@ def calculate_leverage(total_open_amount):
         print(f"Error: {e}")
         return
 
-    leveragex = round(total_open_amount / trading_account, 2)
+    leveragex = round(total_open_amount / trading_account, 2)  # Se calcula el apalancamiento actual
 
+    # Cálculo de montos apalancados y reducción de posición
     leverage_levels = [2, 3, 4, 5, 6, 7, 8]
     leveraged_amounts = []
     reduce_positions = []

@@ -1,7 +1,7 @@
 {
     "ADA": {
         "current_price": 0,
-        "margin": 225,
+        "margin": 200.0,
         "open_orders": [
             {
                 "id": "da5a5c4d-5697-4eb9-966f-5c7ad54dee64",
@@ -117,7 +117,7 @@
     },
     "BTC": {
         "current_price": 0,
-        "margin": 675,
+        "margin": 200.0,
         "open_orders": [
             {
                 "id": "e2f739f6-028a-4be2-983e-5b0f0da7e370",
@@ -169,5 +169,40 @@
                 "target": 0
             }
         ]
+    },
+    "LTC": {
+        "current_price": 0,
+        "margin": 200.0,
+        "open_orders": [
+            {
+                "id": "9a3bddf6-f546-4d7c-9e50-b69fb8e804c1",
+                "price": 115.0,
+                "amount_usdt": 300.0,
+                "quantity": 2.60869565,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": true
+            },
+            {
+                "id": "10a7f82e-59e1-49ea-89b6-8a9b41e0cc98",
+                "price": 90.0,
+                "amount_usdt": 200.0,
+                "quantity": 2.22222222,
+                "stop_loss": 0.0,
+                "target": 0.0,
+                "mother_order": true
+            }
+        ],
+        "buy_limits": [
+            {
+                "id": "593be34e-7048-41ba-975d-79701894094e",
+                "price": 30.0,
+                "amount_usdt": 100.0,
+                "quantity": 3.33333333,
+                "stop_loss": 0.0,
+                "target": 0.0
+            }
+        ],
+        "sell_limits": []
     }
 }

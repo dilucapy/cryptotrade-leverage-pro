@@ -144,7 +144,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 widget.destroy()
 
         # linea para depuracion
-        print(f"Hijos del right_panel antes de crear botones secundarios: {self.right_panel.winfo_children()}")
+        #print(f"Hijos del right_panel antes de crear botones secundarios: {self.right_panel.winfo_children()}")
 
         # Crea la sección para mostrar las órdenes del activo y los botones de creación de ordenes
         self.create_asset_orders_section()
@@ -1088,7 +1088,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             return None
 
     def calculate_burn_price(self):
-        """Calcula el precio de quema del activo seleccionado, obteniendo el precio actual de Binance."""
+        """Calcula el precio de quema del activo seleccionado, obteniendo el precio actual de Binance.
+        El cambio que hicimos con esta funcion es que ahora obtiene la cantidad total del activo en vez
+        de calcular la cantidad de activo de la orden madre (ahora la orden madre no se considera la
+        resultante de todas las ordenes abiertas sino las que el usuario desee unificar.
+        Las ordenes NO madres, ahora no van a estar incluidas en la orden madre.)"""
         symbol = self.selected_asset.get()
 
         if not symbol:
@@ -1103,24 +1107,22 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 margin = data_asset.get("margin", 0)
 
                 burn_price_message = f" BURN PRICE SUMMARY {symbol} ".center(50, '*') + "\n"
-                burn_price_message += "Advertencia: tener actualizada la orden madre y el MARGIN!\n\n"
+                burn_price_message += "Advertencia: tener actualizada las OPEN ORDERS y el MARGIN!\n\n"
                 burn_price_message += f"CURRENT PRICE: {current_price}\n"
                 burn_price_message += f"MARGIN: {margin} USDT\n\n"
 
-                quantity_mother_order = 0
-                mother_order_found = False
+                # bucle calcula cantidad total de activo, en ordenes abiertas
+                quantity_open_orders = 0
                 if 'open_orders' in data_asset:
                     for order in data_asset['open_orders']:
-                        if order.get('mother_order', False):
-                            quantity_mother_order = order['quantity']
-                            mother_order_found = True
-                            break
+                        quantity_open_orders += order['quantity']
 
-                if not mother_order_found:
-                    burn_price_message += "No hay MOTHER ORDER!\n"
+                if quantity_open_orders == 0:
+                    burn_price_message += "No hay Ordenes Abiertas!\n"
                 else:
-                    burn_price_message += f"Cantidad Mother Order: {quantity_mother_order}\n"
+                    burn_price_message += f"Cantidad OPEN ORDERS: {quantity_open_orders}\n"
 
+                # bucle calcula cant.total y monto total de ordenes BUY LIMITS
                 total_amount_buy_limits = 0
                 total_quantity_buy_limits = 0
                 if 'buy_limits' in data_asset and data_asset['buy_limits']:
@@ -1132,12 +1134,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 else:
                     burn_price_message += "No hay BUY LIMITS!\n"
 
-                total_quantity = quantity_mother_order + total_quantity_buy_limits
+                total_quantity = quantity_open_orders + total_quantity_buy_limits
                 if total_quantity == 0:
                     messagebox.showerror("Error",
-                                         "No se puede calcular BURN PRICE porque la cantidad total de activo es CERO.")
+                                         "No se puede calcular BURN PRICE porque no existen OPEN ORDERS ni BUY LIMITS")
                 else:
-                    burn_price = ((current_price * quantity_mother_order) + total_amount_buy_limits - margin) / total_quantity
+                    burn_price = ((current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity
                     burn_price_message += f"\nBURN PRICE: {round(burn_price, 3)} USDT\n"
                     messagebox.showinfo("Resultado Burn Price", burn_price_message)
 

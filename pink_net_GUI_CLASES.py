@@ -303,10 +303,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button = tk.Button(top, text="Volver", command=top.destroy)
         cancel_button.pack(pady=10)
 
-
-    def show_open_positions(self):
-        """Muestra los montos totales por activo de todas las órdenes abiertas
-        en un gráfico de barras y devuelve el total_open_amount."""
+    def calculate_total_open_amount(self):
+        """Calcula el monto total de todas las operaciones abiertas por activo
+        y devuelve el total general, la lista de símbolos y la lista de montos."""
 
         total_open_amount = 0
         list_amount = []
@@ -338,9 +337,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     list_amount.append(int(sum_amount))
                     total_open_amount += sum_amount
                     list_symbol.append(symbol)
-                    # messagebox.showerror("Error de Precio",
-                                     #    f"No se pudo obtener el precio para {symbol}. Se mostrará con monto 0")
 
+        return total_open_amount, list_symbol, list_amount
+
+    def show_open_positions(self):
+        """Muestra los montos totales por activo de todas las órdenes abiertas
+                en un gráfico de barras."""
+
+        total_open_amount, list_symbol, list_amount = self.calculate_total_open_amount()
 
         if not list_amount:
             messagebox.showinfo("Información", "No hay órdenes abiertas guardadas para mostrar los montos.")

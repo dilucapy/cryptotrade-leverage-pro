@@ -1342,6 +1342,22 @@ def create_list_with_mother_order(data):
 
     return list_symbol
 
+def list_of_symbols_with_open_order_or_buy_limit(data):
+    """crea una lista de activos que contiene al menos
+    una OPEN ORDER o BUY LIMIT"""
+
+    # verificar si existen activos
+    if not data:
+        print("No hay activos guardados!\n")
+
+    list_symbol = []
+
+    for symbol, data_asset in data.items():
+        if data_asset['open_orders'] or data_asset['buy_limits']:
+            list_symbol.append(symbol)
+
+    return list_symbol
+
 def get_symbols_for_buttons(data):
     """crea una lista de los simbolos de los activos que se encuentran en data
     para crear los botones en el panel asset_menu"""
@@ -1608,12 +1624,32 @@ def generate_sales_cloud(levels, initial_level, final_level, withdrawal_amount):
 
 def update_burn_prices(data, list_symbol):
     """toma la lista de simbolos que tienen operaciones abiertas
-     y sobre esos activos se calcula el burn_price respectivamente"""
+    o compras limites y sobre esos activos se calcula el
+    burn_price respectivo"""
 
     for symbol, data_asset in data.items():
         if symbol in list_symbol:
             current_price = get_price(symbol)
             calculate_burn_price(symbol, data_asset, current_price)
+
+
+def calculate_and_show_all_burning_prices():
+    """calcula y muestra el precio de quema de todos los activos.
+    Se ejecuta desde el menu primario"""
+    while True:
+        response = input("\nHas actualizado los MARGINS? (s/n):").strip().lower()
+        if response == 's':
+            list_symbol = list_of_symbols_with_open_order_or_buy_limit(data)
+            update_burn_prices(data, list_symbol)
+            pause_program()
+            break
+
+        elif response == 'n':
+            print("Debes actualizar los MARGINS!")
+            pause_program()
+            break
+        else:
+            print("No es una opción valida!")
 
 
 data = load_data(filename)
@@ -1690,7 +1726,7 @@ def main():  # Función principal para ejecutar el flujo del programa
             while True:
                 response = input("\nHas actualizado los MARGINS? (s/n):").strip().lower()
                 if response == 's':
-                    list_symbol = create_list_with_mother_order(data)
+                    list_symbol = list_of_symbols_with_open_order_or_buy_limit(data)
                     update_burn_prices(data, list_symbol)
                     pause_program()
                     break

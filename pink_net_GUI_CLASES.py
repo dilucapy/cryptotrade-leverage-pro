@@ -3,11 +3,12 @@ from tkinter import *
 import GUI_functions_module
 import uuid
 import json
-from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox, simpledialog
+from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox, simpledialog, ttk
 import requests
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
+import tkinter.font as tkFont
 
 # ruta del archivo JSON
 filename = 'pink_net_data_3_GUI.json'
@@ -126,6 +127,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                              sticky="ew")  # Lo colocamos debajo del título
         self.create_asset_buttons()
 
+        # Panel Derecho (para mostrar información del activo y otras funciones)
+        self.right_panel = Frame(self.master, bd=1, relief=FLAT, padx=10, pady=10)
+        self.right_panel.pack(side=RIGHT, fill=X, padx=10, pady=10, expand=True)
+
+        # Frame para la tabla de precios de quema
+        self.burn_price_table_frame = tk.Frame(self.right_panel)
+        self.burn_price_table_frame.pack(fill=tk.BOTH, expand=True)
+
         # Panel Izquierdo (para el menu primario)
         self.left_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
         self.left_panel.pack(side=LEFT, fill=Y)
@@ -134,10 +143,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.primary_menu = Frame(self.left_panel, bd=1, relief=FLAT, bg='burlywood')
         self.primary_menu.pack(side=LEFT, padx=10, pady=10)
         self.create_primary_menu_buttons()
-
-        # Panel Derecho (para mostrar información del activo y otras funciones)
-        self.right_panel = Frame(self.master, bd=1, relief=FLAT, padx=10, pady=10)
-        self.right_panel.pack(side=RIGHT, fill=X, padx=10, pady=10, expand=True)
 
         self.create_asset_info_section()  # crea seccion de iformación del activo (símbolo, precio, margin)
         #self.create_asset_orders_section()  # crea seccion de ordenes del activo
@@ -155,15 +160,24 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Update MARGINS", "command": self.update_margins},
             {"text": "Mostrar POSICIONES ABIERTAS", "command": self.show_open_positions},
             {"text": "Calcular LEVERAGE", "command": self.calculate_leverage},
-            {"text": "Calculate BURN PRICE", "command": self.calculate_burn_price},
+            {"text": "Calculate BURN PRICE", "command": self.calculate_and_show_all_burning_prices_in_right_panel},
             {"text": "EXIT", "command": self.quit}
         ]
         for config in primary_buttons_config:
             button = Button(self.primary_menu, text=config["text"].title(), font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=10, cursor='hand2', command=config["command"])
             button.pack(pady=4, fill=X)
 
+    def get_symbols_for_buttons(self):
+        """
+        Crea una lista de los símbolos de los activos que se encuentran en self.data
+        para crear los botones en el panel asset_menu.
+        """
+        list_symbol = list(self.data.keys())
+        return list_symbol
+
     def create_asset_buttons(self):
-        list_symbols = GUI_functions_module.get_symbols_for_buttons(self.data)
+        """Crea los botones de los activos en el top_panel."""
+        list_symbols = self.get_symbols_for_buttons()  # llama al método como self.metodo()
         row = 1
         column = 0
         num_columns = 5
@@ -534,10 +548,98 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         top.state('zoomed')  # Maximizar la ventana del gráfico
 
-    def calculate_burning_price_of_all(self):
-        """calcula el precio de quema de todos los activos.
-        Se ejecuta desde el menu primario"""
-        pass
+    def list_of_symbols_with_open_order_or_buy_limit(self):
+        """
+        Crea y devuelve una lista de símbolos de activos que tienen al menos
+        una OPEN ORDER o una BUY LIMIT en sus datos (self.data).
+        """
+        list_symbol = []
+        if not self.data:
+            print("No hay activos guardados en la GUI!\n")
+            return list_symbol  # Devuelve una lista vacía
+
+        for symbol, data_asset in self.data.items():
+            if 'open_orders' in data_asset and data_asset['open_orders'] or \
+                    'buy_limits' in data_asset and data_asset['buy_limits']:
+                list_symbol.append(symbol)
+        return list_symbol
+
+    def calculate_and_show_all_burning_prices_in_right_panel(self):
+        """Calcula y muestra el precio de quema de todos los activos con órdenes
+        en un widget Treeview dentro del self.right_panel, con confirmación Sí/No."""
+
+        def calculate_and_display():
+            confirmed = messagebox.askyesno("Confirmación", "¿Has actualizado los MARGINS?", parent=self)
+            if confirmed:
+                list_symbol = self.list_of_symbols_with_open_order_or_buy_limit()
+                if not list_symbol:
+                    self.show_info_messagebox(self, "Info",
+                                              "No hay activos con órdenes para calcular el Burn Price.")
+                    return
+
+                # Limpiar cualquier widget anterior en el right_panel
+                #for widget in self.right_panel.winfo_children():
+                #    widget.destroy()
+
+                # Crear objeto de fuente con tamaño aumentado
+                table_font = tkFont.Font(family="Arial", size=18, weight="bold")
+
+                # crea una instancia de la clase Style del módulo tkinter.ttk
+                style = ttk.Style()
+                # utiliza el objeto style para configurar un estilo específico para el widget Treeview
+                style.configure("Custom.Treeview", font=table_font)  # "Custom.Treeview" es simplemente un nombre que elegimos para nuestro estilo personalizado
+
+                tree = ttk.Treeview(self.burn_price_table_frame, columns=(
+                    "Symbol", "Current Price", "Margin", "Open Orders Qty", "Buy Limits Qty", "Burn Price"),
+                                    show="headings", style="Custom.Treeview")
+
+                # Definir encabezados de las columnas
+                tree.heading("Symbol", text="Símbolo")
+                tree.heading("Current Price", text="Precio Actual")
+                tree.heading("Margin", text="Margen (USDT)")
+                tree.heading("Open Orders Qty", text="Cant. Órdenes Abiertas")
+                tree.heading("Buy Limits Qty", text="Cant. Buy Limits")
+                tree.heading("Burn Price", text="Precio de Quema (USDT)")
+
+                # Ajustar el ancho de las columnas (opcional)
+                tree.column("Symbol", width=80)
+                tree.column("Current Price", width=120)
+                tree.column("Margin", width=120)
+                tree.column("Open Orders Qty", width=150)
+                tree.column("Buy Limits Qty", width=150)
+                tree.column("Burn Price", width=150)
+
+                for symbol in list_symbol:
+                    if symbol in self.data:
+                        data_asset = self.data[symbol]
+                        current_price = self.get_price(symbol)
+                        if current_price is not None:
+                            margin = data_asset.get("margin", 0)
+                            quantity_open_orders = sum(
+                                order['quantity'] for order in data_asset.get('open_orders', []))
+                            total_amount_buy_limits = sum(
+                                order['amount_usdt'] for order in data_asset.get('buy_limits', []))
+                            total_quantity_buy_limits = sum(
+                                order['quantity'] for order in data_asset.get('buy_limits', []))
+                            total_quantity = quantity_open_orders + total_quantity_buy_limits
+                            burn_price = None
+                            if total_quantity > 0:
+                                burn_price = round(((
+                                                            current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity,
+                                                   3)
+
+                            tree.insert("", tk.END, values=(
+                                symbol, current_price, margin, quantity_open_orders, total_quantity_buy_limits,
+                                burn_price if burn_price is not None else "N/A"))
+                        else:
+                            tree.insert("", tk.END, values=(symbol, "N/A", "N/A", "N/A", "N/A", "N/A"))
+                    else:
+                        tree.insert("", tk.END, values=(symbol, "N/A", "N/A", "N/A", "N/A", "N/A"))
+
+                tree.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+        calculate_and_display()  # Llama directamente a la función interna
+
 
     def update_asset_info_display(self):
         """Actualiza la información del activo seleccionado en la GUI.
@@ -1156,8 +1258,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             messagebox.showerror("Error de API", f"Error al obtener el precio de {symbol}: {e}")
             return None
 
-
-
     def calculate_burn_price(self):
         """Calcula el precio de quema del activo seleccionado, obteniendo el precio actual de Binance.
         El cambio que hicimos con esta funcion es que ahora obtiene la cantidad total del activo en vez
@@ -1213,7 +1313,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 else:
                     burn_price = ((current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity
                     burn_price_message += f"\nBURN PRICE: {round(burn_price, 3)} USDT\n"
-                    self.show_info_messagebox(self, "Resultado Burn Price", burn_price_message)
+                    self.show_info_messagebox(self, "Resultado Burn Price", burn_price_message)  # se llama al metodo que encapsula la clase personalizada 'CustomInfoDialog'
                     #messagebox.showinfo("Resultado Burn Price", burn_price_message)
 
             else:

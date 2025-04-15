@@ -211,5 +211,12 @@
         "open_orders": [],
         "buy_limits": [],
         "sell_limits": []
+    },
+    "XRP": {
+        "current_price": 0,
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_limits": []
     }
 }

@@ -603,8 +603,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
                 # crea una instancia de la clase Style del módulo tkinter.ttk
                 style = ttk.Style()
-                # utiliza el objeto style para configurar un estilo específico para el widget Treeview
-                style.configure("Custom.Treeview", font=table_font)  # "Custom.Treeview" es simplemente un nombre que elegimos para nuestro estilo personalizado
+                #style.theme_use('default')  # usar un tema para aplicar estilos('clam', 'alt', 'default', 'classic', etc)
+                # Configurar un estilo personalizado para el widget 'Treeview'
+                style.configure("Custom.Treeview", font=table_font, borderwidth=1, relief="solid", background="lightgray", bordercolor="green")  # "Custom.Treeview" es simplemente un nombre que elegimos para nuestro estilo personalizado
 
                 tree = ttk.Treeview(self.burn_price_table_frame, columns=(
                     "Symbol", "Current Price", "Margin", "Open Orders Qty", "Buy Limits Qty", "Burn Price"),
@@ -625,12 +626,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 tree.column("Open Orders Qty", width=150)
                 tree.column("Buy Limits Qty", width=150)
                 tree.column("Burn Price", width=150)
-                tree.tag_configure('rojo', foreground='red')
+                #tree.tag_configure('rojo', foreground='red')
 
                 for symbol in list_symbol:
                     if symbol in self.data:
                         data_asset = self.data[symbol]
-                        current_price = self.get_price(symbol)
+                        current_price = round(self.get_price(symbol), 3)
                         if current_price is not None:
                             margin = data_asset.get("margin", 0)
                             quantity_open_orders = sum(
@@ -641,10 +642,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                 order['quantity'] for order in data_asset.get('buy_limits', []))
                             total_quantity = quantity_open_orders + total_quantity_buy_limits
                             burn_price = None
+
                             if total_quantity > 0:
                                 burn_price = round(((
                                                             current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity,
                                                    3)
+                                # Redondear en cantidad de decimales, segun valor de total_quantity
+                                if total_quantity < 1:
+                                    quantity_open_orders = round(quantity_open_orders, 8)
+                                    total_quantity_buy_limits = round(total_quantity_buy_limits, 8)
+                                else:
+                                    quantity_open_orders = round(quantity_open_orders, 3)
+                                    total_quantity_buy_limits = round(total_quantity_buy_limits, 3)
 
                             tree.insert("", tk.END, values=(
                                 symbol, current_price, margin, quantity_open_orders, total_quantity_buy_limits,

@@ -78,6 +78,33 @@ class CustomErrorDialog(tk.Toplevel):
             print(f"Error al cargar el icono: {e}")
 
 
+class CustomConfirmationDialog(tk.Toplevel):
+    """Una ventana de diálogo personalizada para obtener una respuesta booleana (Sí/No) del usuario.
+    Hereda de tk.Toplevel y presenta un mensaje con botones "Sí" y "No",
+    almacenando la elección del usuario en el atributo `result`."""
+    def __init__(self, parent, title="Confirmación", message=""):
+        super().__init__(parent)
+        self.title(title)
+        self.resizable(False, False)
+        self.result = None  # almacena la respuesta
+
+        tk.Label(self, text=message, font=("Arial", 14, "bold"), padx=20, pady=20).pack()
+
+        button_frame = tk.Frame(self)
+        button_frame.pack(pady=10)
+
+        tk.Button(button_frame, text="Sí", command=lambda: self.set_result(True), padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="No", command=lambda: self.set_result(False), padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+
+        self.transient(parent)
+        self.grab_set()
+        parent.wait_window(self)
+
+    def set_result(self, value):
+        self.result = value
+        self.destroy()
+
+
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
@@ -111,6 +138,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         """Este metodo es una alternativa a 'messagebox.showerror'
         llama a la clase que personaliza la ventana de error"""
         CustomErrorDialog(parent, mensaje)
+
+    def show_confirmation_dialog(self, parent, titulo, mensaje):
+        """Este metodo es una alternativa a 'messagebox.askyesno'
+        llama a la clase que personaliza la ventana de error"""
+        dialog = CustomConfirmationDialog(parent, titulo, mensaje)
+        return dialog.result
 
     def create_widgets(self):
         """Este método crea todos los widgets de tu GUI
@@ -576,11 +609,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         return list_symbol
 
     def calculate_and_show_all_burning_prices(self):
-        """Calcula y muestra el precio de quema de todos los activos con órdenes
+        """Calcula y muestra el precio de quema de todos los activos
+        (que contengan al mneos una OPNEN ORDER o BUY LIMIT)
         en un widget Treeview dentro del self.right_panel, con confirmación Sí/No."""
 
         def calculate_and_display():
-            confirmed = messagebox.askyesno("Confirmación", "¿Has actualizado los MARGINS?", parent=self)
+            confirmed = self.show_confirmation_dialog(self, "Confirmación", "¿Has actualizado los MARGINS?")
+            #confirmed = messagebox.askyesno("Confirmación", "¿Has actualizado los MARGINS?", parent=self)
             if confirmed:
                 list_symbol = self.list_of_symbols_with_open_order_or_buy_limit()
                 if not list_symbol:
@@ -626,7 +661,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 tree.column("Open Orders Qty", width=150)
                 tree.column("Buy Limits Qty", width=150)
                 tree.column("Burn Price", width=150)
-                #tree.tag_configure('rojo', foreground='red')
 
                 for symbol in list_symbol:
                     if symbol in self.data:

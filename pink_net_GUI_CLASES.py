@@ -144,7 +144,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.primary_menu.pack(side=LEFT, padx=10, pady=10)
         self.create_primary_menu_buttons()
 
-        self.create_asset_info_section()  # crea seccion de iformación del activo (símbolo, precio, margin)
+        # crea seccion de iformación del activo (símbolo, precio, margin)
+        self.create_asset_info_section()
         #self.create_asset_orders_section()  # crea seccion de ordenes del activo
         #self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
 
@@ -160,7 +161,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Update MARGINS", "command": self.update_margins},
             {"text": "Mostrar POSICIONES ABIERTAS", "command": self.show_open_positions},
             {"text": "Calcular LEVERAGE", "command": self.calculate_leverage},
-            {"text": "Calculate BURN PRICE", "command": self.calculate_and_show_all_burning_prices_in_right_panel},
+            {"text": "Calculate BURN PRICES", "command": self.calculate_and_show_all_burning_prices},
             {"text": "EXIT", "command": self.quit}
         ]
         for config in primary_buttons_config:
@@ -204,9 +205,24 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.selected_asset.set(symbol)  # Se actualiza la variable de control con el símbolo del activo seleccionado.
         print(f"Activo seleccionado: {self.selected_asset.get()}")
 
+        # Si la tabla de precios de quema ha sido creada, elimina todos sus elementos (filas, encabezados, etc.).
+        """if hasattr(self, 'burn_price_table_frame'):
+            for widget in self.burn_price_table_frame.winfo_children():
+                widget.destroy()"""
+
+        # Si la sección de información del activo existe, la hace visible nuevamente
+        if hasattr(self, 'asset_info_frame'):
+            self.asset_info_frame.pack(pady=2, fill=X)  # Si usas pack
+
+        # Destruir todos los widgets hijos del right_panel excepto self.asset_info_frame
+        for widget in self.right_panel.winfo_children():
+            if widget != self.asset_info_frame:
+                widget.destroy()
+
         # Se maneja la apariencia visual de los botones (deseleccionando el anterior y seleccionando el actual).
         if self.active_asset_button and self.active_asset_button != button:
             self.active_asset_button.config(bg=self.default_button_bg)
+
 
         # Seleccionar el botón actual
         self.active_asset_button = button
@@ -220,11 +236,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # se llama a este metodo para mostrar informacion del activo
         self.update_asset_info_display()
-
-        # Destruir todos los widgets hijos del right_panel excepto self.asset_info_frame
-        for widget in self.right_panel.winfo_children():
-            if widget != self.asset_info_frame:
-                widget.destroy()
 
         # linea para depuracion
         #print(f"Hijos del right_panel antes de crear botones secundarios: {self.right_panel.winfo_children()}")
@@ -564,7 +575,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 list_symbol.append(symbol)
         return list_symbol
 
-    def calculate_and_show_all_burning_prices_in_right_panel(self):
+    def calculate_and_show_all_burning_prices(self):
         """Calcula y muestra el precio de quema de todos los activos con órdenes
         en un widget Treeview dentro del self.right_panel, con confirmación Sí/No."""
 
@@ -577,9 +588,15 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                               "No hay activos con órdenes para calcular el Burn Price.")
                     return
 
-                # Limpiar cualquier widget anterior en el right_panel
-                #for widget in self.right_panel.winfo_children():
-                #    widget.destroy()
+                # oculta un widget que ha sido gestionado por el layout manager 'pack'(en nuestro caso un frame)
+                if hasattr(self, 'asset_info_frame'):
+                    self.asset_info_frame.pack_forget()  # Si usas pack
+
+                # Crear un label para el título de la tabla (de precios de quema)
+                self.table_title = Label(self.burn_price_table_frame,
+                                        text="B U R N   P R I C E S",
+                                        font=('Arial', 18, 'bold'))
+                self.table_title.pack()
 
                 # Crear objeto de fuente con tamaño aumentado
                 table_font = tkFont.Font(family="Arial", size=18, weight="bold")
@@ -608,6 +625,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 tree.column("Open Orders Qty", width=150)
                 tree.column("Buy Limits Qty", width=150)
                 tree.column("Burn Price", width=150)
+                tree.tag_configure('rojo', foreground='red')
 
                 for symbol in list_symbol:
                     if symbol in self.data:

@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 import tkinter.font as tkFont
+import os
+
 
 # ruta del archivo JSON
 filename = 'pink_net_data_3_GUI.json'
@@ -18,9 +20,7 @@ filename = 'pink_net_data_3_GUI.json'
 
 
 class CustomInfoDialog(tk.Toplevel):
-    """
-        Una ventana de diálogo personalizada para mostrar mensajes informativos al usuario.
-
+    """Una ventana de diálogo personalizada para mostrar mensajes informativos al usuario.
         Esta clase hereda de tk.Toplevel y proporciona una alternativa a los messagebox.showinfo()
         estándar, permitiendo un mayor control sobre la apariencia del diálogo, incluyendo la
         fuente del mensaje.
@@ -55,6 +55,9 @@ class CustomInfoDialog(tk.Toplevel):
 
 
 class CustomErrorDialog(tk.Toplevel):
+    """Una ventana de diálogo personalizada para mostrar mensajes de error al usuario.
+       Hereda de tk.Toplevel y presenta un título y un mensaje de error,
+       junto con un botón "Aceptar" para cerrar la ventana."""
     def __init__(self, parent, message):
         super().__init__(parent)
         self.title("Error")
@@ -79,7 +82,8 @@ class CustomErrorDialog(tk.Toplevel):
 
 
 class CustomConfirmationDialog(tk.Toplevel):
-    """Una ventana de diálogo personalizada para obtener una respuesta booleana (Sí/No) del usuario.
+    """Una ventana de diálogo personalizada para obtener una respuesta booleana (Sí/No)
+    del usuario.
     Hereda de tk.Toplevel y presenta un mensaje con botones "Sí" y "No",
     almacenando la elección del usuario en el atributo `result`."""
     def __init__(self, parent, title="Confirmación", message=""):
@@ -108,13 +112,12 @@ class CustomConfirmationDialog(tk.Toplevel):
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
-    def __init__(self, data, filename):
+    def __init__(self, filename):
         super().__init__()  # Llama al constructor de la clase padre (tk.Tk)
-        self.data = data
-        self.filename = filename
 
-        # Inicializar el estado de la GUI
-        self.data = GUI_functions_module.load_data('pink_net_data_3_GUI.json')
+        self.filename = filename  # Ejemplo de atributo de la clase
+        self.data = self.load_data(self.filename)
+
         self.data = GUI_functions_module.order_orders(self.data)
 
         # Configuración para la selección única de botones de activo
@@ -129,6 +132,24 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Crear los widgets de la GUI
         self.create_widgets()
 
+    def load_data(self, filename):
+        """Carga los datos desde un archivo JSON. Devuelve un diccionario,
+        incluso si el archivo no se encuentra (diccionario vacío)
+        o muestra un error al usuario si falla la carga."""
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+                return data
+        except FileNotFoundError:
+            self.show_info_messagebox("Información", f"No se encontró el archivo: {filename}. Iniciando con datos vacíos.")
+            return {}
+        except json.JSONDecodeError:
+            self.show_error_messagebox("Error de Formato", f"El archivo {filename} no tiene un formato JSON válido.")
+            return {}
+        except Exception as e:
+            self.show_error_messagebox("Error Inesperado", f"Ocurrió un error al cargar {filename}: {e}")
+            return {}
+
     def show_info_messagebox(self, parent, titulo, mensaje):
         """Este metodo es una alternativa a 'messagebox.showinfo'
         se llama a la clase que personaliza la ventana de informacion"""
@@ -141,7 +162,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def show_confirmation_dialog(self, parent, titulo, mensaje):
         """Este metodo es una alternativa a 'messagebox.askyesno'
-        llama a la clase que personaliza la ventana de error"""
+        llama a la clase que personaliza la ventana de confirmacion"""
         dialog = CustomConfirmationDialog(parent, titulo, mensaje)
         return dialog.result
 
@@ -615,7 +636,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         def calculate_and_display():
             confirmed = self.show_confirmation_dialog(self, "Confirmación", "¿Has actualizado los MARGINS?")
-            #confirmed = messagebox.askyesno("Confirmación", "¿Has actualizado los MARGINS?", parent=self)
             if confirmed:
                 list_symbol = self.list_of_symbols_with_open_order_or_buy_limit()
                 if not list_symbol:
@@ -1680,14 +1700,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
 
 if __name__ == "__main__":
-    try:
-        with open(filename, 'r') as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        data = {}
-
     # Crear una instancia de la clase de GUI
-    gui = AssetManagerGUI(data, filename)
+    gui = AssetManagerGUI(filename)
 
     # Configurar la ventana principal (tamaño, resizable, etc.)
     gui.state('zoomed')  # Maximizar la ventana

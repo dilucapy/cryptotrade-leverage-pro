@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import *
-import GUI_functions_module
 import uuid
 import json
 from tkinter import Toplevel, Label, Entry, Button, Checkbutton, BooleanVar, messagebox, simpledialog, ttk
@@ -115,10 +114,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def __init__(self, filename):
         super().__init__()  # Llama al constructor de la clase padre (tk.Tk)
 
-        self.filename = filename  # Ejemplo de atributo de la clase
-        self.data = self.load_data(self.filename)
+        self.filename = filename  # Archivo de datos
+        self.data = self.load_data(self.filename)  # Carga los datos iniciales desde el archivo
+        # Ordenar las órdenes si se cargaron los datos correctamente.
+        if self.data:
+            self._order_orders(self.data)
 
-        self.data = GUI_functions_module.order_orders(self.data)
+        # Configurar la ventana principal
+        self.state('zoomed')  # Maximizar la ventana
+        self.resizable(False, False)  # Impide el redimensionamiento de la ventana.
+        self.config(bg='burlywood')  # Establece el color de background.
+
 
         # Configuración para la selección única de botones de activo
         self.selected_asset = tk.StringVar()  # Almacena el símbolo del activo actualmente seleccionado
@@ -149,6 +155,30 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         except Exception as e:
             self.show_error_messagebox("Error Inesperado", f"Ocurrió un error al cargar {filename}: {e}")
             return {}
+
+    def order_orders(self, data):
+        """Ordena las órdenes abiertas y órdenes límite de activos financieros."""
+        for asset, data_asset in data.items():
+            # Verificar si data_asset es None
+            if data_asset is None:
+                print(f"Advertencia: El activo '{asset}' es None")
+                continue
+
+            # Verificar si 'open_orders' y 'limit_orders' están presentes
+            if 'open_orders' not in data_asset:
+                print(f"Advertencia: El activo '{asset}' no tiene 'open_orders'.")
+                continue
+            if 'buy_limits' not in data_asset:
+                print(f"Advertencia: El activo '{asset}' no tiene 'buy_limits'.")
+                continue
+
+            # Ordenar open_orders por precio, pero mantener la orden madre en la primera posición
+            data_asset['open_orders'] = sorted(data_asset['open_orders'],
+                                               key=lambda x: (not x['mother_order'], x['price']))
+
+            # Ordenar buy_limits por precio
+            data_asset['buy_limits'] = sorted(data_asset['buy_limits'], key=lambda x: x['price'])
+        return data
 
     def show_info_messagebox(self, parent, titulo, mensaje):
         """Este metodo es una alternativa a 'messagebox.showinfo'
@@ -1702,11 +1732,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 if __name__ == "__main__":
     # Crear una instancia de la clase de GUI
     gui = AssetManagerGUI(filename)
-
-    # Configurar la ventana principal (tamaño, resizable, etc.)
-    gui.state('zoomed')  # Maximizar la ventana
-    gui.resizable(False, False)
-    gui.config(bg='burlywood')
 
     # Iniciar el loop principal de Tkinter (mantiene la ventana abierta y responde a los eventos)
     gui.mainloop()

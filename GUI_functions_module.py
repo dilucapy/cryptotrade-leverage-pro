@@ -272,9 +272,14 @@ def order_orders(data):
         """data_asset['open_orders'] = sorted(data_asset['open_orders'], key=lambda x: x['price'])"""
         # Ordenar open_orders por precio, pero mantener la orden madre en la primera posición
         data_asset['open_orders'] = sorted(data_asset['open_orders'], key=lambda x: (not x['mother_order'], x['price']))
-
+        for order in data_asset['open_orders']:
+            print(order)
         # Ordenar buy_limits por precio
         data_asset['buy_limits'] = sorted(data_asset['buy_limits'], key=lambda x: x['price'])
+        print()
+        for order in data_asset['buy_limits']:
+            print(order)
+        print(50 * '*')
 
     return data
 

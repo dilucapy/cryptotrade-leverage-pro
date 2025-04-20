@@ -1,7 +1,7 @@
 {
     "ADA": {
         "current_price": 0,
-        "margin": 380.0,
+        "margin": 1000,
         "open_orders": [
             {
                 "id": "da5a5c4d-5697-4eb9-966f-5c7ad54dee64",
@@ -117,7 +117,7 @@
     },
     "BTC": {
         "current_price": 0,
-        "margin": 380.0,
+        "margin": 600,
         "open_orders": [
             {
                 "id": "e2f739f6-028a-4be2-983e-5b0f0da7e370",
@@ -181,7 +181,7 @@
     },
     "LTC": {
         "current_price": 0,
-        "margin": 380.0,
+        "margin": 200,
         "open_orders": [
             {
                 "id": "a217bae3-f429-49d6-a803-2c0f0d6ff53c",
@@ -225,7 +225,7 @@
     },
     "DOT": {
         "current_price": 0,
-        "margin": 380.0,
+        "margin": 100,
         "open_orders": [
             {
                 "id": "c001069f-3ceb-4734-9175-36061ff557c7",
@@ -242,7 +242,7 @@
     },
     "XRP": {
         "current_price": 0,
-        "margin": 380.0,
+        "margin": 100,
         "open_orders": [
             {
                 "id": "77d469ef-d215-4523-86eb-59acaea73e47",

@@ -453,6 +453,129 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                       prompt="Ingrese el monto total de la cuenta de trading:")
         return dialog.result
 
+    def calculate_equitable_margin(self):
+        """Divide el monto total de la cuenta de trading equitativamente
+        entre los activos y actualiza sus márgenes."""
+        trading_account = self.ask_trading_account(self)
+
+        if trading_account is not None and trading_account > 0:
+            num_assets = len(self.data)
+            if num_assets > 0:
+                margin = round(trading_account / num_assets, 2)
+                ponderacion = round(margin / trading_account, 3) if trading_account > 0 else 0.0
+                report = "  Symbol        MARGIN (USDT)    Weight\n"
+                report += "  " + "-" * 80 + "\n"
+                for symbol, data_asset in self.data.items():
+                    data_asset['margin'] = margin
+                    report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
+
+                self.show_info_messagebox(self, "Márgenes Actualizados (Equitativo)", report)
+                self.save_data()
+
+            else:
+                self.show_error_messagebox(self, "No hay activos para calcular el margen.")
+
+        elif trading_account is not None:
+            self.show_error_messagebox(self, "El monto de la cuenta de trading debe ser mayor que cero.")
+
+    def calculate_weighted_margin_form(self):
+        """Muestra un formulario para ingresar los montos de posición abierta
+        de cada activo y calcula los márgenes ponderados."""
+
+        top_weighted_form = tk.Toplevel(self)
+        top_weighted_form.title("Ponderación NO Equitativa")
+
+        row = 0
+
+        # Etiqueta para el monto total de la cuenta de trading
+        tk.Label(top_weighted_form, text="Monto Total de la Cuenta de Trading (USDT):").grid(row=row, column=0,
+                                                                                             padx=5, pady=5,
+                                                                                             sticky="w")
+        entry_trading_account = tk.Entry(top_weighted_form)
+        entry_trading_account.grid(row=row, column=1, padx=5, pady=5, sticky="ew")
+        row += 1
+
+        # Etiquetas y campos de entrada para cada activo
+        entry_amounts = {}
+        for symbol in self.data:
+            tk.Label(top_weighted_form, text=f"Posición Abierta en USDT para {symbol}:").grid(row=row, column=0,
+                                                                                              padx=5, pady=5,
+                                                                                              sticky="w")
+            entry = tk.Entry(top_weighted_form)
+            entry.grid(row=row, column=1, padx=5, pady=5, sticky="ew")
+            entry_amounts[symbol] = entry
+            row += 1
+
+        def calculate_and_show():
+            trading_account_str = entry_trading_account.get()
+            try:
+                trading_account = float(trading_account_str)
+                if trading_account <= 0:
+                    self.show_error_messagebox("El monto de la cuenta de trading debe ser mayor que cero.")
+                    return
+            except ValueError:
+                self.show_error_messagebox("Por favor, ingrese un número válido para el monto de la cuenta de trading.")
+                return
+
+            total_usdt_open_positions = 0
+            current_amounts = {}
+            for symbol, entry in entry_amounts.items():
+                amount_str = entry.get()
+                try:
+                    amount_asset = float(amount_str)
+                    current_amounts[symbol] = amount_asset
+                    total_usdt_open_positions += amount_asset
+                except ValueError:
+                    self.show_error_messagebox(f"Por favor, ingrese un número válido para la posición abierta de {symbol}.")
+                    return
+
+            if total_usdt_open_positions > 0:
+                report = "  Symbol        MARGIN (USDT)   Weight\n"
+                report += "  " + "-" * 80 + "\n"
+                for symbol, data_asset in self.data.items():
+                    amount_asset = current_amounts.get(symbol, 0)
+                    weight = round(amount_asset / total_usdt_open_positions, 3)
+                    margin = round(trading_account * weight)
+                    data_asset['margin'] = margin
+                    report += f"  {symbol:<13}      {margin:<17.2f}         {weight:<10}\n"
+
+                self.show_info_messagebox(self, "Márgenes Actualizados (Ponderado)", report)
+                self.save_data()
+                top_weighted_form.destroy()  # Cerrar el formulario después de calcular
+            else:
+                self.show_error_messagebox("El total de las posiciones abiertas debe ser mayor que cero.")
+
+        # Frame para los botones
+        button_frame = tk.Frame(top_weighted_form)
+        button_frame.grid(row=row, column=0, columnspan=2, pady=10)
+
+        # Botón Calcular
+        calculate_button = tk.Button(button_frame, text="Calcular", command=calculate_and_show)
+        calculate_button.pack(side=tk.LEFT, padx=5)
+
+        # Botón Cancelar
+        cancel_button = tk.Button(button_frame, text="Cancelar", command=top_weighted_form.destroy)
+        cancel_button.pack(side=tk.LEFT, padx=5)
+
+        top_weighted_form.grid_columnconfigure(1, weight=1)  # Hacer que la columna de entrada se expanda
+
+    def _calculate_equitable_and_destroy_window(self, selection_window):
+        """(Metodo interno en update_margins)
+        Calcula márgenes equitativos y cierra la ventana de selección.
+        selection_window es la ventana Toplevel que se crea en el método update_margins
+        y presenta las opciones al usuario."""
+        self.calculate_equitable_margin()
+        selection_window.destroy()
+
+    def _calculate_weighted_form_and_destroy_window(self, selection_window):
+        """(Metodo interno para el metodo update_margins)
+        Muestra el formulario ponderado y cierra la ventana de selección.
+        selection_window es la ventana Toplevel que se crea en el método update_margins
+        y presenta las opciones al usuario"""
+
+        self.calculate_weighted_margin_form()
+        selection_window.destroy()
+
     def update_margins(self):
         """Permite al usuario actualizar los márgenes de los activos
         mediante división equitativa o ponderación."""
@@ -467,71 +590,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Se crea un widget Label de Tkinter para mostrar texto al usuario.
         tk.Label(top, text="Elige una opción para calcular los márgenes:").pack(pady=10)
 
-        def calculate_equitable_margin():
-            top_equitable = tk.Toplevel(top)
-            top_equitable.title("División Equitativa")
-            trading_account = self.ask_trading_account(self)  # metodo para pedir al usuario el monto de la cuenta de trading
-
-            if trading_account is not None and trading_account > 0:
-                num_assets = len(self.data)
-                if num_assets > 0:
-                    margin = round(trading_account / num_assets, 2)
-                    ponderacion = round(margin / trading_account, 3) if trading_account > 0 else 0.0
-                    report = "  Symbol        MARGIN (USDT)    Weight\n"
-                    report += "  " + "-" * 80 + "\n"
-                    for symbol, data_asset in self.data.items():
-                        data_asset['margin'] = margin
-                        report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
-
-                    self.show_info_messagebox(self, "Márgenes Actualizados (Equitativo)", report)  # muestra el reporte en al ventana de dialogo de informacion
-                    self.save_data()  # se guardan los margin actualizados en el data
-
-                else:
-                    self.show_error_messagebox(self, "No hay activos para calcular el margen.")
-
-            elif trading_account is not None:
-                self.show_error_messagebox(self, "El monto de la cuenta de trading debe ser mayor que cero.")
-
-
-        def calculate_weighted_margin():
-            top_weighted = tk.Toplevel(top)
-            top_weighted.title("Ponderación NO Equitativa")
-            trading_account = simpledialog.askfloat("Monto Cuenta de Trading",
-                                                    "Ingrese el monto total de la cuenta de trading:",
-                                                    parent=top_weighted)
-            if trading_account is not None and trading_account > 0:
-                amounts = {}
-                total_usdt_open_positions = 0
-                for symbol in self.data:
-                    amount_asset = simpledialog.askfloat(f"Posición Abierta de {symbol}",
-                                                         f"Ingrese la posición abierta en USDT para {symbol}:",
-                                                         parent=top_weighted)
-                    if amount_asset is None:
-                        return  # El usuario canceló la entrada de algún monto
-                    amounts[symbol] = amount_asset
-                    total_usdt_open_positions += amount_asset
-
-                if total_usdt_open_positions > 0:
-                    report = "  Symbol        MARGIN (USDT)   Weight\n"
-                    report += "  " + "-" * 45 + "\n"
-                    for symbol, data_asset in self.data.items():
-                        amount_asset = amounts.get(symbol, 0)
-                        weight = round(amount_asset / total_usdt_open_positions, 3)
-                        margin = round(trading_account * weight)
-                        data_asset['margin'] = margin
-                        report += f"  {symbol:<13}      {margin:<17.2f}         {weight:<10}\n"
-                    messagebox.showinfo("Márgenes Actualizados (Ponderado)", report)
-                    self.save_data()
-                    #self.create_asset_info_section()  # Actualizar la sección de información del activo
-                else:
-                    messagebox.showerror("Error", "El total de las posiciones abiertas debe ser mayor que cero.")
-            elif trading_account is not None:
-                messagebox.showerror("Error", "El monto de la cuenta de trading debe ser mayor que cero.")
-
-        equitable_button = tk.Button(top, text="División Equitativa", command=calculate_equitable_margin)
+        equitable_button = tk.Button(top, text="División Equitativa", command=lambda: self._calculate_equitable_and_destroy_window(top))
         equitable_button.pack(pady=5)
 
-        weighted_button = tk.Button(top, text="Ponderación NO Equitativa", command=calculate_weighted_margin)
+        weighted_button = tk.Button(top, text="Ponderación NO Equitativa", command=lambda: self._calculate_weighted_form_and_destroy_window(top))
         weighted_button.pack(pady=5)
 
         cancel_button = tk.Button(top, text="Volver", command=top.destroy)

@@ -238,10 +238,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         #self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
 
     def create_primary_menu_buttons(self):
-        """Método para crear los botones del menús primario.
-        command en los botones:
-        Para los botones del menú primario, el command ahora llama directamente
-        a métodos de la clase (por ej., self.add_new_symbol_ui)."""
+        """Método para crear los botones del menú primario.
+        command en los botones: llama directamente
+        a métodos de la clase (por ej., self.add_new_symbol)."""
 
         primary_buttons_config = [
             {"text": "ADD new symbol", "command": self.add_new_symbol},
@@ -257,10 +256,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             button.pack(pady=4, fill=X)
 
     def get_symbols_for_buttons(self):
-        """
-        Crea una lista de los símbolos de los activos que se encuentran en self.data
-        para crear los botones en el panel asset_menu.
-        """
+        """Crea una lista de los símbolos de los activos que se encuentran en self.data
+        para crear los botones en el panel asset_menu."""
         list_symbol = list(self.data.keys())
         return list_symbol
 
@@ -293,24 +290,19 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.selected_asset.set(symbol)  # Se actualiza la variable de control con el símbolo del activo seleccionado.
         print(f"Activo seleccionado: {self.selected_asset.get()}")
 
-        # Si la tabla de precios de quema ha sido creada, elimina todos sus elementos (filas, encabezados, etc.).
-        """if hasattr(self, 'burn_price_table_frame'):
-            for widget in self.burn_price_table_frame.winfo_children():
-                widget.destroy()"""
-
         # Si la sección de información del activo existe, la hace visible nuevamente
         if hasattr(self, 'asset_info_frame'):
-            self.asset_info_frame.pack(pady=2, fill=X)  # Si usas pack
+            self.asset_info_frame.pack(pady=2, fill=X)
 
         # Destruir todos los widgets hijos del right_panel excepto self.asset_info_frame
         for widget in self.right_panel.winfo_children():
             if widget != self.asset_info_frame:
                 widget.destroy()
 
-        # Se maneja la apariencia visual de los botones (deseleccionando el anterior y seleccionando el actual).
+        # Se maneja la apariencia visual de los botones
+        # Deseleccionar el botón anterior
         if self.active_asset_button and self.active_asset_button != button:
             self.active_asset_button.config(bg=self.default_button_bg)
-
 
         # Seleccionar el botón actual
         self.active_asset_button = button
@@ -320,7 +312,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         if symbol in self.data:
             self.selected_asset_data = self.data[symbol]
         else:
-            self.selected_asset_data = None  # O podrías mostrar un mensaje de error
+            self.selected_asset_data = None
 
         # se llama a este metodo para mostrar informacion del activo
         self.update_asset_info_display()
@@ -339,7 +331,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.create_left_secondary_menu_buttons()
 
     def add_new_symbol(self):
-        """Muestra una ventana de nivel superior (encimna de la ventana princiapla)
+        """Muestra una ventana de nivel superior (encimna de la ventana principal)
         para agregar un nuevo símbolo de activo."""
         add_symbol_window = Toplevel(self)
         add_symbol_window.title("Agregar Nuevo Símbolo")
@@ -378,22 +370,31 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button.pack(pady=5)
 
     def show_margins(self):
-        for symbol, data_asset in self.data.items():
-            margin = data_asset.get('margin', 0)
-            print(margin)
-        """Muestra los márgenes individuales de cada activo y el total en un cuadro de diálogo."""
+        """Muestra los márgenes individuales de cada activo y el total en un cuadro de diálogo,
+        ordenados por margen de mayor a menor."""
         total_margin = 0
+        asset_margins = []
         margins_report = "  Symbol        MARGIN (USDT)   Weight\n"
-        margins_report += "  " + "-" * 45 + "\n"
+        margins_report += "  " + "-" * 80 + "\n"
 
-        # Primer bucle: Se itera sobre todos los activos para calcular la suma total de los márgenes
+        # Primer bucle: Se itera sobre todos los activos para calcular la suma total de los márgenes y almacenar los márgenes con sus símbolos
         for symbol, data_asset in self.data.items():
             margin = data_asset.get('margin', 0)  # Usamos .get() para evitar errores si la clave no existe (con valor predeterminado de '0')
             total_margin += margin
+            asset_margins.append({'symbol': symbol, 'margin': margin})
 
-        # Segundo bucle: se calcula la ponderación de cada activo
-        for symbol, data_asset in self.data.items():
-            margin = data_asset.get('margin', 0)
+        # Ordenar la lista de activos por margen de mayor a menor
+        asset_margins_ordenados = sorted(asset_margins, key=lambda item: item['margin'], reverse=True)
+
+        # Muestra un error si el margen total es cero.
+        if total_margin == 0:
+            self.show_error_messagebox(self, "Total Margin = 0\nDebes Actualizar Margenes!")
+            return  # Salir de la función si no hay márgenes para mostrar
+
+        # Segundo bucle: se itera sobre los márgenes ordenados para calcular la ponderación y construir el reporte
+        for asset in asset_margins_ordenados:
+            symbol = asset['symbol']
+            margin = asset['margin']
             if total_margin > 0:
                 ponderacion = round(margin / total_margin, 3)
             else:
@@ -401,9 +402,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             margins_report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
 
-        margins_report += f"\n\n  TOTAL MARGINS: {total_margin:.2f} USDT"
+        margins_report += f"\n\n  TOTAL MARGINS: {int(total_margin)} USDT"
 
-        messagebox.showinfo("Márgenes y Total", margins_report)
+        self.show_info_messagebox(self, "Márgenes y Total", margins_report)
 
     def update_margins(self):
         """Permite al usuario actualizar los márgenes de los activos

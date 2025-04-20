@@ -112,6 +112,45 @@ class CustomConfirmationDialog(tk.Toplevel):
         self.destroy()
 
 
+class CustomAskFloatDialog(tk.Toplevel):
+    """Una ventana de diálogo personalizada para solicitar un valor float al usuario.
+    Hereda de tk.Toplevel y proporciona un control adicional sobre el diálogo."""
+    def __init__(self, parent, title="Ingrese un valor", prompt="Por favor, ingrese un número:", initialvalue=None):
+        super().__init__(parent)
+        self.title(title)
+        self.resizable(False, False)
+        self.result = None
+
+        tk.Label(self, text=prompt, font=("Arial", 12), padx=20, pady=10).pack()
+
+        self.entry = tk.Entry(self, font=("Arial", 12))
+        if initialvalue is not None:
+            self.entry.insert(0, initialvalue)
+        self.entry.pack(padx=20, pady=5)
+        self.entry.focus_set()
+
+        button_frame = tk.Frame(self)
+        button_frame.pack(pady=10)
+
+        tk.Button(button_frame, text="Aceptar", command=self.ok, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Cancelar", command=self.cancel, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+
+        self.transient(parent)
+        self.grab_set()
+        parent.wait_window(self)
+
+    def ok(self):
+        try:
+            self.result = float(self.entry.get())
+            self.destroy()
+        except ValueError:
+            tk.messagebox.showerror("Error", "Por favor, ingrese un número válido.")
+            self.entry.focus_set()
+
+    def cancel(self):
+        self.destroy()
+
+
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
@@ -406,41 +445,53 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         self.show_info_messagebox(self, "Márgenes y Total", margins_report)
 
+    def ask_trading_account(self, parent):
+        """Método que muestra la ventana de diálogo personalizado
+        para pedir al usuario que ingrese el monto de cuenta de trading."""
+        dialog = CustomAskFloatDialog(parent,
+                                      title="Monto Cuenta de Trading",
+                                      prompt="Ingrese el monto total de la cuenta de trading:")
+        return dialog.result
+
     def update_margins(self):
         """Permite al usuario actualizar los márgenes de los activos
         mediante división equitativa o ponderación."""
         if not self.data:
-            messagebox.showinfo("Información", "No hay activos guardados!")
+            self.show_info_messagebox(self, "Información", "No hay activos guardados!")
             return
 
+        # Si 'self.data' no está vacío, se crea una nueva ventana Toplevel
         top = tk.Toplevel(self)
         top.title("Actualizar Márgenes de Activos")
 
+        # Se crea un widget Label de Tkinter para mostrar texto al usuario.
         tk.Label(top, text="Elige una opción para calcular los márgenes:").pack(pady=10)
 
         def calculate_equitable_margin():
             top_equitable = tk.Toplevel(top)
             top_equitable.title("División Equitativa")
-            trading_account = simpledialog.askfloat("Monto Cuenta de Trading",
-                                                    "Ingrese el monto total de la cuenta de trading:",
-                                                    parent=top_equitable)
+            trading_account = self.ask_trading_account(self)  # metodo para pedir al usuario el monto de la cuenta de trading
+
             if trading_account is not None and trading_account > 0:
                 num_assets = len(self.data)
                 if num_assets > 0:
                     margin = round(trading_account / num_assets, 2)
                     ponderacion = round(margin / trading_account, 3) if trading_account > 0 else 0.0
-                    report = "  Symbol        MARGIN (USDT)   Weight\n"
-                    report += "  " + "-" * 45 + "\n"
+                    report = "  Symbol        MARGIN (USDT)    Weight\n"
+                    report += "  " + "-" * 80 + "\n"
                     for symbol, data_asset in self.data.items():
                         data_asset['margin'] = margin
                         report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
-                    messagebox.showinfo("Márgenes Actualizados (Equitativo)", report)
-                    self.save_data()
-                    #self.create_asset_info_section()  # Actualizar la sección de información del activo
+
+                    self.show_info_messagebox(self, "Márgenes Actualizados (Equitativo)", report)  # muestra el reporte en al ventana de dialogo de informacion
+                    self.save_data()  # se guardan los margin actualizados en el data
+
                 else:
-                    messagebox.showerror("Error", "No hay activos para calcular el margen.")
+                    self.show_error_messagebox(self, "No hay activos para calcular el margen.")
+
             elif trading_account is not None:
-                messagebox.showerror("Error", "El monto de la cuenta de trading debe ser mayor que cero.")
+                self.show_error_messagebox(self, "El monto de la cuenta de trading debe ser mayor que cero.")
+
 
         def calculate_weighted_margin():
             top_weighted = tk.Toplevel(top)

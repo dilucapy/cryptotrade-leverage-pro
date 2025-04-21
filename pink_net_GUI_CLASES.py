@@ -49,7 +49,11 @@ class CustomInfoDialog(tk.Toplevel):
         self.message_label = tk.Label(self, text=message, font=("Arial", 12, "bold"), padx=20, pady=20)
         self.message_label.pack()
 
-        self.ok_button = tk.Button(self, text="Aceptar", command=self.destroy, padx=10, pady=5)
+        self.ok_button = tk.Button(self,
+                                   text="Aceptar",
+                                   cursor='hand2',
+                                   font=("Segoe UI", 12),
+                                   command=self.destroy, padx=10, pady=5)
         self.ok_button.pack(pady=10)
 
         self.transient(parent)
@@ -69,7 +73,12 @@ class CustomErrorDialog(tk.Toplevel):
         self.message_label = tk.Label(self, text=message, fg="red", font=("Arial", 14, "bold"), padx=20, pady=20)
         self.message_label.pack()
 
-        self.ok_button = tk.Button(self, text="Aceptar", command=self.destroy, padx=10, pady=5)
+        self.ok_button = tk.Button(self,
+                                   text="Aceptar",
+                                   cursor='hand2',
+                                   font=("Segoe UI", 12),
+                                   padx=10, pady=5,
+                                   command=self.destroy)
         self.ok_button.pack(pady=10)
 
         self.transient(parent)
@@ -100,8 +109,8 @@ class CustomConfirmationDialog(tk.Toplevel):
         button_frame = tk.Frame(self)
         button_frame.pack(pady=10)
 
-        tk.Button(button_frame, text="Sí", command=lambda: self.set_result(True), padx=10, pady=5).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="No", command=lambda: self.set_result(False), padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Sí", cursor='hand2', font=("Segoe UI", 12), command=lambda: self.set_result(True), padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="No", cursor='hand2', font=("Segoe UI", 12), command=lambda: self.set_result(False), padx=10, pady=5).pack(side=tk.LEFT, padx=5)
 
         self.transient(parent)
         self.grab_set()
@@ -132,8 +141,8 @@ class CustomAskFloatDialog(tk.Toplevel):
         button_frame = tk.Frame(self)
         button_frame.pack(pady=10)
 
-        tk.Button(button_frame, text="Aceptar", command=self.ok, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Cancelar", command=self.cancel, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Aceptar", cursor="hand2", font=("Segoe UI", 12), command=self.ok, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Cancelar", cursor="hand2", font=("Segoe UI", 12), command=self.cancel, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
 
         self.transient(parent)
         self.grab_set()
@@ -180,6 +189,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Crear los widgets de la GUI
         self.create_widgets()
+
+        # Estilos de apariencia para toplevel y button
+        self.toplevel_bgcolor = "orange"  # Color de fondo predeterminado para las ventanas emergentes (Toplevel)
+        self.button_font = ("Segoe UI", 12)  # Fuente predeterminada para el texto de los botones (familia, tamaño)
+        self.button_bgcolor = "lightgreen"  # Color de fondo predeterminado para los botones
+        self.button_relief = tk.FLAT  # Estilo de relieve predeterminado para los botones (sin efecto 3D)
 
     def load_data(self, filename):
         """Carga los datos desde un archivo JSON. Devuelve un diccionario,
@@ -484,25 +499,32 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         top_weighted_form = tk.Toplevel(self)
         top_weighted_form.title("Ponderación NO Equitativa")
+        top_weighted_form.config(bg=self.toplevel_bgcolor)
+        top_weighted_form.geometry('400x350')
 
         row = 0
 
         # Etiqueta para el monto total de la cuenta de trading
-        tk.Label(top_weighted_form, text="Monto Total de la Cuenta de Trading (USDT):").grid(row=row, column=0,
-                                                                                             padx=5, pady=5,
-                                                                                             sticky="w")
-        entry_trading_account = tk.Entry(top_weighted_form)
+        label = tk.Label(top_weighted_form,
+                         text="Monto Total de la Cuenta de Trading (USDT):",
+                         bg=self.toplevel_bgcolor,
+                         font=("Arial", 10, "bold"))
+        label.grid(row=row, column=0, padx=5, pady=5, sticky="w")
+
+        entry_trading_account = tk.Entry(top_weighted_form, font=("Arial", 12, "bold"))
         entry_trading_account.grid(row=row, column=1, padx=5, pady=5, sticky="ew")
         row += 1
 
         # Etiquetas y campos de entrada para cada activo
         entry_amounts = {}
         for symbol in self.data:
-            tk.Label(top_weighted_form, text=f"Posición Abierta en USDT para {symbol}:").grid(row=row, column=0,
-                                                                                              padx=5, pady=5,
-                                                                                              sticky="w")
-            entry = tk.Entry(top_weighted_form)
-            entry.grid(row=row, column=1, padx=5, pady=5, sticky="ew")
+            label_asset = tk.Label(top_weighted_form,
+                                   text=f"Posición Abierta en USDT para {symbol}:",
+                                   bg=self.toplevel_bgcolor,
+                                   font=("Arial", 10, "bold"))
+            label_asset.grid(row=row, column=0, padx=5, pady=10, sticky="w")
+            entry = tk.Entry(top_weighted_form, font=("Arial", 12, "bold"))
+            entry.grid(row=row, column=1, padx=5, pady=10, sticky="ew")
             entry_amounts[symbol] = entry
             row += 1
 
@@ -546,16 +568,28 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 self.show_error_messagebox("El total de las posiciones abiertas debe ser mayor que cero.")
 
         # Frame para los botones
-        button_frame = tk.Frame(top_weighted_form)
+        button_frame = tk.Frame(top_weighted_form, bg=self.toplevel_bgcolor)
         button_frame.grid(row=row, column=0, columnspan=2, pady=10)
 
         # Botón Calcular
-        calculate_button = tk.Button(button_frame, text="Calcular", command=calculate_and_show)
-        calculate_button.pack(side=tk.LEFT, padx=5)
+        calculate_button = tk.Button(button_frame,
+                                     text="Calcular",
+                                     cursor="hand2",
+                                     font=self.button_font,
+                                     pady=5,
+                                     padx=20,
+                                     command=calculate_and_show)
+        calculate_button.pack(side=tk.LEFT, padx=10)
 
         # Botón Cancelar
-        cancel_button = tk.Button(button_frame, text="Cancelar", command=top_weighted_form.destroy)
-        cancel_button.pack(side=tk.LEFT, padx=5)
+        cancel_button = tk.Button(button_frame,
+                                  text="Cancelar",
+                                  cursor="hand2",
+                                  font=self.button_font,
+                                  pady=5,
+                                  padx=20,
+                                  command=top_weighted_form.destroy)
+        cancel_button.pack(side=tk.LEFT, padx=10)
 
         top_weighted_form.grid_columnconfigure(1, weight=1)  # Hacer que la columna de entrada se expanda
 
@@ -585,19 +619,37 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Si 'self.data' no está vacío, se crea una nueva ventana Toplevel
         top = tk.Toplevel(self)
+        top.config(bg=self.toplevel_bgcolor)
+        top.geometry('400x260')
         top.title("Actualizar Márgenes de Activos")
 
         # Se crea un widget Label de Tkinter para mostrar texto al usuario.
-        tk.Label(top, text="Elige una opción para calcular los márgenes:").pack(pady=10)
+        label = tk.Label(top, text="Elige una opción para calcular los márgenes:", bg=self.toplevel_bgcolor, font=("Arial", 12, "bold"))
+        label.pack(pady=10)
 
-        equitable_button = tk.Button(top, text="División Equitativa", command=lambda: self._calculate_equitable_and_destroy_window(top))
-        equitable_button.pack(pady=5)
+        equitable_button = tk.Button(top,
+                                     text="División Equitativa",
+                                     pady=5,
+                                     font=self.button_font,
+                                     cursor="hand2",
+                                     command=lambda: self._calculate_equitable_and_destroy_window(top))
+        equitable_button.pack(fill='x', pady=5, padx=60)
 
-        weighted_button = tk.Button(top, text="Ponderación NO Equitativa", command=lambda: self._calculate_weighted_form_and_destroy_window(top))
-        weighted_button.pack(pady=5)
+        weighted_button = tk.Button(top,
+                                    text="Ponderación NO Equitativa",
+                                    pady=5,
+                                    font=self.button_font,
+                                    cursor="hand2",
+                                    command=lambda: self._calculate_weighted_form_and_destroy_window(top))
+        weighted_button.pack(fill='x', pady=5, padx=60)
 
-        cancel_button = tk.Button(top, text="Volver", command=top.destroy)
-        cancel_button.pack(pady=10)
+        cancel_button = tk.Button(top,
+                                  text="Cancel",
+                                  pady=5,
+                                  font=self.button_font,
+                                  cursor="hand2",
+                                  command=top.destroy)
+        cancel_button.pack(fill='x', pady=30, padx=100)
 
     def calculate_total_open_amount(self):
         """Calcula el monto total de todas las operaciones abiertas por activo
@@ -1884,6 +1936,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                command=button_info["command"])
 
             button.pack(pady=4, padx=2, fill=X)
+
+    def apply_toplevel_style(self, toplevel, geometry=None):
+        """Aplica estilos predeterminados (color de fondo, título y geometría) a una ventana Toplevel."""
+        toplevel.config(bg=self.toplevel_bgcolor)
+        if geometry:
+            toplevel.geometry(geometry)
+
+    def create_styled_button(self, parent, text, command):
+        """Crea un botón con estilos predeterminados (fuente, color de fondo y relieve)."""
+        return tk.Button(parent, text=text, command=command,
+                         font=self.button_font, bg=self.button_bgcolor, relief=self.button_relief)
 
 
 if __name__ == "__main__":

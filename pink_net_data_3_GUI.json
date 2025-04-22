@@ -95,5 +95,17 @@
         "open_orders": [],
         "buy_limits": [],
         "sell_limits": []
+    },
+    "ETH": {
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_limits": []
+    },
+    "ACA": {
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_limits": []
     }
 }

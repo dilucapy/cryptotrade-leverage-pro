@@ -47,15 +47,16 @@ class CustomInfoDialog(tk.Toplevel):
         self.title(title)
         self.resizable(False, False)
 
-        self.message_label = tk.Label(self, text=message, font=("Arial", 12, "bold"), padx=20, pady=20)
+        self.message_label = tk.Label(self, text=message, font=("Arial", 12, "bold"), padx=30, pady=30)
         self.message_label.pack()
 
         self.ok_button = tk.Button(self,
                                    text="Aceptar",
                                    cursor='hand2',
                                    font=("Segoe UI", 12),
-                                   command=self.destroy, padx=10, pady=5)
-        self.ok_button.pack(pady=10)
+                                   padx=10, pady=5,
+                                   command=self.destroy)
+        self.ok_button.pack(pady=20)
 
         self.transient(parent)
         self.grab_set()
@@ -389,12 +390,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         """Muestra una ventana de nivel superior (encimna de la ventana principal)
         para agregar un nuevo símbolo de activo."""
         add_symbol_window = Toplevel(self)
+        add_symbol_window.config(bg=self.toplevel_bgcolor)
+        add_symbol_window.geometry('340x200')
         add_symbol_window.title("Agregar Nuevo Símbolo")
 
-        symbol_label = Label(add_symbol_window, text="Nuevo Símbolo:")
+        symbol_label = Label(add_symbol_window, text="Nuevo Símbolo:",
+                             bg=self.toplevel_bgcolor,
+                             font=("Arial", 12, "bold"))
+
         symbol_label.pack(padx=10, pady=5)
 
-        symbol_entry = Entry(add_symbol_window)
+        symbol_entry = Entry(add_symbol_window, font=("Arial", 12, "bold"), width=10)
         symbol_entry.pack(padx=10, pady=5)
         symbol_entry.focus_set()  # Enfocar el campo de entrada al abrir la ventana
 
@@ -402,10 +408,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             new_symbol = symbol_entry.get().strip().upper()
             if new_symbol:
                 if new_symbol in self.data:
-                    messagebox.showerror("Error", f"El símbolo '{new_symbol}' ya existe.")
+                    self.show_error_messagebox(f"El símbolo '{new_symbol}' ya existe.")
+
                 else:
                     self.data[new_symbol] = {
-                        "current_price": 0,  # O cualquier otro valor inicial
                         "margin": 0,
                         "open_orders": [],
                         "buy_limits": [],
@@ -413,15 +419,24 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     }
                     self.save_data()  # Guarda todos los datos, incluyendo el nuevo símbolo
                     self.create_asset_buttons()  # Actualiza los botones de activos en el 'top panel'
-                    messagebox.showinfo("Éxito", f"Símbolo '{new_symbol}' agregado.")
+                    self.show_info_messagebox(self, "Éxito", f"Símbolo '{new_symbol}' agregado.")
                     add_symbol_window.destroy()  # llama al metodo para destruir la instacia de toplevel
             else:
-                messagebox.showerror("Error", "Por favor, introduce un símbolo.")
+                self.show_error_messagebox("Por favor, introduce un símbolo.")
 
-        save_button = Button(add_symbol_window, text="Guardar Símbolo", command=save_new_symbol)
+
+        save_button = Button(add_symbol_window, text="Guardar Símbolo",
+                             pady=5,
+                             font=self.button_font,
+                             cursor="hand2",
+                             command=save_new_symbol)
         save_button.pack(pady=10)
 
-        cancel_button = Button(add_symbol_window, text="Cancelar", command=add_symbol_window.destroy)
+        cancel_button = Button(add_symbol_window, text="Cancelar",
+                               pady=5,
+                               font=self.button_font,
+                               cursor="hand2",
+                               command=add_symbol_window.destroy)
         cancel_button.pack(pady=5)
 
     def show_margins(self):
@@ -1936,7 +1951,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         buttons_config = [
             {"text": "MENU PRINCIPAL", "command": self.return_to_primary_menu},
             {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
-            {"text": "Borrar Activo", "command": self.delete_asset},
+            {"text": "Eliminar Activo", "command": self.delete_asset},
             {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
             {"text": "Generar PINK NET", "command": self.generate_pink_net},
             {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},

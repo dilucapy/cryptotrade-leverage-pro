@@ -10,6 +10,7 @@ import tkinter.font as tkFont
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
+
 # ruta del archivo JSON
 filename = 'pink_net_data_3_GUI.json'
 
@@ -743,18 +744,21 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         total_open_amount, _, _ = self.calculate_total_open_amount()
 
+        # ventana de dialogo para preguntar al usuario por el monto de Trading Account
+        trading_account = self.ask_trading_account(self)
+
         top = tk.Toplevel(self)
         top.title("Calcular Apalancamiento")
 
-        tk.Label(top, text=f"Total OPEN AMOUNT: {total_open_amount:.2f} USDT").pack(pady=5)
-
-        trading_account = simpledialog.askfloat("Cuenta de Trading", "Ingrese el monto de su cuenta de trading:", parent=top)
+        label = tk.Label(top, text="Leveraged Amount and Reduce Position by Leverage Level",
+                         font=('Arial', 12, 'bold'))
+        label.pack(pady=5)
 
         if trading_account is None:
             return  # El usuario canceló la entrada
 
         if trading_account <= 0:
-            messagebox.showerror("Error", "La cuenta de trading debe ser mayor que cero.", parent=top)
+            self.show_error_messagebox("La cuenta de trading debe ser mayor que cero.")
             return
 
         leveragex = round(total_open_amount / trading_account, 2)  # Se calcula el apalancamiento actual
@@ -796,7 +800,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         ax.set_xlabel('Leverage')
         ax.set_ylabel('Amount (USDT)')
         ax.set_title(
-            f'Leveraged Amount and Reduce Position by Leverage Level\nTOTAL OPEN AMOUNT: {total_open_amount:.2f}\nTRADING ACCOUNT: {trading_account:.2f}\nLEVERAGE: {leveragex:.2f}')
+            f'TOTAL OPEN AMOUNT ---> {int(total_open_amount)} USDT\nTRADING ACCOUNT ---> {int(trading_account)} USDT\nLEVERAGE ---> {leveragex:.2f}  X')
         ax.set_xticks([i + bar_width / 2 for i in x])
         ax.set_xticklabels(leverage_levels)
         ax.legend()
@@ -804,8 +808,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         fig.tight_layout()
 
-        # Insertar el gráfico en la ventana Toplevel
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        # Toma la figura de Matplotlib (fig) y la "integra" en un widget de Tkinter (FigureCanvasTkAgg)
         canvas = FigureCanvasTkAgg(fig, master=top)
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.pack(fill=tk.BOTH, expand=True)
@@ -1937,16 +1940,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             button.pack(pady=4, padx=2, fill=X)
 
-    def apply_toplevel_style(self, toplevel, geometry=None):
-        """Aplica estilos predeterminados (color de fondo, título y geometría) a una ventana Toplevel."""
-        toplevel.config(bg=self.toplevel_bgcolor)
-        if geometry:
-            toplevel.geometry(geometry)
 
-    def create_styled_button(self, parent, text, command):
-        """Crea un botón con estilos predeterminados (fuente, color de fondo y relieve)."""
-        return tk.Button(parent, text=text, command=command,
-                         font=self.button_font, bg=self.button_bgcolor, relief=self.button_relief)
 
 
 if __name__ == "__main__":

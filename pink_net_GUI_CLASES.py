@@ -625,7 +625,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         top.title("Actualizar Márgenes de Activos")
 
         # Se crea un widget Label de Tkinter para mostrar texto al usuario.
-        label = tk.Label(top, text="Elige una opción para calcular los márgenes:", bg=self.toplevel_bgcolor, font=("Arial", 12, "bold"))
+        label = tk.Label(top, text="Elige una opción para calcular los márgenes:",
+                         bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold"))
         label.pack(pady=10)
 
         equitable_button = tk.Button(top,
@@ -871,10 +873,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
                 # Definir encabezados de las columnas
                 tree.heading("Symbol", text="Símbolo")
-                tree.heading("Current Price", text="Precio Actual")
+                tree.heading("Current Price", text="Precio Actual (USDT)")
                 tree.heading("Margin", text="Margen (USDT)")
-                tree.heading("Open Orders Qty", text="Cant. Órdenes Abiertas")
-                tree.heading("Buy Limits Qty", text="Cant. Buy Limits")
+                tree.heading("Open Orders Qty", text="Total Quantity (Open Orders)")
+                tree.heading("Buy Limits Qty", text="Total Quantity (Buy Limits)")
                 tree.heading("Burn Price", text="Precio de Quema (USDT)")
 
                 # Ajustar el ancho de las columnas (opcional)
@@ -1332,7 +1334,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
 
         if not symbol:
-            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            self.show_error_messagebox("Por favor, selecciona un activo primero.")
             return
         # muestra el formulario para ingresar los datos necesarios para calcular la orden madre
         self.show_calculate_mother_order_form(symbol)
@@ -1340,28 +1342,39 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def show_calculate_mother_order_form(self, symbol):
         """Crea y muestra el formulario para calcular la orden madre."""
         top = tk.Toplevel(self)
+        top.config(bg=self.toplevel_bgcolor)
+        top.geometry('460x280')
         top.title(f"Calcular Orden Madre para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
-        tk.Label(top, text="Precio Promedio de Compra:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        entry_average_price = tk.Entry(top)
-        entry_average_price.grid(row=0, column=1, padx=5, pady=5)
+        tk.Label(top, text="Precio Promedio de Compra:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        entry_average_price = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_average_price.grid(row=0, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Monto de Posición Abierta (USDT):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        entry_open_position = tk.Entry(top)
-        entry_open_position.grid(row=1, column=1, padx=5, pady=5)
+        tk.Label(top, text="Monto de Posición Abierta (USDT):", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        entry_open_position = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_open_position.grid(row=1, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Beneficio Tomado:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        entry_profits_taken = tk.Entry(top)
-        entry_profits_taken.grid(row=2, column=1, padx=5, pady=5)
+        tk.Label(top, text="Beneficio Tomado:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        entry_profits_taken = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_profits_taken.grid(row=2, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Cantidad:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        entry_quantity = tk.Entry(top)
-        entry_quantity.grid(row=3, column=1, padx=5, pady=5)
+        tk.Label(top, text="Cantidad:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky="e")
+        entry_quantity = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_quantity.grid(row=3, column=1, padx=5, pady=10)
 
         # --- Botones ---
         calculate_button = tk.Button(top, text="Calcular",
-                                      command=lambda: self.perform_mother_order_calculation(
+                                     pady=5,
+                                     padx=5,
+                                     width=15,
+                                     font=self.button_font,
+                                     cursor="hand2",
+                                     command=lambda: self.perform_mother_order_calculation(
                                           symbol,
                                           entry_average_price.get(),
                                           entry_open_position.get(),
@@ -1369,10 +1382,16 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                           entry_quantity.get(),
                                           top  # se pasa la ventana Toplevel para cerrarla
                                       ))
-        calculate_button.grid(row=4, column=0, columnspan=2, pady=10)
+        calculate_button.grid(row=4, column=1, pady=30)
 
-        cancel_button = tk.Button(top, text="Cancelar", command=top.destroy)
-        cancel_button.grid(row=5, column=0, columnspan=2, pady=5)
+        cancel_button = tk.Button(top, text="Cancelar",
+                                  pady=5,
+                                  padx=5,
+                                  width=15,
+                                  font=self.button_font,
+                                  cursor="hand2",
+                                  command=top.destroy)
+        cancel_button.grid(row=4, column=0, pady=30)
 
     def perform_mother_order_calculation(self, symbol, avg_price_str, open_pos_str, profit_str, qty_str, form_window):
         """Realiza el cálculo de la orden madre y pregunta si se guarda."""

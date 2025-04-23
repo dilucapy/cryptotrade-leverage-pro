@@ -1599,13 +1599,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         """Calcula el precio de quema del activo seleccionado, obteniendo el precio actual de Binance.
         El cambio que hicimos con esta funcion es que ahora obtiene la cantidad total del activo en vez
         de calcular la cantidad de activo de la orden madre (ahora la orden madre no se considera la
-        resultante de todas las ordenes abiertas sino las que el usuario desee unificar.
-        Las ordenes NO madres, ahora no van a estar incluidas en la orden madre.)"""
+        resultante de todas las ordenes abiertas.
+        Las ordenes NO madres, ahora pueden no estar incluidas en la orden madre y ser independientes.)"""
         symbol = self.selected_asset.get()
 
         if not symbol:
-            self.show_error_messagebox(self, "Por favor, selecciona un activo primero.")
-            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            self.show_error_messagebox("Por favor, selecciona un activo primero.")
             return
 
         current_price = self.get_price(symbol)
@@ -1615,47 +1614,51 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 data_asset = self.data[symbol]
                 margin = data_asset.get("margin", 0)
 
-                burn_price_message = f" BURN PRICE {symbol} ".center(60, '*') + "\n"
-                burn_price_message += "Advertencia: tener actualizada las OPEN ORDERS y el MARGIN!\n\n"
-                burn_price_message += f"CURRENT PRICE: {current_price}\n"
-                burn_price_message += f"MARGIN: {margin} USDT\n\n"
-
-                # bucle calcula cantidad total de activo, en ordenes abiertas
-                quantity_open_orders = 0
-                if 'open_orders' in data_asset:
-                    for order in data_asset['open_orders']:
-                        quantity_open_orders += order['quantity']
-
-                if quantity_open_orders == 0:
-                    burn_price_message += "No hay Ordenes Abiertas!\n"
-                else:
-                    burn_price_message += f"Cantidad OPEN ORDERS: {quantity_open_orders}\n"
-
-                # bucle calcula cant.total y monto total de ordenes BUY LIMITS
-                total_amount_buy_limits = 0
-                total_quantity_buy_limits = 0
-                if 'buy_limits' in data_asset and data_asset['buy_limits']:
-                    for order in data_asset['buy_limits']:
-                        total_amount_buy_limits += order['amount_usdt']
-                        total_quantity_buy_limits += order['quantity']
-                    burn_price_message += f"Total cantidad buy limits: {total_quantity_buy_limits}\n"
-                    #burn_price_message += f"Total monto buy limits: {total_amount_buy_limits} USDT\n"
-                else:
-                    burn_price_message += "No hay BUY LIMITS!\n"
-
-                total_quantity = quantity_open_orders + total_quantity_buy_limits
-                if total_quantity == 0:
-                    self.show_error_messagebox(self, "No se puede calcular BURN PRICE\n No existen OPEN ORDERS ni BUY LIMITS")
+                if margin == 0:
+                    self.show_info_messagebox(self, "Información", "No se puede calcular BURN PRICE\nMargin = 0\nActualizar Margin!")
 
                 else:
-                    burn_price = ((current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity
-                    burn_price_message += f"\nBURN PRICE: {round(burn_price, 3)} USDT\n"
-                    self.show_info_messagebox(self, "Resultado Burn Price", burn_price_message)  # se llama al metodo que encapsula la clase personalizada 'CustomInfoDialog'
-                    #messagebox.showinfo("Resultado Burn Price", burn_price_message)
+                    burn_price_message = f"  BURN PRICE {symbol}  ".center(74, '*') + "\n\n"
+                    burn_price_message += "Advertencia: tener actualizada las OPEN ORDERS y el MARGIN!\n\n"
+                    burn_price_message += f"CURRENT PRICE: {current_price}\n"
+                    burn_price_message += f"MARGIN: {margin} USDT\n\n"
+
+                    # bucle calcula cantidad total de activo, en ordenes abiertas
+                    quantity_open_orders = 0
+                    if 'open_orders' in data_asset:
+                        for order in data_asset['open_orders']:
+                            quantity_open_orders += order['quantity']
+
+                    if quantity_open_orders == 0:
+                        burn_price_message += "No hay Ordenes Abiertas!\n"
+                    else:
+                        burn_price_message += f"Cantidad OPEN ORDERS: {quantity_open_orders}\n"
+
+                    # bucle calcula cant.total y monto total de ordenes BUY LIMITS
+                    total_amount_buy_limits = 0
+                    total_quantity_buy_limits = 0
+                    if 'buy_limits' in data_asset and data_asset['buy_limits']:
+                        for order in data_asset['buy_limits']:
+                            total_amount_buy_limits += order['amount_usdt']
+                            total_quantity_buy_limits += order['quantity']
+                        burn_price_message += f"Total cantidad buy limits: {total_quantity_buy_limits}\n"
+
+                    else:
+                        burn_price_message += "No hay BUY LIMITS!\n"
+
+                    total_quantity = quantity_open_orders + total_quantity_buy_limits
+                    if total_quantity == 0:
+                        self.show_error_messagebox("No se puede calcular BURN PRICE\n No existen OPEN ORDERS ni BUY LIMITS")
+
+                    else:
+                        burn_price = ((current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity
+                        burn_price_message += f"\nBURN PRICE: {round(burn_price, 3)} USDT\n\n"
+                        burn_price_message += "".center(82, '*')
+                        self.show_info_messagebox(self, "Resultado Burn Price", burn_price_message)  # se llama al metodo que encapsula la clase personalizada 'CustomInfoDialog'
 
             else:
-                self.show_error_messagebox(self, f"No se pudo obtener el precio actual de '{symbol}'.")
-                #messagebox.showerror("Error", f"No se encontraron datos para el activo '{symbol}'.")
+                self.show_error_messagebox(f"No esta ingresado '{symbol}' en el data.")
+
         else:
             # Manejar el caso en que no se pudo obtener el precio de la API
             pass  # El error ya se mostró en get_price()

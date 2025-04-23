@@ -1668,7 +1668,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
 
         if not symbol:
-            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            self.show_error_messagebox("Por favor, selecciona un activo primero.")
             return
 
         self.show_generate_sales_cloud_form(symbol)
@@ -1676,38 +1676,55 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def show_generate_sales_cloud_form(self, symbol):
         """Crea y muestra el formulario para generar la NUBE DE VENTAS."""
         top = tk.Toplevel(self)
+        top.config(bg=self.toplevel_bgcolor)
+        top.geometry('420x280')
         top.title(f"Generar NUBE DE VENTAS para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
-        tk.Label(top, text="Cantidad de Niveles:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        entry_levels = tk.Entry(top)
+        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky='e')
+        entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_levels.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Precio del Nivel Inicial:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        entry_initial_level = tk.Entry(top)
+        tk.Label(top, text="Precio del Nivel Inicial:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky='e')
+        entry_initial_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_initial_level.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Precio del Nivel Final:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        entry_final_level = tk.Entry(top)
+        tk.Label(top, text="Precio del Nivel Final:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky='e')
+        entry_final_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_final_level.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Monto Total a Reducir (USDT):").grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        entry_withdrawal_amount = tk.Entry(top)
+        tk.Label(top, text="Monto Total a Reducir (USDT):", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky='e')
+        entry_withdrawal_amount = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_withdrawal_amount.grid(row=3, column=1, padx=5, pady=5)
 
         # --- Botones ---
         generate_button = tk.Button(top, text="Generar",
-                                       command=lambda: self.calculate_sales_cloud_and_ask_save(
-                                           symbol,
-                                           entry_levels.get(),
-                                           entry_initial_level.get(),
-                                           entry_final_level.get(),
-                                           entry_withdrawal_amount.get(),
-                                           top  # Pasar la ventana Toplevel para cerrarla
-                                       ))
+                                    pady=5,
+                                    padx=5,
+                                    width=15,
+                                    font=self.button_font,
+                                    cursor="hand2",
+                                    command=lambda: self.calculate_sales_cloud_and_ask_save(
+                                        symbol,
+                                        entry_levels.get(),
+                                        entry_initial_level.get(),
+                                        entry_final_level.get(),
+                                        entry_withdrawal_amount.get(),
+                                        top  # Pasar la ventana Toplevel para cerrarla
+                                    ))
         generate_button.grid(row=4, column=0, columnspan=2, pady=10)
 
-        cancel_button = tk.Button(top, text="Cancelar", command=top.destroy)
+        cancel_button = tk.Button(top, text="Cancelar",
+                                  pady=5,
+                                  padx=5,
+                                  width=15,
+                                  font=self.button_font,
+                                  cursor="hand2",
+                                  command=top.destroy)
         cancel_button.grid(row=5, column=0, columnspan=2, pady=5)
 
     def calculate_sales_cloud_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, withdrawal_amount_str, form_window):
@@ -1717,9 +1734,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             initial_level = float(initial_level_str)
             final_level = float(final_level_str)
             withdrawal_amount = float(withdrawal_amount_str)
+            current_price = self.get_price(symbol)
+
+            if initial_level < current_price:
+                self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser mayor al Precio Actual")
+                return
+
+            if initial_level > final_level:
+                self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser menor al Nivel Final")
+                return
 
             if levels <= 0 or withdrawal_amount <= 0:
-                messagebox.showerror("Error", "La cantidad de niveles y el monto total a reducir deben ser mayores que cero.")
+                self.show_error_messagebox("La cantidad de niveles y el monto total a reducir deben ser mayores que cero.")
                 return
 
             sales_cloud = []
@@ -1739,31 +1765,33 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 }
                 sales_cloud.append(level_cloud)
 
-            result_message = "NUBE DE VENTAS Generada:\n"
+            result_message = "NUBE DE VENTAS Generada:\n\n"
             for level in sales_cloud:
                 result_message += f"Precio: {level['price']}, Monto: {level['amount_usdt']} USDT, Cantidad: {level['quantity']}\n"
 
-            messagebox.showinfo("NUBE DE VENTAS Generada", result_message)
+            self.show_info_messagebox(self, "NUBE DE VENTAS Generada", result_message)
 
-            save_confirmation = messagebox.askyesno("Guardar NUBE DE VENTAS", "¿Desea guardar estos niveles como SELL LIMIT?")
+            save_confirmation = self.show_confirmation_dialog(self, "Guardar NUBE DE VENTAS", "¿Desea guardar estos niveles como SELL LIMIT?")
             if save_confirmation:
                 if symbol in self.data:
                     # Advertir al usuario sobre la sobreescritura
-                    overwrite = messagebox.askyesno("Advertencia", "Guardar la NUBE DE VENTAS sobreescribirá las órdenes límite de venta existentes. ¿Continuar?")
+                    overwrite = self.show_confirmation_dialog(self, "Advertencia", "Guardar la NUBE DE VENTAS sobreescribirá las órdenes límite de venta existentes. ¿Continuar?")
                     if overwrite:
                         self.data[symbol]["sell_limits"] = sales_cloud
                         self.save_data()
-                        self.create_asset_orders_section() # Actualizar la sección de órdenes
-                        messagebox.showinfo("NUBE DE VENTAS Guardada", "La NUBE DE VENTAS ha sido guardada!")
+                        self.create_asset_orders_section()  # Actualizar la sección de órdenes
+                        self.show_info_messagebox(self, "NUBE DE VENTAS Guardada", "La NUBE DE VENTAS ha sido guardada!")
+
                 else:
-                    messagebox.showerror("Error", f"El símbolo '{symbol}' ya no existe en los datos.")
+                    self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
 
             form_window.destroy()
 
         except ValueError:
-            messagebox.showerror("Error", "Por favor, introduce valores numéricos válidos en todos los campos.")
+            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
+
         except ZeroDivisionError:
-            messagebox.showerror("Error", "El precio del nivel no puede ser cero.")
+            self.show_error_messagebox("El precio del nivel no puede ser cero.")
 
     def plot_open_orders_window(self, data_asset, current_price, active_symbol):
         """Genera y muestra el gráfico de órdenes abiertas para el activo seleccionado

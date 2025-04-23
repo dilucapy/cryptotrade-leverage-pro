@@ -107,16 +107,9 @@
         "open_orders": [],
         "buy_limits": [
             {
-                "price": 0.3,
+                "price": 0.09,
                 "amount_usdt": 100.0,
-                "quantity": 333.33333,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 0.23,
-                "amount_usdt": 100.0,
-                "quantity": 434.78261,
+                "quantity": 1111.11111,
                 "stop_loss": 0,
                 "target": 0
             },
@@ -128,13 +121,42 @@
                 "target": 0
             },
             {
-                "price": 0.09,
+                "price": 0.23,
                 "amount_usdt": 100.0,
-                "quantity": 1111.11111,
+                "quantity": 434.78261,
+                "stop_loss": 0,
+                "target": 0
+            },
+            {
+                "price": 0.3,
+                "amount_usdt": 100.0,
+                "quantity": 333.33333,
                 "stop_loss": 0,
                 "target": 0
             }
         ],
-        "sell_limits": []
+        "sell_limits": [
+            {
+                "price": 0.1,
+                "amount_usdt": 100.0,
+                "quantity": 1000.0,
+                "stop_loss": 0,
+                "target": 0
+            },
+            {
+                "price": 0.3,
+                "amount_usdt": 100.0,
+                "quantity": 333.33333,
+                "stop_loss": 0,
+                "target": 0
+            },
+            {
+                "price": 0.5,
+                "amount_usdt": 100.0,
+                "quantity": 200.0,
+                "stop_loss": 0,
+                "target": 0
+            }
+        ]
     }
 }

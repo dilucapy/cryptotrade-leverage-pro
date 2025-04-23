@@ -1457,7 +1457,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
 
         if not symbol:
-            messagebox.showerror("Error", "Por favor, selecciona un activo primero.")
+            self.show_error_messagebox("Por favor, selecciona un activo primero.")
             return
 
         self.show_generate_pink_net_form(symbol)
@@ -1465,38 +1465,54 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def show_generate_pink_net_form(self, symbol):
         """Crea y muestra el formulario para generar la PINK NET."""
         top = tk.Toplevel(self)
+        top.config(bg=self.toplevel_bgcolor)
+        top.geometry('400x320')
         top.title(f"Generar PINK NET para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
-        tk.Label(top, text="Cantidad de Niveles:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        entry_levels = tk.Entry(top)
-        entry_levels.grid(row=0, column=1, padx=5, pady=5)
+        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_levels.grid(row=0, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Precio del Nivel Inicial:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        entry_initial_level = tk.Entry(top)
-        entry_initial_level.grid(row=1, column=1, padx=5, pady=5)
+        tk.Label(top, text="Precio del Nivel Inicial:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        entry_initial_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_initial_level.grid(row=1, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Precio del Nivel Final:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        entry_final_level = tk.Entry(top)
-        entry_final_level.grid(row=2, column=1, padx=5, pady=5)
+        tk.Label(top, text="Precio del Nivel Final:", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        entry_final_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_final_level.grid(row=2, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Monto Total a Invertir (USDT):").grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        entry_investment_amount = tk.Entry(top)
-        entry_investment_amount.grid(row=3, column=1, padx=5, pady=5)
+        tk.Label(top, text="Monto Total a Invertir (USDT):", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky="e")
+        entry_investment_amount = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_investment_amount.grid(row=3, column=1, padx=5, pady=10)
 
         # --- Botones ---
         generate_button = tk.Button(top, text="Generar",
-                                       command=lambda: self.calculate_pink_net_and_ask_save(
-                                           symbol,
-                                           entry_levels.get(),
-                                           entry_initial_level.get(),
-                                           entry_final_level.get(),
-                                           entry_investment_amount.get(),
-                                           top  # Pasar la ventana Toplevel para cerrarla
-                                       ))
+                                    pady=5,
+                                    width=15,
+                                    font=self.button_font,
+                                    cursor="hand2",
+                                    command=lambda: self.calculate_pink_net_and_ask_save(
+                                        symbol,
+                                        entry_levels.get(),
+                                        entry_initial_level.get(),
+                                        entry_final_level.get(),
+                                        entry_investment_amount.get(),
+                                        top  # Pasar la ventana Toplevel para cerrarla
+                                   ))
+
         generate_button.grid(row=4, column=0, columnspan=2, pady=10)
 
-        cancel_button = tk.Button(top, text="Cancelar", command=top.destroy)
+        cancel_button = tk.Button(top, text="Cancelar",
+                                  pady=5,
+                                  width=15,
+                                  font=self.button_font,
+                                  cursor="hand2",
+                                  command=top.destroy)
         cancel_button.grid(row=5, column=0, columnspan=2, pady=5)
 
     def calculate_pink_net_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, investment_amount_str, form_window):
@@ -1508,7 +1524,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             investment_amount = float(investment_amount_str)
 
             if levels <= 0 or investment_amount <= 0:
-                messagebox.showerror("Error", "La cantidad de niveles y el monto de inversión deben ser mayores que cero.")
+                self.show_error_messagebox("La cantidad de niveles y el monto de inversión deben ser mayores que cero.")
                 return
 
             pink_net = []
@@ -1528,31 +1544,35 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 }
                 pink_net.append(level_pink_net)
 
-            result_message = "PINK NET Generada:\n"
+            result_message = "PINK NET Generada:\n\n"
             for level in pink_net:
                 result_message += f"Precio: {level['price']}, Monto: {level['amount_usdt']} USDT, Cantidad: {level['quantity']}\n"
 
-            messagebox.showinfo("PINK NET Generada", result_message)
+            self.show_info_messagebox(self, "PINK NET Generada", result_message )
 
-            save_confirmation = messagebox.askyesno("Guardar PINK NET", "¿Desea guardar estos niveles como órdenes límite de compra?")
+            save_confirmation = self.show_confirmation_dialog(self, "Guardar PINK NET", "¿Desea guardar estos niveles como órdenes límite de compra?")
+
             if save_confirmation:
                 if symbol in self.data:
                     # Advertir al usuario sobre la sobreescritura
-                    overwrite = messagebox.askyesno("Advertencia", "Guardar la PINK NET sobreescribirá las órdenes límite de compra existentes. ¿Continuar?")
+                    overwrite = self.show_confirmation_dialog(self, "Advertencia", "Guardar la PINK NET sobreescribirá las órdenes límite de compra existentes. ¿Continuar?")
+
                     if overwrite:
                         self.data[symbol]["buy_limits"] = pink_net
                         self.save_data()
                         self.create_asset_orders_section()  # Actualizar la sección de órdenes
-                        messagebox.showinfo("PINK NET Guardada", "La PINK NET ha sido guardada en órdenes límite de compra.")
+                        self.show_info_messagebox(self, "PINK NET Guardada", "La PINK NET ha sido guardada en órdenes límite de compra.")
+
                 else:
-                    messagebox.showerror("Error", f"El símbolo '{symbol}' ya no existe en los datos.")
+                    self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
 
             form_window.destroy()
 
         except ValueError:
-            messagebox.showerror("Error", "Por favor, introduce valores numéricos válidos en todos los campos.")
+            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
+
         except ZeroDivisionError:
-            messagebox.showerror("Error", "El precio del nivel no puede ser cero.")
+            self.show_error_messagebox("El precio del nivel no puede ser cero.")
 
     def get_price(self, symbol):
         """

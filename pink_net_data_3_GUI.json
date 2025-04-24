@@ -122,19 +122,6 @@
             }
         ]
     },
-    "ETH": {
-        "margin": 0,
-        "open_orders": [],
-        "buy_limits": [],
-        "sell_take_profit": [
-            {
-                "id": "515948f7-88d6-45d0-ae5f-db7ad63f3cb4",
-                "price": 2100.0,
-                "amount_usdt": 50.0,
-                "quantity": 0.02380952
-            }
-        ]
-    },
     "ACA": {
         "margin": 0,
         "open_orders": [],

@@ -117,41 +117,29 @@
         "margin": 0,
         "open_orders": [],
         "buy_limits": [],
-        "sell_take_profit": []
+        "sell_take_profit": [
+            {
+                "id": "515948f7-88d6-45d0-ae5f-db7ad63f3cb4",
+                "price": 2100.0,
+                "amount_usdt": 50.0,
+                "quantity": 0.02380952
+            }
+        ]
     },
     "ACA": {
         "margin": 0,
-        "open_orders": [],
-        "buy_limits": [
+        "open_orders": [
             {
-                "price": 0.09,
+                "id": "9f55ad71-6663-4600-9e67-f14cd04c8167",
+                "price": 0.03,
                 "amount_usdt": 100.0,
-                "quantity": 1111.11111,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 0.16,
-                "amount_usdt": 100.0,
-                "quantity": 625.0,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 0.23,
-                "amount_usdt": 100.0,
-                "quantity": 434.78261,
-                "stop_loss": 0,
-                "target": 0
-            },
-            {
-                "price": 0.3,
-                "amount_usdt": 100.0,
-                "quantity": 333.33333,
-                "stop_loss": 0,
-                "target": 0
+                "quantity": 3333.33333333,
+                "mother_order": true,
+                "stop_loss": null,
+                "target": null
             }
         ],
+        "buy_limits": [],
         "sell_take_profit": [
             {
                 "price": 0.1,
@@ -167,6 +155,12 @@
                 "price": 0.5,
                 "amount_usdt": 100.0,
                 "quantity": 200.0
+            },
+            {
+                "id": "e6bd2c62-4a55-473e-9db3-184fc264d059",
+                "price": 0.25,
+                "amount_usdt": 100.0,
+                "quantity": 400.0
             }
         ]
     }

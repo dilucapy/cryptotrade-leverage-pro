@@ -1176,23 +1176,28 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         para manejar la adición de la nueva orden (self.handle_add_new_order), y
         finalmente destruye la ventana del formulario. En caso de que la conversión
         a número falle (ValueError), muestra un mensaje de error al usuario."""
+        order_data = {}
         try:
             price_val = float(price)
             amount_val = float(amount)
-            sl_val = float(sl) if sl is not None else None
-            tp_val = float(tp) if tp is not None else None
 
             order_id = str(uuid.uuid4())  # Generar el 'id' único aquí
+            order_data['id'] = order_id
+            order_data['price'] = price_val
+            order_data['amount_usdt'] = amount_val
 
-            # almacena todos los detalles (incluyendo el 'id') en el atributo self.new_order_data como un diccionario
-            self.new_order_data = {
-                'id': order_id,  # Incluir el 'id' en los datos de la orden
-                'price': price_val,
-                'amount_usdt': amount_val,
-                'stop_loss': sl_val,
-                'target': tp_val,
-                'mother_order': mother_order
-            }
+            if order_type == 'open':
+                order_data['mother_order'] = mother_order
+                order_data['stop_loss'] = float(sl) if sl else None
+                order_data['target'] = float(tp) if tp else None
+            elif order_type == 'pending_buy':
+                order_data['stop_loss'] = float(sl) if sl else None
+                order_data['target'] = float(tp) if tp else None
+            elif order_type == 'sell_take_profit':
+                # No se agregan stop_loss ni target para sell_take_profit
+                pass
+
+            self.new_order_data = order_data  # almacena la nueva orden en el atributo 'new_order_data'
             self.handle_add_new_order(order_type)  # llama al metodo manejar la adición de la nueva orden
             form.destroy()  # destruye la ventana del formulario
         except ValueError:
@@ -1295,8 +1300,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 return self.data[symbol].get('open_orders', [])
             elif order_type == "pending_buy":
                 return self.data[symbol].get('buy_limits', [])
-            elif order_type == "pending_sell":
-                return self.data[symbol].get('sell_limits', [])
+            elif order_type == "sell_take_profit":
+                return self.data[symbol].get('sell_take_profit', [])
         return []
 
     def show_orders(self, parent_frame, order_type):
@@ -1324,15 +1329,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 order_info_parts.append(f"MO: {order.get('mother_order', False)}")
 
             if order_type != 'sell_take_profit':
-                order_info_parts.append(f"SL: {order.get('stop_loss', 'N/A')}")
+                order_info_parts.append(f"StopLoss: {order.get('stop_loss', 'N/A')}")
                 order_info_parts.append(f"Target: {order.get('target', 'N/A')}")
 
-            order_info = " ---> ".join(order_info_parts)
+            order_info = "  >  ".join(order_info_parts)
 
             order_label = Label(order_row_frame, text=order_info, font=('Dosis', 12, 'bold'))
             order_label.pack(side=LEFT, anchor='w')  # Empaquetar la etiqueta a la izquierda
 
             delete_button = Button(order_row_frame, text="Delete",
+                                   font=("Segoe UI", 10),
+                                   cursor="hand2",
                                    command=lambda oid=order.get('id'): self.delete_order(oid))
             delete_button.pack(side=RIGHT, padx=5)  # Empaquetar el botón a la derecha
 
@@ -1359,7 +1366,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.save_data()
             self.update_asset_info_display()
             self.create_asset_orders_section()  # Volver a crear la sección de órdenes vacía
-            self.show_info_messagebox(self, "Acción Exitosa", f"Los datos del activo '{symbol}' han sido restablecidos.")
+            self.show_info_messagebox(self, "Acción Exitosa", f"Los datos del activo '{symbol}' han sido borrado.")
 
         else:
             self.show_error_messagebox(f"El símbolo '{symbol}' no existe en los datos.")

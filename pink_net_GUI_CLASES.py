@@ -21,6 +21,7 @@ filename = 'pink_net_data_3_GUI.json'
 mandarina_atomica = '#FEB285'
 azul_palido = '#AACCEE'
 burlywood = 'burlywood'
+persian_pink = '#E887C5'
 
 
 class CustomInfoDialog(tk.Toplevel):
@@ -177,14 +178,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Configurar la ventana principal
         self.state('zoomed')  # Maximizar la ventana
         self.resizable(False, False)  # Impide el redimensionamiento de la ventana.
-        self.config(bg=azul_palido)  # Establece el color de background.
+        self.config(bg='#D5A572')  # Establece el color de background.
 
 
         # Configuración para la selección única de botones de activo
         self.selected_asset = tk.StringVar()  # Almacena el símbolo del activo actualmente seleccionado
         self.active_asset_button = None  # Para rastrear el botón activo
         self.default_button_bg = 'azure4'  # Color de fondo por defecto
-        self.selected_button_bg = 'green'  # Color de fondo cuando está seleccionado
+        self.selected_button_bg = '#0CCE6B'  # Color de fondo cuando está seleccionado (esmeralada, tonalidad de verde)
 
         self.selected_asset_data = None  # Inicialización de self.selected_asset_data
         self.new_order_data = None  # Para almacenar los datos del formulario
@@ -193,7 +194,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.create_widgets()
 
         # Estilos de apariencia para toplevel y button
-        self.toplevel_bgcolor = "orange"  # Color de fondo predeterminado para las ventanas emergentes (Toplevel)
+        self.toplevel_bgcolor_generate_pink_net = persian_pink # Color bg solo para ventana generate pink net
+        self.toplevel_bgcolor = "#AED5CB"  # (Tonalidad celeste) Color de fondo predeterminado para las ventanas emergentes (Toplevel)
         self.button_font = ("Segoe UI", 12)  # Fuente predeterminada para el texto de los botones (familia, tamaño)
         self.button_bgcolor = "lightgreen"  # Color de fondo predeterminado para los botones
         self.button_relief = tk.FLAT  # Estilo de relieve predeterminado para los botones (sin efecto 3D)
@@ -262,8 +264,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Panel Superior (para etiqueta de titulo y Panel de activos)
         self.top_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
         self.top_panel.pack(side=TOP, fill=X)
-        self.title_label = Label(self.top_panel, text='Gestión de Operaciones Apalancadas', fg='azure4', font=('Dosis', 20), bg='burlywood', width=30)
-        self.title_label.grid(row=0, column=0, columnspan=5, pady=5, sticky="ew")
+        self.title_label = Label(self.top_panel, text='Gestión de Operaciones Apalancadas', fg='#333333', font=('Dosis', 20), bg='burlywood', width=30)
+        self.title_label.grid(row=0, column=0, columnspan=5, pady=5, sticky="w")
 
         # Panel de Activos (para los botones de activos)
         self.asset_menu = Frame(self.top_panel, bd=1, relief=FLAT)
@@ -1548,27 +1550,27 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def show_generate_pink_net_form(self, symbol):
         """Crea y muestra el formulario para generar la PINK NET."""
         top = tk.Toplevel(self)
-        top.config(bg=self.toplevel_bgcolor)
+        top.config(bg=self.toplevel_bgcolor_generate_pink_net)
         top.geometry('400x320')
         top.title(f"Generar PINK NET para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
-        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor,
+        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor_generate_pink_net,
                          font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky="e")
         entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_levels.grid(row=0, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Precio del Nivel Inicial:", bg=self.toplevel_bgcolor,
+        tk.Label(top, text="Precio del Nivel Inicial:", bg=self.toplevel_bgcolor_generate_pink_net,
                          font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky="e")
         entry_initial_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_initial_level.grid(row=1, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Precio del Nivel Final:", bg=self.toplevel_bgcolor,
+        tk.Label(top, text="Precio del Nivel Final:", bg=self.toplevel_bgcolor_generate_pink_net,
                          font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky="e")
         entry_final_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_final_level.grid(row=2, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Monto Total a Invertir (USDT):", bg=self.toplevel_bgcolor,
+        tk.Label(top, text="Monto Total a Invertir (USDT):", bg=self.toplevel_bgcolor_generate_pink_net,
                          font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky="e")
         entry_investment_amount = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_investment_amount.grid(row=3, column=1, padx=5, pady=10)

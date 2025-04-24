@@ -1092,21 +1092,30 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         muestra un cuadro de mensaje de error al usuario pidiéndole que ingrese valores numéricos válidos."""
         form = Toplevel(self)
         form.config(bg=self.toplevel_bgcolor)
-        form.geometry('400x280')
-        form.title(f"Nueva Orden de {order_type.capitalize()}")
+        if order_type == 'open':
+            form.geometry('400x320')
+            titulo = 'OPEN'
+        elif order_type == 'pending_buy':
+            form.geometry('400x300')
+            titulo = 'BUY LIMIT'
+        elif order_type == 'sell_take_profit':
+            form.geometry('400x260')
+            titulo = 'SELL TAKE PROFIT'
+
+        form.title(f"Nueva Orden: {titulo}")
 
         row_num = 0
 
         price_label = Label(form, text="Precio:", bg=self.toplevel_bgcolor,
                             font=("Arial", 12, "bold"))
-        price_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+        price_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="e")
         price_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
         price_entry.grid(row=row_num, column=1, padx=5, pady=5)
         row_num += 1
 
         amount_label = Label(form, text="Monto (USDT):", bg=self.toplevel_bgcolor,
                              font=("Arial", 12, "bold"))
-        amount_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+        amount_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="e")
         amount_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
         amount_entry.grid(row=row_num, column=1, padx=5, pady=5)
         row_num += 1
@@ -1117,24 +1126,25 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         take_profit_entry = None
 
         if order_type != 'sell_take_profit':
-            stoploss_label = Label(form, text="Stop Loss:", bg=self.toplevel_bgcolor,
+            stoploss_label = Label(form, text="Stop Loss (opcional):", bg=self.toplevel_bgcolor,
                                    font=("Arial", 12, "bold"))
-            stoploss_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+            stoploss_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="e")
             stoploss_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
             stoploss_entry.grid(row=row_num, column=1, padx=5, pady=5)
             row_num += 1
 
-            take_profit_label = Label(form, text="Target:", bg=self.toplevel_bgcolor,
+            take_profit_label = Label(form, text="Target (opcional):", bg=self.toplevel_bgcolor,
                                       font=("Arial", 12, "bold"))
-            take_profit_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+            take_profit_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="e")
             take_profit_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
             take_profit_entry.grid(row=row_num, column=1, padx=5, pady=5)
             row_num += 1
 
         if order_type == 'open':
             mother_var = BooleanVar()
-            mother_check = Checkbutton(form, text="¿Orden Madre?", variable=mother_var)
-            mother_check.grid(row=row_num, column=0, columnspan=2, padx=5, pady=5, sticky="w")
+            mother_check = Checkbutton(form, text="¿Es Orden Madre?",
+                                       bg=self.toplevel_bgcolor, font=("Arial", 12, "bold"), variable=mother_var)
+            mother_check.grid(row=row_num, column=0, columnspan=2, padx=5, pady=5, sticky="e")
             row_num += 1
         else:
             row_num += 1  # Incrementar row_num para los botones

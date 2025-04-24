@@ -322,7 +322,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         list_symbols = self.get_symbols_for_buttons()  # llama al método como self.metodo()
         row = 1
         column = 0
-        num_columns = 5
+        num_columns = 10
         for symbol in list_symbols:
             button = Button(self.top_panel,
                             text=symbol,
@@ -713,7 +713,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         total_open_amount, list_symbol, list_amount = self.calculate_total_open_amount()
 
         if not list_amount:
-            messagebox.showinfo("Información", "No hay órdenes abiertas guardadas para mostrar los montos.")
+            self.show_info_messagebox(self, "Información", "No hay órdenes abiertas guardadas para mostrar los montos.")
             return 0  # Devuelve 0 si no hay datos
 
         # Se crea una lista, con tuplas creadas con zip (symbol, monto), por el segundo elemento (monto), de menor a mayor.
@@ -834,10 +834,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         top.state('zoomed')  # Maximizar la ventana del gráfico
 
     def list_of_symbols_with_open_order_or_buy_limit(self):
-        """
-        Crea y devuelve una lista de símbolos de activos que tienen al menos
-        una OPEN ORDER o una BUY LIMIT en sus datos (self.data).
-        """
+        """Crea y devuelve una lista de símbolos de activos que tienen al menos
+        una OPEN ORDER o una BUY LIMIT en sus datos (self.data)."""
         list_symbol = []
         if not self.data:
             print("No hay activos guardados en la GUI!\n")
@@ -954,11 +952,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             info_text = f"Símbolo: {symbol}\n"
 
             if current_price is None:
-                tk.messagebox.showerror("Error al obtener precio",
-                                        f"No se pudo obtener el precio actual para el activo: {symbol}")
+                self.show_error_messagebox(f"Error al obtener precio\nNo se pudo obtener el precio actual para el activo: {symbol}")
                 print("No se pudo obtener el precio actual.")
                 self.info_label.config(text="Error al obtener el precio.")  # Informar del error en la GUI
-                return  # Salir de la función para no mostrar información incompleta
+                return  # Salir de la función
             else:
                 info_text += f"Precio actual: {current_price}\n"
 
@@ -974,7 +971,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.info_label.config(text="Seleccione un activo para ver su información.")
 
     def create_asset_info_section(self):
-        # asset_info_frame (contiene nformación del activo como símbolo, precio y margin)
+        # asset_info_frame (contiene información del activo como símbolo, precio y margin)
         self.asset_info_frame = Frame(self.right_panel)  # Empaquetar este frame en right_panel
         self.asset_info_frame.pack(pady=2, fill=X)
 
@@ -994,26 +991,28 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             'amount_usdt': order_details.get('amount_usdt'),
             'quantity': round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
                               8) if order_details.get('price', 1) != 0 else 0,
-            'stop_loss': order_details.get('stop_loss'),
-            'target': order_details.get('target'),
         }
 
         if order_type == 'open':
             order['mother_order'] = order_details.get('mother_order', False)
+            order['stop_loss'] = order_details.get('stop_loss')
+            order['target'] = order_details.get('target')
             if 'open_orders' not in data_asset:
                 data_asset['open_orders'] = []
             data_asset['open_orders'].append(order)
             print("Orden abierta agregada!")
         elif order_type == 'pending_buy':
+            order['stop_loss'] = order_details.get('stop_loss')
+            order['target'] = order_details.get('target')
             if 'buy_limits' not in data_asset:
                 data_asset['buy_limits'] = []
             data_asset['buy_limits'].append(order)
             print("Orden de compra pendiente agregada!")
-        elif order_type == 'pending_sell':
-            if 'sell_limits' not in data_asset:
-                data_asset['sell_limits'] = []
-            data_asset['sell_limits'].append(order)
-            print("Orden de venta pendiente agregada!")
+        elif order_type == 'sell_take_profit':
+            if 'sell_take_profit' not in data_asset:
+                data_asset['sell_take_profit'] = []
+            data_asset['sell_take_profit'].append(order)
+            print("Orden de venta de toma de ganancia agregada!")
         else:
             print(f"Tipo de orden '{order_type}' no válido.")
             return data_asset
@@ -1044,25 +1043,35 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             print(f"Error al guardar los datos: {e}")
 
     def handle_add_new_order(self, order_type):
-        """
-        Toma la información de la nueva orden recopilada del formulario
+        """Toma la información de la nueva orden recopilada del formulario
         (almacenada en self.new_order_data) y la agrega a la estructura
         de datos para el activo seleccionado. Luego, actualiza la
-        visualización de las órdenes.
-        """
+        visualización de las órdenes."""
+        # Obtiene el símbolo del activo que actualmente está seleccionado en la interfaz.
         active_symbol = self.selected_asset.get()
+
+        # Verifica si hay un símbolo de activo seleccionado en 'self.selected_asset'
+        # y si se han recopilado datos de la nueva orden en el atributo 'self.new_order_data'.
         if active_symbol in self.data and self.new_order_data:
+            # Si ambas condiciones son verdaderas, procede a agregar la nueva orden.
+            # Llama al método 'self.add_new_order', pasando:
+            #   - Los datos actuales del activo seleccionado ('self.data[active_symbol]').
+            #   - El símbolo del activo activo ('active_symbol').
+            #   - El tipo de orden ('order_type').
+            #   - Los datos de la nueva orden recopilados del formulario ('self.new_order_data').
+            # El resultado (la estructura de datos del activo actualizada) se guarda
+            # nuevamente en 'self.data[active_symbol]'.
             self.data[active_symbol] = self.add_new_order(self.data[active_symbol], active_symbol, order_type, self.new_order_data)
-            #self.save_data_asset(self.data, self.data[active_symbol], active_symbol)  # Guardar los datos
             self.show_orders(self.open_orders_frame, "open")
             self.show_orders(self.pending_buy_orders_frame, "pending_buy")
-            self.show_orders(self.pending_sell_orders_frame, "pending_sell")
+            self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
             self.update_asset_info_display()
             self.new_order_data = None  # Resetear los datos del formulario
         elif not active_symbol:
-            tk.messagebox.showerror("Error", "Por favor, seleccione un activo primero.")
+            self.show_error_messagebox("Por favor, seleccione un activo primero.")
+
         elif not self.new_order_data:
-            tk.messagebox.showerror("Error", "No se ingresaron datos en el formulario.")
+            self.show_error_messagebox("No se ingresaron datos en el formulario.")
 
     def show_new_order_form(self, order_type):
         """Esta función es llamada cuando el usuario hace clic en uno de los botones de
@@ -1071,8 +1080,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         Se encarga de procesar los datos ingresados por el usuario en el formulario
         para crear una nueva orden.
         Recibe el tipo de orden ('order_type') como argumento, y los valores de los
-        campos de entrada (precio, monto, stop loss, target, y si es una orden madre).
-        Intenta convertir los valores de precio, monto, stop loss ytarget a números de punto flotante.
+        campos de entrada correspondientes segun el order_type
+        (precio, monto, stop loss, target, si es una orden madre).
+        Intenta convertir los valores de precio, monto, stop loss y target a números de punto flotante.
         Si la conversión es exitosa, almacena estos valores
         (junto con el booleano de 'mother_order') en el atributo 'self.new_order_data' de la clase.
         Luego, llama a la función 'self.handle_add_new_order' para que se agregue la
@@ -1081,63 +1091,100 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         Si ocurre un error durante la conversión a número (por ejemplo, si el usuario ingresó texto),
         muestra un cuadro de mensaje de error al usuario pidiéndole que ingrese valores numéricos válidos."""
         form = Toplevel(self)
+        form.config(bg=self.toplevel_bgcolor)
+        form.geometry('400x280')
         form.title(f"Nueva Orden de {order_type.capitalize()}")
 
-        price_label = Label(form, text="Precio:")
-        price_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        price_entry = Entry(form)
-        price_entry.grid(row=0, column=1, padx=5, pady=5)
+        row_num = 0
 
-        amount_label = Label(form, text="Monto (USDT):")
-        amount_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        amount_entry = Entry(form)
-        amount_entry.grid(row=1, column=1, padx=5, pady=5)
+        price_label = Label(form, text="Precio:", bg=self.toplevel_bgcolor,
+                            font=("Arial", 12, "bold"))
+        price_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+        price_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
+        price_entry.grid(row=row_num, column=1, padx=5, pady=5)
+        row_num += 1
 
-        sl_label = Label(form, text="Stop Loss (0 para ninguno):")
-        sl_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        sl_entry = Entry(form)
-        sl_entry.grid(row=2, column=1, padx=5, pady=5)
+        amount_label = Label(form, text="Monto (USDT):", bg=self.toplevel_bgcolor,
+                             font=("Arial", 12, "bold"))
+        amount_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+        amount_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
+        amount_entry.grid(row=row_num, column=1, padx=5, pady=5)
+        row_num += 1
 
-        tp_label = Label(form, text="Target (0 para ninguno):")
-        tp_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        tp_entry = Entry(form)
-        tp_entry.grid(row=3, column=1, padx=5, pady=5)
+        stoploss_label = None
+        stoploss_entry = None
+        take_profit_label = None
+        take_profit_entry = None
 
-        mother_var = BooleanVar()
+        if order_type != 'sell_take_profit':
+            stoploss_label = Label(form, text="Stop Loss:", bg=self.toplevel_bgcolor,
+                                   font=("Arial", 12, "bold"))
+            stoploss_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+            stoploss_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
+            stoploss_entry.grid(row=row_num, column=1, padx=5, pady=5)
+            row_num += 1
+
+            take_profit_label = Label(form, text="Target:", bg=self.toplevel_bgcolor,
+                                      font=("Arial", 12, "bold"))
+            take_profit_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="w")
+            take_profit_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
+            take_profit_entry.grid(row=row_num, column=1, padx=5, pady=5)
+            row_num += 1
+
         if order_type == 'open':
+            mother_var = BooleanVar()
             mother_check = Checkbutton(form, text="¿Orden Madre?", variable=mother_var)
-            mother_check.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="w")
+            mother_check.grid(row=row_num, column=0, columnspan=2, padx=5, pady=5, sticky="w")
+            row_num += 1
+        else:
+            row_num += 1  # Incrementar row_num para los botones
 
         submit_button = Button(form, text="Crear Orden",
-                               command=lambda: self.get_form_data(form, order_type, price_entry.get(),
-                                                                  amount_entry.get(), sl_entry.get(),
-                                                                  tp_entry.get(),
-                                                                  mother_var.get() if order_type == 'open' else False))
-        submit_button.grid(row=5, column=0, columnspan=2, pady=10)
+                               pady=5,
+                               padx=5,
+                               width=15,
+                               font=self.button_font,
+                               cursor="hand2",
+                               command=lambda: self.get_form_data(  # llama a este metodo de la clase de GUI
+                                   form,
+                                   order_type,
+                                   price_entry.get(),  # Obtiene el precio del campo de entrada
+                                   amount_entry.get(),  # Obtiene el monto del campo de entrada
+                                   stoploss_entry.get() if stoploss_entry else None,  # Obtiene el Stop Loss o None si no existe
+                                   take_profit_entry.get() if take_profit_entry else None,  # Obtiene el Take Profit  o None si no existe
+                                   mother_var.get() if order_type == 'open' else False  # Obtiene el estado de orden madre si es 'open'
+                               ))
+        submit_button.grid(row=row_num, column=1, columnspan=2, pady=10)
+        row_num += 1
 
-        cancel_button = Button(form, text="Cancelar", command=form.destroy)
-        cancel_button.grid(row=6, column=0, columnspan=2, pady=5)
+        cancel_button = Button(form, text="Cancelar",
+                               pady=5,
+                               padx=5,
+                               width=15,
+                               font=self.button_font,
+                               cursor="hand2",
+                               command=form.destroy)
+        cancel_button.grid(row=row_num, column=1, columnspan=2, pady=10)
 
         form.wait_window()  # Pausa la ejecución de la ventana principal hasta que el formulario se cierre.
 
     def get_form_data(self, form, order_type, price, amount, sl, tp, mother_order):
-        """
-        Recupera los datos ingresados por el usuario en el formulario de nueva orden,
+        """Recupera los datos ingresados por el usuario en el formulario de nueva orden,
         genera un 'id' único para la orden, valida los datos convirtiéndolos a sus
         tipos numéricos correspondientes, almacena todos los detalles (incluyendo el 'id')
         en el atributo self.new_order_data como un diccionario, llama a la función
         para manejar la adición de la nueva orden (self.handle_add_new_order), y
         finalmente destruye la ventana del formulario. En caso de que la conversión
-        a número falle (ValueError), muestra un mensaje de error al usuario.
-        """
+        a número falle (ValueError), muestra un mensaje de error al usuario."""
         try:
             price_val = float(price)
             amount_val = float(amount)
-            sl_val = float(sl)
-            tp_val = float(tp)
+            sl_val = float(sl) if sl is not None else None
+            tp_val = float(tp) if tp is not None else None
 
             order_id = str(uuid.uuid4())  # Generar el 'id' único aquí
 
+            # almacena todos los detalles (incluyendo el 'id') en el atributo self.new_order_data como un diccionario
             self.new_order_data = {
                 'id': order_id,  # Incluir el 'id' en los datos de la orden
                 'price': price_val,
@@ -1149,7 +1196,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.handle_add_new_order(order_type)  # llama al metodo manejar la adición de la nueva orden
             form.destroy()  # destruye la ventana del formulario
         except ValueError:
-            tk.messagebox.showerror("Error", "Por favor, ingrese valores numéricos válidos.")
+            self.show_error_messagebox("Por favor, ingrese valores numéricos válidos.")
 
     def delete_order(self, order_id):
         """Elimina una orden del activo seleccionado basándose en su ID."""
@@ -1172,7 +1219,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         # Recargar y mostrar las órdenes actualizadas
                         self.show_orders(self.open_orders_frame, "open")
                         self.show_orders(self.pending_buy_orders_frame, "pending_buy")
-                        self.show_orders(self.pending_sell_orders_frame, "pending_sell")
+                        self.show_orders(self.sell_take_profit_frame, "pending_sell")
                         return  # Salir de la función una vez que se elimina la orden
 
         print(f"No se encontró ninguna orden con ID '{order_id}' para eliminar.")
@@ -1186,8 +1233,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.open_orders_frame.destroy()
         if hasattr(self, 'pending_buy_orders_frame'):
             self.pending_buy_orders_frame.destroy()
-        if hasattr(self, 'pending_sell_orders_frame'):
-            self.pending_sell_orders_frame.destroy()
+        if hasattr(self, 'sell_take_profit_frame'):
+            self.sell_take_profit_frame.destroy()
         if hasattr(self, 'buttons_frame_orders'):  # Destruir el frame de los botones también si existe
             self.buttons_frame_orders.destroy()
 
@@ -1202,7 +1249,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         actions = [
             {"text": "Add OPEN ORDER", "command": lambda: self.show_new_order_form('open')},
             {"text": "Add BUY LIMIT", "command": lambda: self.show_new_order_form('pending_buy')},
-            {"text": "Add SELL LIMIT", "command": lambda: self.show_new_order_form('pending_sell')},
+            {"text": "Add SELL TAKE PROFIT", "command": lambda: self.show_new_order_form('sell_take_profit')},
             # Agrega aquí más botones de creación si es necesario
         ]
 
@@ -1236,10 +1283,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         Label(self.pending_buy_orders_frame, text="Compras Pendientes").pack(anchor='w')
         self.show_orders(self.pending_buy_orders_frame, "pending_buy")
 
-        self.pending_sell_orders_frame = Frame(self.asset_orders_frame)
-        self.pending_sell_orders_frame.pack(fill=X, pady=2)
-        Label(self.pending_sell_orders_frame, text="Ventas Pendientes").pack(anchor='w')
-        self.show_orders(self.pending_sell_orders_frame, "pending_sell")
+        self.sell_take_profit_frame = Frame(self.asset_orders_frame)
+        self.sell_take_profit_frame.pack(fill=X, pady=2)
+        Label(self.sell_take_profit_frame, text="Ventas Take Profit").pack(anchor='w')
+        self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
 
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
@@ -1258,7 +1305,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         for widget in parent_frame.winfo_children():
             if not isinstance(widget, tk.Label):
                 widget.destroy()
-        
+
         symbol = self.selected_asset.get()
         orders = self.get_orders_for_asset(symbol, order_type)
 
@@ -1267,9 +1314,20 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             order_row_frame = Frame(parent_frame)
             order_row_frame.pack(fill=X, pady=2)  # Empaquetar el frame de la fila
 
-            order_info = f"Price: {order.get('price', 'N/A')} ---> {order.get('amount_usdt', 'N/A')} USDT, " \
-                         f"SL: {order.get('stop_loss', 'N/A')}, Target: {order.get('target', 'N/A')}, " \
-                         f"Quanttity: {order.get('quantity', 'N/A')}, MO: {order.get('mother_order', False)}"
+            order_info_parts = [
+                f"Price: {order.get('price', 'N/A')}",
+                f"Amount: {order.get('amount_usdt', 'N/A')} USDT",
+                f"Quantity: {order.get('quantity', 'N/A')}",
+            ]
+
+            if order_type == 'open':
+                order_info_parts.append(f"MO: {order.get('mother_order', False)}")
+
+            if order_type != 'sell_take_profit':
+                order_info_parts.append(f"SL: {order.get('stop_loss', 'N/A')}")
+                order_info_parts.append(f"Target: {order.get('target', 'N/A')}")
+
+            order_info = " ---> ".join(order_info_parts)
 
             order_label = Label(order_row_frame, text=order_info, font=('Dosis', 12, 'bold'))
             order_label.pack(side=LEFT, anchor='w')  # Empaquetar la etiqueta a la izquierda
@@ -1278,9 +1336,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                    command=lambda oid=order.get('id'): self.delete_order(oid))
             delete_button.pack(side=RIGHT, padx=5)  # Empaquetar el botón a la derecha
 
-            """# Botón de Editar (opcional, pero lo coloco como ejemplo)
+            """# Botón de Editar (opcional para editar ordenes en otras version de sofware futuro)
             edit_button = Button(order_row_frame, text="Editar",
-                                 command=lambda oid=order.get('id'): self.edit_order(oid))
+                                             command=lambda oid=order.get('id'): self.edit_order(oid))
             edit_button.pack(side=RIGHT, padx=2)"""
 
     def delete_all_asset_data(self):
@@ -1293,18 +1351,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 self.asset_orders_frame.destroy()
 
             self.data[symbol] = {
-                "current_price": 0,
                 "margin": 0,
                 "open_orders": [],
                 "buy_limits": [],
-                "sell_limits": []
+                "sell_take_profit": []
             }
             self.save_data()
             self.update_asset_info_display()
-            self.create_asset_orders_section() # Volver a crear la sección de órdenes vacía
-            messagebox.showinfo("Acción Exitosa", f"Los datos del activo '{symbol}' han sido restablecidos.")
+            self.create_asset_orders_section()  # Volver a crear la sección de órdenes vacía
+            self.show_info_messagebox(self, "Acción Exitosa", f"Los datos del activo '{symbol}' han sido restablecidos.")
+
         else:
-            messagebox.showerror("Error", f"El símbolo '{symbol}' no existe en los datos.")
+            self.show_error_messagebox(f"El símbolo '{symbol}' no existe en los datos.")
 
     def clear_asset_buttons(self):
         """Elimina todos los botones de activos del panel superior."""
@@ -1318,7 +1376,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
 
         if symbol:
-            confirmation = messagebox.askyesno("Confirmar Eliminación", f"¿Está seguro de que desea eliminar el activo '{symbol}'?")
+            confirmation = self.show_confirmation_dialog(self, "Confirmar Eliminación", f"¿Está seguro de que desea eliminar el activo '{symbol}'?")
             if confirmation:
                 if symbol in self.data:
                     del self.data[symbol]
@@ -1336,13 +1394,16 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     # Recrear los widgets con la lista de activos actualizada
                     self.create_widgets()
 
-                    messagebox.showinfo("Acción Exitosa", f"El activo '{symbol}' ha sido eliminado.")
+                    self.show_info_messagebox(self, "Acción Exitosa", f"El activo '{symbol}' ha sido eliminado.")
+
                 else:
-                    messagebox.showerror("Error", f"El activo '{symbol}' no existe en los datos.")
+                    self.show_error_messagebox(f"El activo '{symbol}' no existe en los datos.")
+
             else:
-                messagebox.showinfo("Eliminación Cancelada", f"Se mantuvo el activo '{symbol}'.")
+                self.show_info_messagebox(self, "Eliminación Cancelada", f"Se mantuvo el activo '{symbol}'.")
+
         else:
-            messagebox.showerror("Error", "Por favor, seleccione un activo para eliminar.")
+            self.show_error_messagebox("Por favor, seleccione un activo para eliminar.")
 
     def calculate_mother_order(self):
         """Abre el formulario para calcular la orden madre."""
@@ -1425,9 +1486,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     f"PRICE Mother Order {symbol}: {price_mother_order_rounded}\n"
                     f"QUANTITY Mother Order: {quantity_mother_order}"
                 )
-                messagebox.showinfo("Resultado Orden Madre", result_message)
+                self.show_info_messagebox(self, "Resultado Orden Madre", result_message)
 
-                save_confirmation = messagebox.askyesno("Guardar Orden Madre", "¿Desea guardar esta orden madre en OPEN ORDERS?")
+                save_confirmation = self.show_confirmation_dialog(self, "Guardar Orden Madre", "¿Desea guardar esta orden madre en OPEN ORDERS?")
                 if save_confirmation:
                     if symbol in self.data:
                         new_order = {
@@ -1443,14 +1504,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         self.data[symbol]["open_orders"].append(new_order)
                         self.save_data()
                         self.create_asset_orders_section()
-                        messagebox.showinfo("Orden Guardada", "La orden madre ha sido guardada en órdenes abiertas.")
+                        self.show_info_messagebox(self, "Orden Guardada", "La orden madre ha sido guardada en órdenes abiertas.")
+
                     else:
-                        messagebox.showerror("Error", f"El símbolo '{symbol}' ya no existe en los datos.")
+                        self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
+
                 form_window.destroy()  # Cerrar el formulario después del cálculo y (opcional) guardado de la orden
             else:
-                messagebox.showerror("Error", "La cantidad de la orden madre no puede ser cero.")
+                self.show_error_messagebox("La cantidad de la orden madre no puede ser cero.")
+
         except ValueError:
-            messagebox.showerror("Error", "Por favor, introduce valores numéricos válidos en todos los campos.")
+            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
 
     def generate_pink_net(self):
         """Abre el formulario para generar la PINK NET (Ordenes de compras pendientes)"""
@@ -1592,7 +1656,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             data = response.json()
             return float(data['price'])
         except requests.exceptions.RequestException as e:
-            messagebox.showerror("Error de API", f"Error al obtener el precio de {symbol}: {e}")
+            self.show_error_messagebox(f"Error de API\nError al obtener el precio de {symbol}: {e}")
             return None
 
     def calculate_burn_price(self):
@@ -1664,7 +1728,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             pass  # El error ya se mostró en get_price()
 
     def generate_sales_cloud(self):
-        """Abre el formulario para generar la NUBE DE VENTAS."""
+        """Abre el formulario para generar la NUBE DE VENTAS.
+        (genera los Niveles de Venta de Toma de Ganancia)"""
         symbol = self.selected_asset.get()
 
         if not symbol:
@@ -1678,7 +1743,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         top = tk.Toplevel(self)
         top.config(bg=self.toplevel_bgcolor)
         top.geometry('420x280')
-        top.title(f"Generar NUBE DE VENTAS para {symbol}")
+        top.title(f"Generar Niveles de Toma de Ganancias para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
         tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor,
@@ -1728,7 +1793,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button.grid(row=5, column=0, columnspan=2, pady=5)
 
     def calculate_sales_cloud_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, withdrawal_amount_str, form_window):
-        """Realiza el cálculo de la NUBE DE VENTAS y pregunta si se guarda."""
+        """Realiza el cálculo de los niveles de ventas y pregunta si se guarda."""
         try:
             levels = int(levels_str)
             initial_level = float(initial_level_str)
@@ -1759,28 +1824,26 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 level_cloud = {
                     'price': round(price, 3),
                     'amount_usdt': round(amount_per_level, 2),
-                    'quantity': round(quantity, 5),
-                    'stop_loss': 0,
-                    'target': 0,
-                }
+                    'quantity': round(quantity, 5)}
+
                 sales_cloud.append(level_cloud)
 
-            result_message = "NUBE DE VENTAS Generada:\n\n"
+            result_message = "Niveles de Toma de Ganancias Generada:\n\n"
             for level in sales_cloud:
                 result_message += f"Precio: {level['price']}, Monto: {level['amount_usdt']} USDT, Cantidad: {level['quantity']}\n"
 
-            self.show_info_messagebox(self, "NUBE DE VENTAS Generada", result_message)
+            self.show_info_messagebox(self, "VENTAS de Toma de Ganancia Generada", result_message)
 
-            save_confirmation = self.show_confirmation_dialog(self, "Guardar NUBE DE VENTAS", "¿Desea guardar estos niveles como SELL LIMIT?")
+            save_confirmation = self.show_confirmation_dialog(self, "Guardar Niveles de VENTAS", "¿Desea guardar estos niveles como SELL TAKE PROFIT?")
             if save_confirmation:
                 if symbol in self.data:
                     # Advertir al usuario sobre la sobreescritura
-                    overwrite = self.show_confirmation_dialog(self, "Advertencia", "Guardar la NUBE DE VENTAS sobreescribirá las órdenes límite de venta existentes. ¿Continuar?")
+                    overwrite = self.show_confirmation_dialog(self, "Advertencia", "Guardar la Niveles de Toma de Ganancias, sobreescribirá \n las órdenes existentes en SELL TAKE PROFIT. ¿Continuar?")
                     if overwrite:
-                        self.data[symbol]["sell_limits"] = sales_cloud
+                        self.data[symbol]["sell_take_profit"] = sales_cloud
                         self.save_data()
                         self.create_asset_orders_section()  # Actualizar la sección de órdenes
-                        self.show_info_messagebox(self, "NUBE DE VENTAS Guardada", "La NUBE DE VENTAS ha sido guardada!")
+                        self.show_info_messagebox(self, "Niveles VENTAS de Toma de Ganancias Guardada", "Los Niveles de VENTAS han sido guardado!")
 
                 else:
                     self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
@@ -2006,7 +2069,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
             {"text": "Generar PINK NET", "command": self.generate_pink_net},
             {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
-            {"text": "Generar Nube de Ventas", "command": self.generate_sales_cloud},
+            {"text": "Generar Niveles de Ventas", "command": self.generate_sales_cloud},
             {"text": "Renderizar Órdenes Abiertas", "command": self.render_open_orders},
         ]
 

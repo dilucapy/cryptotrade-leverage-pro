@@ -1209,7 +1209,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         if symbol in self.data:
             # este bucle asegura que intentemos eliminar la orden de la lista correcta.
-            for order_type_key in ['open_orders', 'buy_limits', 'sell_limits']:
+            for order_type_key in ['open_orders', 'buy_limits', 'sell_take_profit']:
                 if order_type_key in self.data[symbol]:  # verifica si esa clave existe dentro del diccionario de datos del activo seleccionado
                     # guardamos la longitud original de la lista de órdenes del tipo actual.
                     # Esto nos permitirá verificar más tarde si realmente se eliminó alguna orden.
@@ -1224,7 +1224,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         # Recargar y mostrar las órdenes actualizadas
                         self.show_orders(self.open_orders_frame, "open")
                         self.show_orders(self.pending_buy_orders_frame, "pending_buy")
-                        self.show_orders(self.sell_take_profit_frame, "pending_sell")
+                        self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
                         return  # Salir de la función una vez que se elimina la orden
 
         print(f"No se encontró ninguna orden con ID '{order_id}' para eliminar.")

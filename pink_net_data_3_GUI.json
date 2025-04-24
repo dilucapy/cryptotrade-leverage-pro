@@ -132,18 +132,6 @@
         "buy_limits": [],
         "sell_take_profit": [
             {
-                "id": "c7da58ce-7b8a-4443-81e5-987fb9d4c043",
-                "price": 0.05,
-                "amount_usdt": 100.0,
-                "quantity": 2000.0
-            },
-            {
-                "id": "0ac12888-ecfa-4d53-9882-7d12d68f8818",
-                "price": 0.085,
-                "amount_usdt": 100.0,
-                "quantity": 1176.47059
-            },
-            {
                 "id": "465ce2f2-2680-4d21-bd3b-d425fffe4c0e",
                 "price": 0.12,
                 "amount_usdt": 100.0,

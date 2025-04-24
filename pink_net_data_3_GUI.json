@@ -128,39 +128,26 @@
     },
     "ACA": {
         "margin": 0,
-        "open_orders": [
-            {
-                "id": "9f55ad71-6663-4600-9e67-f14cd04c8167",
-                "price": 0.03,
-                "amount_usdt": 100.0,
-                "quantity": 3333.33333333,
-                "mother_order": true,
-                "stop_loss": null,
-                "target": null
-            }
-        ],
+        "open_orders": [],
         "buy_limits": [],
         "sell_take_profit": [
             {
-                "price": 0.1,
+                "id": "c7da58ce-7b8a-4443-81e5-987fb9d4c043",
+                "price": 0.05,
                 "amount_usdt": 100.0,
-                "quantity": 1000.0
+                "quantity": 2000.0
             },
             {
-                "price": 0.3,
+                "id": "0ac12888-ecfa-4d53-9882-7d12d68f8818",
+                "price": 0.085,
                 "amount_usdt": 100.0,
-                "quantity": 333.33333
+                "quantity": 1176.47059
             },
             {
-                "price": 0.5,
+                "id": "465ce2f2-2680-4d21-bd3b-d425fffe4c0e",
+                "price": 0.12,
                 "amount_usdt": 100.0,
-                "quantity": 200.0
-            },
-            {
-                "id": "e6bd2c62-4a55-473e-9db3-184fc264d059",
-                "price": 0.25,
-                "amount_usdt": 100.0,
-                "quantity": 400.0
+                "quantity": 833.33333
             }
         ]
     }

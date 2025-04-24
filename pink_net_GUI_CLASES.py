@@ -1829,6 +1829,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 price = initial_level + i * increment
                 quantity = amount_per_level / price if price > 0 else 0
                 level_cloud = {
+                    'id': str(uuid.uuid4()),  # Generar 'id' único para cada orden de venta
                     'price': round(price, 3),
                     'amount_usdt': round(amount_per_level, 2),
                     'quantity': round(quantity, 5)}

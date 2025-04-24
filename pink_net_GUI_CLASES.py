@@ -1092,6 +1092,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         muestra un cuadro de mensaje de error al usuario pidiéndole que ingrese valores numéricos válidos."""
         form = Toplevel(self)
         form.config(bg=self.toplevel_bgcolor)
+        titulo = ''
         if order_type == 'open':
             form.geometry('400x320')
             titulo = 'OPEN'
@@ -1967,9 +1968,22 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         ax2.set_xlabel('ORDERS NON MOTHER')
         ax2.set_ylabel('Profits USDT')
 
-        # Configuraciones comunes a todos los casos para ax2
+        # --- Configuraciones comunes a todos los casos para ax2 ---
         ax2.grid(axis='y', linestyle='--', alpha=0.7)
         ax2.axhline(y=0, color='black', linestyle='-', linewidth=1)
+
+        # Crear y mostrar la leyenda
+        handles = []
+        labels = []
+        # Leyenda de abreviaturas
+        legend_labels = {'P': 'Precio', 'I': 'Monto Inicial (USDT)', 'Pf': 'Beneficios (USDT)',
+                         '%': 'Porcentaje'}
+        for key, value in legend_labels.items():
+            handle = plt.Rectangle((0, 0), 1, 1, color='black', ec='black')
+            label = f"{key}: {value}"
+            handles.append(handle)
+            labels.append(label)
+        ax2.legend(handles, labels, loc='upper right', fontsize=10)
 
         # --- Lógica para diferentes escenarios de órdenes no madre ---
         if non_mother_profits:
@@ -1994,24 +2008,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         linestyle='--', label=f'TOTAL PROFIT OPEN ORDERS: {total_non_mother_profits} USDT',
                         alpha=0.7)
 
-            # --- Crear y mostrar la leyenda ---
-            handles = []
-            labels = []
             # Handle y label para el total profit
             total_profit_color = 'red' if total_non_mother_profits <= 0 else 'forestgreen'
             profit_handle = plt.Line2D([0], [0], color=total_profit_color, linestyle='--')
             profit_label = f'TOTAL NON MOTHER PFOFIT: {total_non_mother_profits} USDT'
             handles.append(profit_handle)
             labels.append(profit_label)
-            # Leyenda de abreviaturas
-            legend_labels = {'P': 'Precio', 'I': 'Monto Inicial (USDT)', 'Pf': 'Beneficios (USDT)',
-                             '%': 'Porcentaje'}
-            for key, value in legend_labels.items():
-                handle = plt.Rectangle((0, 0), 1, 1, color='black', ec='black')
-                label = f"{key}: {value}"
-                handles.append(handle)
-                labels.append(label)
-            ax2.legend(handles, labels, loc='upper right', fontsize=10)
 
             # Limites del eje Y para ordenes no-madre
             margen_porcentual_nmo = 0.1
@@ -2026,7 +2028,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         else:
             ax2.set_xticks([])
             ax2.set_ylim(-50, 50)  # Valores predeterminados si no hay órdenes no madre
-            ax2.text(0.5, 0.5, "No Open Orders (Non-Mother)", ha='center', va='center', fontsize=14, color='blue',
+            ax2.text(0.5, 0.8, "No Open Orders (Non-Mother)", ha='center', va='center', fontsize=14, color='blue',
                      weight='bold')
 
         # Añade un texto con el precio actual y el beneficio total a la figura.

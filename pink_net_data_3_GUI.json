@@ -62,6 +62,15 @@
                 "stop_loss": "N/A",
                 "target": "N/A",
                 "mother_order": true
+            },
+            {
+                "id": "a017af11-00ce-48c4-aa62-7cbf7e568da6",
+                "price": 2.03,
+                "amount_usdt": 111.0,
+                "quantity": 54.67980296,
+                "mother_order": false,
+                "stop_loss": null,
+                "target": null
             }
         ],
         "buy_limits": [

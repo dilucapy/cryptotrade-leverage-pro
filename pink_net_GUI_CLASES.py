@@ -117,6 +117,17 @@ class CustomConfirmationDialog(tk.Toplevel):
 
         self.transient(parent)
         self.grab_set()
+
+        # Centrar la ventana después de que se haya creado el layout
+        self.update_idletasks()  # Forzar la actualización del layout para obtener el tamaño real
+        width = self.winfo_width()  # Obtener el ancho real de la ventana
+        height = self.winfo_height()  # Obtener la altura real de la ventana
+        screen_width = self.winfo_screenwidth()  # Obtener el ancho de la pantalla
+        screen_height = self.winfo_screenheight()  # Obtener la altura de la pantalla
+        x = (screen_width - width) // 2  # Calcular la coordenada x para centrar
+        y = (screen_height - height) // 2   # Calcular la coordenada y para centrar
+        self.geometry(f'+{x}+{y}')  # Establecer la posición de la ventana
+
         parent.wait_window(self)
 
     def set_result(self, value):
@@ -1218,7 +1229,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.show_error_messagebox("Por favor, ingrese valores numéricos válidos.")
 
     def delete_order(self, order_id):
-        """Elimina una orden del activo seleccionado basándose en su ID."""
+        """Pide Confirmacion al usuario para eliminar una orden del activo seleccionado basándose en su ID."""
+        if not self.show_confirmation_dialog(self, "Confirmar Eliminación", "¿Está seguro de que desea eliminar esta orden?"):
+            return  # Si el usuario hace clic en "No", salimos de la función sin eliminar nada
         symbol = self.selected_asset.get()
 
         if symbol in self.data:
@@ -1351,8 +1364,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             order_label = Label(order_row_frame, text=order_info, font=('Dosis', 12, 'bold'))
             order_label.pack(side=LEFT, anchor='w')  # Empaquetar la etiqueta a la izquierda
 
-            delete_button = Button(order_row_frame, text="Delete",
-                                   font=("Segoe UI", 10),
+            delete_button = Button(order_row_frame, text="X", fg='white', bg='#C21E29', padx=5,
+                                   font=("Segoe UI", 10, 'bold'),
                                    cursor="hand2",
                                    command=lambda oid=order.get('id'): self.delete_order(oid))
             delete_button.pack(side=RIGHT, padx=5)  # Empaquetar el botón a la derecha

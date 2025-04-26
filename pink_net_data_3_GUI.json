@@ -54,13 +54,13 @@
         "margin": 228.57,
         "open_orders": [
             {
-                "id": "f0e58389-a8ac-4ec3-8c5c-42469ccaa9de",
+                "id": "063d066d-92d8-4e91-bc2f-7a809bf05edd",
                 "type": "open",
-                "price": 2.074,
-                "amount_usdt": 200.0,
-                "quantity": 94.32623,
-                "stop_loss": "N/A",
-                "target": "N/A",
+                "price": 2.103,
+                "amount_usdt": 250.0,
+                "quantity": 116.807,
+                "stop_loss": null,
+                "target": null,
                 "mother_order": true
             },
             {
@@ -102,7 +102,18 @@
     },
     "DOT": {
         "margin": 228.57,
-        "open_orders": [],
+        "open_orders": [
+            {
+                "id": "44874173-80bb-4130-a0b3-5d8c3b3d8552",
+                "type": "open",
+                "price": 3.218,
+                "amount_usdt": 300.0,
+                "quantity": 20.0,
+                "stop_loss": null,
+                "target": null,
+                "mother_order": true
+            }
+        ],
         "buy_limits": [],
         "sell_take_profit": [
             {

@@ -1503,6 +1503,54 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                   command=top.destroy)
         cancel_button.grid(row=4, column=0, pady=30)
 
+    def perform_mother_order_calculation2(self, symbol, avg_price_str, open_pos_str, profit_str, qty_str, form_window):
+        """Realiza el cálculo de la orden madre y pregunta si se guarda."""
+        try:
+            average_purchase_price = float(avg_price_str)
+            open_position_usdt = float(open_pos_str)
+            profits_taken = float(profit_str)
+            quantity_mother_order = float(qty_str)
+
+            if quantity_mother_order != 0:
+                price_mother_order = average_purchase_price - (profits_taken / quantity_mother_order)
+                price_mother_order_rounded = round(price_mother_order, 3)
+
+                result_message = (
+                    f"AMOUNT Mother Order {symbol}: {open_position_usdt} USDT\n"
+                    f"PRICE Mother Order {symbol}: {price_mother_order_rounded}\n"
+                    f"QUANTITY Mother Order: {quantity_mother_order}"
+                )
+                self.show_info_messagebox(self, "Resultado Orden Madre", result_message)
+
+                save_confirmation = self.show_confirmation_dialog(self, "Guardar Orden Madre", "¿Desea guardar esta orden madre en OPEN ORDERS?")
+                if save_confirmation:
+
+                    if symbol in self.data:
+                        new_order = {
+                            "id": str(uuid.uuid4()),
+                            "type": "open",
+                            "price": price_mother_order_rounded,
+                            "amount_usdt": open_position_usdt,
+                            "quantity": quantity_mother_order,
+                            "stop_loss": None,
+                            "target": None,
+                            "mother_order": True
+                        }
+                        self.data[symbol]["open_orders"].append(new_order)
+                        self.save_data()
+                        self.create_asset_orders_section()
+                        self.show_info_messagebox(self, "Orden Guardada", "La orden madre ha sido guardada en órdenes abiertas.")
+
+                    else:
+                        self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
+
+                form_window.destroy()  # Cerrar el formulario después del cálculo y (opcional) guardado de la orden
+            else:
+                self.show_error_messagebox("La cantidad de la orden madre no puede ser cero.")
+
+        except ValueError:
+            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
+
     def perform_mother_order_calculation(self, symbol, avg_price_str, open_pos_str, profit_str, qty_str, form_window):
         """Realiza el cálculo de la orden madre y pregunta si se guarda."""
         try:
@@ -1525,23 +1573,56 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 save_confirmation = self.show_confirmation_dialog(self, "Guardar Orden Madre", "¿Desea guardar esta orden madre en OPEN ORDERS?")
                 if save_confirmation:
                     if symbol in self.data:
-                        new_order = {
-                            "id": str(uuid.uuid4()),
-                            "type": "open",
-                            "price": price_mother_order_rounded,
-                            "amount_usdt": open_position_usdt,
-                            "quantity": quantity_mother_order,
-                            "stop_loss": "N/A",
-                            "target": "N/A",
-                            "mother_order": True
-                        }
-                        self.data[symbol]["open_orders"].append(new_order)
-                        self.save_data()
-                        self.create_asset_orders_section()
-                        self.show_info_messagebox(self, "Orden Guardada", "La orden madre ha sido guardada en órdenes abiertas.")
+                        existing_mother_order = None
+                        if "open_orders" in self.data[symbol]:
+                            for order in self.data[symbol]["open_orders"]:
+                                if order.get("mother_order"):
+                                    existing_mother_order = order
+                                    break
 
+                        if existing_mother_order:
+                            confirm_overwrite = self.show_confirmation_dialog(self, "Advertencia", f"Ya existe una orden madre para {symbol}.\n ¿Desea sobreescribirla?")
+                            if confirm_overwrite:
+                                # Eliminar la orden madre existente
+                                self.data[symbol]["open_orders"] = [
+                                    order for order in self.data[symbol]["open_orders"] if not order.get("mother_order")
+                                ]
+                                new_order = {
+                                    "id": str(uuid.uuid4()),
+                                    "type": "open",
+                                    "price": price_mother_order_rounded,
+                                    "amount_usdt": open_position_usdt,
+                                    "quantity": quantity_mother_order,
+                                    "stop_loss": None,
+                                    "target": None,
+                                    "mother_order": True
+                                }
+                                self.data[symbol]["open_orders"].append(new_order)
+                                self.save_data()
+                                self.create_asset_orders_section()
+                                self.show_info_messagebox(self, "Orden Guardada",
+                                                          "La orden madre se ha sobreescrito!")
+                            else:
+                                self.show_info_messagebox(self, "Operación Cancelada",
+                                                          "La nueva orden madre no ha sido guardada.")
+                        else:
+                            new_order = {
+                                "id": str(uuid.uuid4()),
+                                "type": "open",
+                                "price": price_mother_order_rounded,
+                                "amount_usdt": open_position_usdt,
+                                "quantity": quantity_mother_order,
+                                "stop_loss": None,
+                                "target": None,
+                                "mother_order": True
+                            }
+                            self.data[symbol]["open_orders"].append(new_order)
+                            self.save_data()
+                            self.create_asset_orders_section()
+                            self.show_info_messagebox(self, "Orden Guardada",
+                                                      "La orden madre ha sido guardada en órdenes abiertas.")
                     else:
-                        self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
+                        self.show_error_messagebox(self, "Error", "Por favor, seleccione un activo primero.")
 
                 form_window.destroy()  # Cerrar el formulario después del cálculo y (opcional) guardado de la orden
             else:
@@ -1568,20 +1649,20 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         top.title(f"Generar PINK NET para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
-        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor_generate_pink_net,
+        tk.Label(top, text="Precio (Nivel Inicial):", bg=self.toplevel_bgcolor_generate_pink_net,
                          font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky="e")
-        entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
-        entry_levels.grid(row=0, column=1, padx=5, pady=10)
-
-        tk.Label(top, text="Precio del Nivel Inicial:", bg=self.toplevel_bgcolor_generate_pink_net,
-                         font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky="e")
         entry_initial_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
-        entry_initial_level.grid(row=1, column=1, padx=5, pady=10)
+        entry_initial_level.grid(row=0, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Precio del Nivel Final:", bg=self.toplevel_bgcolor_generate_pink_net,
-                         font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        tk.Label(top, text="Precio (Nivel Final):", bg=self.toplevel_bgcolor_generate_pink_net,
+                         font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky="e")
         entry_final_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
-        entry_final_level.grid(row=2, column=1, padx=5, pady=10)
+        entry_final_level.grid(row=1, column=1, padx=5, pady=10)
+
+        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor_generate_pink_net,
+                 font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_levels.grid(row=2, column=1, padx=5, pady=10)
 
         tk.Label(top, text="Monto Total a Invertir (USDT):", bg=self.toplevel_bgcolor_generate_pink_net,
                          font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky="e")
@@ -1777,23 +1858,23 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         top = tk.Toplevel(self)
         top.config(bg=self.toplevel_bgcolor)
         top.geometry('420x280')
-        top.title(f"Generar Niveles de Toma de Ganancias para {symbol}")
+        top.title(f"Generar Niveles de Ventas para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
-        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor,
+        tk.Label(top, text="Precio (Nivel Inicial):", bg=self.toplevel_bgcolor,
                          font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky='e')
-        entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
-        entry_levels.grid(row=0, column=1, padx=5, pady=5)
-
-        tk.Label(top, text="Precio del Nivel Inicial:", bg=self.toplevel_bgcolor,
-                         font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky='e')
         entry_initial_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
-        entry_initial_level.grid(row=1, column=1, padx=5, pady=5)
+        entry_initial_level.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Precio del Nivel Final:", bg=self.toplevel_bgcolor,
-                         font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky='e')
+        tk.Label(top, text="Precio (Nivel Final):", bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky='e')
         entry_final_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
-        entry_final_level.grid(row=2, column=1, padx=5, pady=5)
+        entry_final_level.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(top, text="Niveles:", bg=self.toplevel_bgcolor,
+                 font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky='e')
+        entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
+        entry_levels.grid(row=2, column=1, padx=5, pady=5)
 
         tk.Label(top, text="Monto Total a Reducir (USDT):", bg=self.toplevel_bgcolor,
                          font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky='e')

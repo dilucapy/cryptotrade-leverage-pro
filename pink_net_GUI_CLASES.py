@@ -174,6 +174,226 @@ class CustomAskFloatDialog(tk.Toplevel):
         self.destroy()
 
 
+class CustomConfirmationDialogWithMotherOrder(tk.Toplevel):
+    """Crea una ventana de diálogo de confirmación personalizada que pregunta
+        al usuario con un mensaje y ofrece opciones de "Sí" y "No".
+        Además, incluye una casilla de verificación para preguntar si la acción
+        deseada debe guardarse como una "Orden Madre", devolviendo el estado
+        de esta casilla.
+
+        Hereda de tk.Toplevel.
+
+        Atributos:
+            result (bool o None): Almacena el resultado de la interacción del
+                usuario (True para "Sí", False para "No", None si la ventana
+                se cierra sin elegir).
+            is_mother_order (tk.BooleanVar): Variable de Tkinter que almacena el
+                estado de la casilla de verificación "Guardar como Orden Madre"
+                (True si está marcada, False en caso contrario)."""
+    def __init__(self, parent, title, message):
+        super().__init__(parent)
+        self.title(title)
+        self.result = None
+        self.is_mother_order = tk.BooleanVar()  # Variable para la casilla de verificación
+
+        # Casilla de verificación para orden madre
+        style = ttk.Style()
+        style.configure("Bold14.TCheckbutton", font=("Arial", 14, "bold"))
+        check_madre = ttk.Checkbutton(self, text="Es Orden Madre?", style="Bold14.TCheckbutton", variable=self.is_mother_order)
+        check_madre.pack(pady=5)
+
+        # Mensaje del cuadro de dialogo
+        tk.Label(self, text=message, font=("Arial", 14, "bold")).pack(padx=10, pady=10)
+
+        button_frame = tk.Frame(self)
+        button_frame.pack(pady=10)
+
+        yes_button = tk.Button(button_frame, text="Sí", cursor='hand2', width=15, font=("Segoe UI", 12), command=self.on_yes)
+        yes_button.pack(side=tk.LEFT, padx=5)
+
+        no_button = tk.Button(button_frame, text="No", cursor='hand2', width=15, font=("Segoe UI", 12), command=self.on_no)
+        no_button.pack(side=tk.LEFT, padx=5)
+
+        self.transient(parent)
+        self.grab_set()
+        parent.wait_window(self)
+
+    def on_yes(self):
+        self.result = True
+        self.destroy()
+
+    def on_no(self):
+        self.result = False
+        self.destroy()
+
+    def get_is_mother_order(self):
+        return self.is_mother_order.get()
+
+
+class PromediarOrdenesForm(tk.Toplevel):
+    """Crea una ventana Toplevel para permitir al usuario ingresar múltiples
+        órdenes (precio y monto) y calcular su precio promedio.
+        Ofrece la opción de guardar el resultado como una nueva Orden Abierta,
+        incluyendo la posibilidad de marcarla como orden madre."""
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Promediar Órdenes")
+        self.geometry("460x260")  # Tamaño inicial
+        self.resizable(False, False)
+        self.parent = parent
+
+        self.ordenes_data = []  # Lista para almacenar diccionarios de {'precio': Entry, 'monto': Entry}
+        self.row_counter = 0
+
+        # --- Botones del formulario ---
+        add_button = tk.Button(self, text="+ Añadir Orden",
+                               pady=5,
+                               font=parent.button_font,  # estilos de botones del parent
+                               cursor="hand2",
+                               width=14,
+                               command=self.add_new_order_row)
+        add_button.grid(row=self.row_counter, column=0, pady=10, padx=5)
+
+        promediar_button = tk.Button(self, text="Promediar",
+                                     pady=5,
+                                     font=parent.button_font,
+                                     cursor="hand2",
+                                     width=14,
+                                     command=self.promediar_ordenes)
+        promediar_button.grid(row=self.row_counter, column=1, pady=10, padx=5)
+
+        cancelar_button = tk.Button(self, text="Cancelar",
+                                    pady=5,
+                                    font=parent.button_font,
+                                    cursor="hand2",
+                                    width=14,
+                                    command=self.destroy)
+        cancelar_button.grid(row=self.row_counter, column=2, pady=10, padx=5)
+        self.row_counter += 1
+
+        # --- Agregar etiquetas y campos de entradas para 2 ordenes
+        self.add_order_row("Orden 1")
+        self.add_order_row("Orden 2")
+
+        self.transient(parent)  # Establece esta ventana como dependiente de la ventana parent, minimizándose o cerrándose con ella.
+        self.grab_set()  # Captura todos los eventos de la aplicación, impidiendo la interacción con otras ventanas hasta que esta se cierre.
+        parent.wait_window(self)  # Pausa la ejecución del código en la ventana parent hasta que esta ventana (self) sea cerrada.
+
+    def add_order_row(self, label_text="Orden"):
+        """Este metodo agrega una orden"""
+        label = tk.Label(self, text=label_text,
+                         font=("Arial", 12, "bold"))
+        label.grid(row=self.row_counter, column=0, padx=5, pady=2, sticky="nsew")
+
+        precio_label = tk.Label(self, text="Precio:",
+                    font=("Arial", 12, "bold"))
+        precio_label.grid(row=self.row_counter, column=1, padx=5, pady=2, sticky="w")
+        precio_entry = tk.Entry(self, width=12, font=("Arial", 12, "bold"))
+        precio_entry.grid(row=self.row_counter, column=2, padx=5, pady=2)
+
+        monto_label = tk.Label(self, text="Monto USDT:",
+                            font=("Arial", 12, "bold"))
+        monto_label.grid(row=self.row_counter + 1, column=1, padx=5, pady=2, sticky="w")
+        monto_entry = tk.Entry(self, width=12, font=("Arial", 12, "bold"))
+        monto_entry.grid(row=self.row_counter + 1, column=2, padx=5, pady=2)
+
+        self.ordenes_data.append({'precio': precio_entry, 'monto': monto_entry})
+        self.row_counter += 2
+
+    def add_new_order_row(self):
+        order_number = len(self.ordenes_data) + 1
+        self.add_order_row(f"Orden {order_number}")
+
+        # Ajustar el tamaño de la ventana si es necesario
+        self.geometry(f"460x{260 + (len(self.ordenes_data) - 2) * 50}")  # Ajuste aproximado
+
+    def promediar_ordenes(self):
+        order_values = []
+        for data in self.ordenes_data:
+            precio_str = data['precio'].get()
+            monto_str = data['monto'].get()
+            try:
+                precio = float(precio_str)
+                monto_usdt = float(monto_str)
+                order_values.append({'precio': precio, 'monto_usdt': monto_usdt})
+            except ValueError:
+                self.parent.show_error_messagebox(self.parent, "Por favor, ingrese valores numéricos válidos para todos los precios y montos.")
+                return
+
+        if not order_values:
+            return
+
+        total_usdt = sum(order['monto_usdt'] for order in order_values)
+        print(f"Total usdt {total_usdt}")
+
+        # Calculamos cantidad total de activo
+        cantidad_total_activo = 0
+        for order in order_values:
+            if order['precio'] != 0:
+                cantidad_total_activo += order['monto_usdt'] / order['precio']
+            else:
+                self.parent.show_error_messagebox(self.parent,
+                                                  "El precio de una de las órdenes es cero,\nno se puede calcular la cantidad.")
+                return
+
+        # Calculamos precio promedio
+        precio_promedio = 0
+        if cantidad_total_activo != 0:
+            precio_promedio = round(total_usdt / cantidad_total_activo, 5)
+        else:
+            self.parent.show_error_messagebox(self.parent, "La cantidad total de activo es cero,\n no se puede calcular el precio promedio.")
+            return
+
+        print(f"Precio Promedio: {precio_promedio}")
+
+        active_symbol = self.parent.selected_asset.get()  # Asegúrate de que 'selected_asset' esté accesible
+        if active_symbol == "BTC":
+            cantidad_promedio = round(cantidad_total_activo, 8)
+        else:
+            cantidad_promedio = round(cantidad_total_activo, 3)
+
+        # llamamos a nuestro metodo personalizado de dialogo de confirmacion con casilla de verificacion
+        guardar, is_mother_order = self.parent.show_confirmation_dialog_with_mother_order(self.parent, "Guardar Orden Promedio",
+            f"Precio Promedio: {precio_promedio:.5f}\nMonto: {total_usdt:.2f} USDT\nCantidad: {cantidad_promedio}\n\n¿Desea guardarla en Ordenes Abierta?")
+
+        if guardar:
+            active_symbol = self.parent.selected_asset.get()
+            if active_symbol in self.parent.data and is_mother_order:
+                ordenes_actualizadas = []
+                if "open_orders" in self.parent.data[active_symbol]:
+                    for order in self.parent.data[active_symbol]["open_orders"]:
+                        if order.get("mother_order"):
+                            self.parent.show_info_messagebox(self.parent, "Advertencia",
+                                                f"Se sobreescribirá la orden madre existente para {active_symbol}")
+                        else:
+                            ordenes_actualizadas.append(order)
+                    self.parent.data[active_symbol]["open_orders"] = ordenes_actualizadas
+
+            if active_symbol in self.parent.data:
+                new_order = {
+                    "id": str(uuid.uuid4()),
+                    "type": "open",
+                    "price": precio_promedio,
+                    "amount_usdt": total_usdt,
+                    "quantity": cantidad_promedio,
+                    "stop_loss": None,
+                    "target": None,
+                    "mother_order": is_mother_order
+                }
+                if "open_orders" not in self.parent.data[active_symbol]:
+                    self.parent.data[active_symbol]["open_orders"] = []
+                self.parent.data[active_symbol]["open_orders"].append(new_order)
+                self.parent.save_data_asset(self.parent.data, self.parent.data[active_symbol], active_symbol)
+                self.parent.create_asset_orders_section()
+                # Informa con un cuadro de dialogo
+                self.parent.show_info_messagebox(self.parent, "Orden Guardada", "La orden promedio ha sido guardada en órdenes abiertas.")
+
+            else:
+                self.parent.show_error_messagebox(self.parent, f"No se encontraron datos para el activo: {active_symbol}")
+
+        self.destroy()
+
+
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
@@ -268,6 +488,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         llama a la clase que personaliza la ventana de confirmacion"""
         dialog = CustomConfirmationDialog(parent, titulo, mensaje)
         return dialog.result
+
+    def show_confirmation_dialog_with_mother_order(self, parent, titulo, mensaje):
+        """Este metodo llama a la clase que personaliza la ventana de confirmacion
+        con la opcion de guardar como orden madre y devuelve una tupla con
+        (decision_si_no, es_orden_madre)"""
+        dialog = CustomConfirmationDialogWithMotherOrder(parent, titulo, mensaje)
+        return dialog.result, dialog.get_is_mother_order()
 
     def create_widgets(self):
         """Este método crea todos los widgets de tu GUI
@@ -1503,54 +1730,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                   command=top.destroy)
         cancel_button.grid(row=4, column=0, pady=30)
 
-    def perform_mother_order_calculation2(self, symbol, avg_price_str, open_pos_str, profit_str, qty_str, form_window):
-        """Realiza el cálculo de la orden madre y pregunta si se guarda."""
-        try:
-            average_purchase_price = float(avg_price_str)
-            open_position_usdt = float(open_pos_str)
-            profits_taken = float(profit_str)
-            quantity_mother_order = float(qty_str)
-
-            if quantity_mother_order != 0:
-                price_mother_order = average_purchase_price - (profits_taken / quantity_mother_order)
-                price_mother_order_rounded = round(price_mother_order, 3)
-
-                result_message = (
-                    f"AMOUNT Mother Order {symbol}: {open_position_usdt} USDT\n"
-                    f"PRICE Mother Order {symbol}: {price_mother_order_rounded}\n"
-                    f"QUANTITY Mother Order: {quantity_mother_order}"
-                )
-                self.show_info_messagebox(self, "Resultado Orden Madre", result_message)
-
-                save_confirmation = self.show_confirmation_dialog(self, "Guardar Orden Madre", "¿Desea guardar esta orden madre en OPEN ORDERS?")
-                if save_confirmation:
-
-                    if symbol in self.data:
-                        new_order = {
-                            "id": str(uuid.uuid4()),
-                            "type": "open",
-                            "price": price_mother_order_rounded,
-                            "amount_usdt": open_position_usdt,
-                            "quantity": quantity_mother_order,
-                            "stop_loss": None,
-                            "target": None,
-                            "mother_order": True
-                        }
-                        self.data[symbol]["open_orders"].append(new_order)
-                        self.save_data()
-                        self.create_asset_orders_section()
-                        self.show_info_messagebox(self, "Orden Guardada", "La orden madre ha sido guardada en órdenes abiertas.")
-
-                    else:
-                        self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
-
-                form_window.destroy()  # Cerrar el formulario después del cálculo y (opcional) guardado de la orden
-            else:
-                self.show_error_messagebox("La cantidad de la orden madre no puede ser cero.")
-
-        except ValueError:
-            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
-
     def perform_mother_order_calculation(self, symbol, avg_price_str, open_pos_str, profit_str, qty_str, form_window):
         """Realiza el cálculo de la orden madre y pregunta si se guarda."""
         try:
@@ -2187,7 +2366,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Generar PINK NET", "command": self.generate_pink_net},
             {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
             {"text": "Generar Niveles de Ventas", "command": self.generate_sales_cloud},
-            {"text": "Renderizar Órdenes Abiertas", "command": self.render_open_orders},
+            {"text": "Renderizar Ordenes Abiertas", "command": self.render_open_orders},
+            {"text": "Promediar Ordenes Abiertas", "command": self.mostrar_promediar_ordenes_form}
         ]
 
         for button_info in buttons_config:
@@ -2205,7 +2385,92 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             button.pack(pady=4, padx=2, fill=X)
 
+    # Este metodo para promediar capaz lo borre porque hice otro mas profesional, con una clase independiente
+    def promedio_ordenes2(self):
+        """Permite al usuario ingresar datos de múltiples órdenes (precio y monto en USDT)
+        para calcular el precio promedio ponderado y ofrece la opción de guardar
+        el resultado como una nueva orden abierta no madre."""
 
+        order_data_list = []
+        num_ordenes = simpledialog.askinteger(
+            "Promediar Órdenes",
+            "¿Cuántas órdenes desea promediar?",
+            initialvalue=2,
+            minvalue=2
+        )
+
+        if num_ordenes is None:
+            return  # El usuario canceló
+
+        for i in range(num_ordenes):
+            precio_str = simpledialog.askstring(
+                "Promediar Órdenes",
+                f"Ingrese el precio de la orden {i + 1}:"
+            )
+            if precio_str is None:
+                return  # El usuario canceló
+
+            monto_str = simpledialog.askstring(
+                "Promediar Órdenes",
+                f"Ingrese el monto en USDT de la orden {i + 1}:"
+            )
+            if monto_str is None:
+                return  # El usuario canceló
+
+            try:
+                precio = float(precio_str)
+                monto_usdt = float(monto_str)
+                order_data_list.append({'precio': precio, 'monto_usdt': monto_usdt})
+            except ValueError:
+                messagebox.showerror("Error", "Por favor, ingrese valores numéricos válidos para precio y monto.")
+                return
+
+        if not order_data_list:
+            return
+
+        total_usdt = sum(order['monto_usdt'] for order in order_data_list)
+        precio_ponderado_sum = sum(order['precio'] * order['monto_usdt'] for order in order_data_list)
+
+        if total_usdt == 0:
+            messagebox.showerror("Error", "El monto total en USDT es cero, no se puede calcular el precio promedio.")
+            return
+
+        precio_promedio = precio_ponderado_sum / total_usdt
+        cantidad_promedio = total_usdt / precio_promedio if precio_promedio != 0 else 0
+
+        guardar = messagebox.askyesno(
+            "Guardar Orden Promedio",
+            f"El precio promedio ponderado es: {precio_promedio:.8f} con un total de {total_usdt:.2f} USDT (Cantidad aproximada: {cantidad_promedio:.8f}). ¿Desea guardar esto como una orden abierta?"
+        )
+
+        if guardar:
+            active_symbol = self.selected_asset.get()
+            if not active_symbol:
+                messagebox.showerror("Error", "Por favor, seleccione un activo primero.")
+                return
+
+            if active_symbol in self.data:
+                new_order = {
+                    "id": str(uuid.uuid4()),
+                    "type": "open",
+                    "price": precio_promedio,
+                    "amount_usdt": total_usdt,
+                    "quantity": cantidad_promedio,
+                    "stop_loss": None,
+                    "target": None,
+                    "mother_order": False  # No es una orden madre
+                }
+                if "open_orders" not in self.data[active_symbol]:
+                    self.data[active_symbol]["open_orders"] = []
+                self.data[active_symbol]["open_orders"].append(new_order)
+                self.save_data_asset(self.data, self.data[active_symbol], active_symbol)
+                self.create_asset_orders_section()  # Actualizar la visualización
+                messagebox.showinfo("Orden Guardada", "La orden promedio ha sido guardada en órdenes abiertas.")
+            else:
+                messagebox.showerror("Error", f"No se encontraron datos para el activo: {active_symbol}")
+
+    def mostrar_promediar_ordenes_form(self):
+        PromediarOrdenesForm(self)
 
 
 if __name__ == "__main__":

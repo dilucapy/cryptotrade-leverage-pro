@@ -1743,9 +1743,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 price_mother_order_rounded = round(price_mother_order, 3)
 
                 result_message = (
-                    f"AMOUNT Mother Order {symbol}: {open_position_usdt} USDT\n"
-                    f"PRICE Mother Order {symbol}: {price_mother_order_rounded}\n"
-                    f"QUANTITY Mother Order: {quantity_mother_order}"
+                    f"---------- Mother Order {symbol} ----------\n\n"
+                    f"Amount: {open_position_usdt} USDT\n"
+                    f"Price: {price_mother_order_rounded}\n"
+                    f"Quantity: {quantity_mother_order}"
                 )
                 self.show_info_messagebox(self, "Resultado Orden Madre", result_message)
 
@@ -2190,12 +2191,15 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         non_mother_prices = []
         non_mother_amounts_usdt = []
         non_mother_percentages = []
+        non_mother_quantity = []
         if non_mother_orders:
             non_mother_prices = [order['price'] for order in non_mother_orders]
             non_mother_amounts_usdt = [order['amount_usdt'] for order in non_mother_orders]
             non_mother_percentages = [(current_price - price) / price for price in non_mother_prices]
-            non_mother_profits = [amount_usdt * percentage for amount_usdt, percentage in
-                                  zip(non_mother_amounts_usdt, non_mother_percentages)]
+            non_mother_quantity = [order['quantity'] for order in non_mother_orders]
+            non_mother_profits = [(current_price - price) * quantity for price, quantity in zip(non_mother_prices, non_mother_quantity)]
+            """non_mother_profits = [amount_usdt * percentage for amount_usdt, percentage in
+                                  zip(non_mother_amounts_usdt, non_mother_percentages)]"""
 
         total_non_mother_profits = round(sum(non_mother_profits), 2)
 

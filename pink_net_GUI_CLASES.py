@@ -2123,7 +2123,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
                 sales_cloud.append(level_cloud)
 
-            result_message = "Niveles de Toma de Ganancias Generada:\n\n"
+            result_message = "Niveles de Ventas:\n\n"
             for level in sales_cloud:
                 result_message += f"Precio: {level['price']}, Monto: {level['amount_usdt']} USDT, Cantidad: {level['quantity']}\n"
 
@@ -2182,7 +2182,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             mother_price = mother_order['price']
             mother_amount_usdt = mother_order['amount_usdt']
             mother_percentage = (current_price - mother_price) / mother_price
-            mother_profit = mother_amount_usdt * mother_percentage
+            mother_quantity = mother_order['quantity']
+            mother_profit = (current_price - mother_price) * mother_quantity
 
         # --- DATOS ordenes NO madre ---
         non_mother_profits = []
@@ -2367,7 +2368,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
             {"text": "Generar Niveles de Ventas", "command": self.generate_sales_cloud},
             {"text": "Renderizar Ordenes Abiertas", "command": self.render_open_orders},
-            {"text": "Promediar Ordenes Abiertas", "command": self.mostrar_promediar_ordenes_form}
+            {"text": "Promediar Ordenes", "command": self.mostrar_promediar_ordenes_form}
         ]
 
         for button_info in buttons_config:
@@ -2385,91 +2386,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             button.pack(pady=4, padx=2, fill=X)
 
-    # Este metodo para promediar capaz lo borre porque hice otro mas profesional, con una clase independiente
-    def promedio_ordenes2(self):
-        """Permite al usuario ingresar datos de múltiples órdenes (precio y monto en USDT)
-        para calcular el precio promedio ponderado y ofrece la opción de guardar
-        el resultado como una nueva orden abierta no madre."""
-
-        order_data_list = []
-        num_ordenes = simpledialog.askinteger(
-            "Promediar Órdenes",
-            "¿Cuántas órdenes desea promediar?",
-            initialvalue=2,
-            minvalue=2
-        )
-
-        if num_ordenes is None:
-            return  # El usuario canceló
-
-        for i in range(num_ordenes):
-            precio_str = simpledialog.askstring(
-                "Promediar Órdenes",
-                f"Ingrese el precio de la orden {i + 1}:"
-            )
-            if precio_str is None:
-                return  # El usuario canceló
-
-            monto_str = simpledialog.askstring(
-                "Promediar Órdenes",
-                f"Ingrese el monto en USDT de la orden {i + 1}:"
-            )
-            if monto_str is None:
-                return  # El usuario canceló
-
-            try:
-                precio = float(precio_str)
-                monto_usdt = float(monto_str)
-                order_data_list.append({'precio': precio, 'monto_usdt': monto_usdt})
-            except ValueError:
-                messagebox.showerror("Error", "Por favor, ingrese valores numéricos válidos para precio y monto.")
-                return
-
-        if not order_data_list:
-            return
-
-        total_usdt = sum(order['monto_usdt'] for order in order_data_list)
-        precio_ponderado_sum = sum(order['precio'] * order['monto_usdt'] for order in order_data_list)
-
-        if total_usdt == 0:
-            messagebox.showerror("Error", "El monto total en USDT es cero, no se puede calcular el precio promedio.")
-            return
-
-        precio_promedio = precio_ponderado_sum / total_usdt
-        cantidad_promedio = total_usdt / precio_promedio if precio_promedio != 0 else 0
-
-        guardar = messagebox.askyesno(
-            "Guardar Orden Promedio",
-            f"El precio promedio ponderado es: {precio_promedio:.8f} con un total de {total_usdt:.2f} USDT (Cantidad aproximada: {cantidad_promedio:.8f}). ¿Desea guardar esto como una orden abierta?"
-        )
-
-        if guardar:
-            active_symbol = self.selected_asset.get()
-            if not active_symbol:
-                messagebox.showerror("Error", "Por favor, seleccione un activo primero.")
-                return
-
-            if active_symbol in self.data:
-                new_order = {
-                    "id": str(uuid.uuid4()),
-                    "type": "open",
-                    "price": precio_promedio,
-                    "amount_usdt": total_usdt,
-                    "quantity": cantidad_promedio,
-                    "stop_loss": None,
-                    "target": None,
-                    "mother_order": False  # No es una orden madre
-                }
-                if "open_orders" not in self.data[active_symbol]:
-                    self.data[active_symbol]["open_orders"] = []
-                self.data[active_symbol]["open_orders"].append(new_order)
-                self.save_data_asset(self.data, self.data[active_symbol], active_symbol)
-                self.create_asset_orders_section()  # Actualizar la visualización
-                messagebox.showinfo("Orden Guardada", "La orden promedio ha sido guardada en órdenes abiertas.")
-            else:
-                messagebox.showerror("Error", f"No se encontraron datos para el activo: {active_symbol}")
 
     def mostrar_promediar_ordenes_form(self):
+        """Crea una instancia de la ventana de formulario 'PromediarOrdenesForm'
+    (una nueva ventana Toplevel para ingresar y promediar órdenes).
+    La instancia se crea pasando 'self' (la ventana principal de la aplicación)
+    como el 'parent'. Esto establece a la ventana principal como la ventana
+    padre de este nuevo formulario Toplevel, haciéndolo dependiente de la
+    ventana principal en su comportamiento (por ejemplo, al minimizar)."""
         PromediarOrdenesForm(self)
 
 

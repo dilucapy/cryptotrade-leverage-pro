@@ -502,8 +502,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Panel Superior (para etiqueta de titulo y Panel de activos)
         self.top_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
         self.top_panel.pack(side=TOP, fill=X)
-        self.title_label = Label(self.top_panel, text='Gestión de Operaciones Apalancadas', fg='#333333', font=('Dosis', 20), bg='burlywood', width=30)
-        self.title_label.grid(row=0, column=0, columnspan=5, pady=5, sticky="w")
+        self.title_label = Label(self.top_panel, text='Herramienta de Gestión de Operaciones Apalancadas de Criptomonedas', fg='#333333', font=('Dosis', 20), bg='burlywood', width=60)
+        self.title_label.grid(row=0, column=0, columnspan=10, pady=5, sticky="w")
 
         # Panel de Activos (para los botones de activos)
         self.asset_menu = Frame(self.top_panel, bd=1, relief=FLAT)
@@ -1105,6 +1105,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 # oculta un widget que ha sido gestionado por el layout manager 'pack'(en nuestro caso un frame)
                 if hasattr(self, 'asset_info_frame'):
                     self.asset_info_frame.pack_forget()  # Si usas pack
+
+                # Eliminar la tabla anterior si existe
+                for widget in self.burn_price_table_frame.winfo_children():
+                    widget.destroy()
 
                 # Crear un label para el título de la tabla (de precios de quema)
                 self.table_title = Label(self.burn_price_table_frame,
@@ -2364,7 +2368,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.secondary_menu.pack(side=LEFT, padx=10, pady=10)
 
         buttons_config = [
-            {"text": "MENU PRINCIPAL", "command": self.return_to_primary_menu},
+            {"text": "<<     Volver", "command": self.return_to_primary_menu},
             {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
             {"text": "Eliminar Activo", "command": self.delete_asset},
             {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},

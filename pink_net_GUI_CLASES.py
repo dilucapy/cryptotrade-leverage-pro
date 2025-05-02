@@ -144,9 +144,9 @@ class CustomAskFloatDialog(tk.Toplevel):
         self.resizable(False, False)
         self.result = None
 
-        tk.Label(self, text=prompt, font=("Arial", 12), padx=20, pady=10).pack()
+        tk.Label(self, text=prompt, font=("Arial", 12, 'bold'), padx=40, pady=20).pack()
 
-        self.entry = tk.Entry(self, font=("Arial", 12))
+        self.entry = tk.Entry(self, font=("Arial", 12, 'bold'))
         if initialvalue is not None:
             self.entry.insert(0, initialvalue)
         self.entry.pack(padx=20, pady=5)
@@ -471,6 +471,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             # Ordenar buy_limits por precio
             data_asset['buy_limits'] = sorted(data_asset['buy_limits'], key=lambda x: x['price'])
+
+            # Ordenar Ventas Take Profit
+            data_asset['sell_take_profit'] = sorted(data_asset['sell_take_profit'], key=lambda x: x['price'])
+
         return data
 
     def show_info_messagebox(self, parent, titulo, mensaje):
@@ -722,7 +726,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         para pedir al usuario que ingrese el monto de cuenta de trading."""
         dialog = CustomAskFloatDialog(parent,
                                       title="Monto Cuenta de Trading",
-                                      prompt="Ingrese el monto total de la cuenta de trading:")
+                                      prompt="Ingrese Monto Cuenta de Trading:")
         return dialog.result
 
     def calculate_equitable_margin(self):
@@ -1005,15 +1009,15 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # ventana de dialogo para preguntar al usuario por el monto de Trading Account
         trading_account = self.ask_trading_account(self)
 
+        if trading_account is None:
+            return  # El usuario canceló la entrada
+
         top = tk.Toplevel(self)
         top.title("Calcular Apalancamiento")
 
         label = tk.Label(top, text="Leveraged Amount and Reduce Position by Leverage Level",
                          font=('Arial', 12, 'bold'))
         label.pack(pady=5)
-
-        if trading_account is None:
-            return  # El usuario canceló la entrada
 
         if trading_account <= 0:
             self.show_error_messagebox("La cuenta de trading debe ser mayor que cero.")
@@ -1246,6 +1250,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 data_asset['open_orders'] = []
             data_asset['open_orders'].append(order)
             print("Orden abierta agregada!")
+            # Ordenar ordenes abiertas por precio
+            data_asset['open_orders'] = sorted(data_asset['open_orders'], key=lambda x: x['price'])
+
         elif order_type == 'pending_buy':
             order['stop_loss'] = order_details.get('stop_loss')
             order['target'] = order_details.get('target')
@@ -1253,18 +1260,26 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 data_asset['buy_limits'] = []
             data_asset['buy_limits'].append(order)
             print("Orden de compra pendiente agregada!")
+            # Ordenar compras pendientes por precio
+            data_asset['buy_limits'] = sorted(data_asset['buy_limits'], key=lambda x: x['price'])
+
         elif order_type == 'sell_take_profit':
             if 'sell_take_profit' not in data_asset:
                 data_asset['sell_take_profit'] = []
             data_asset['sell_take_profit'].append(order)
             print("Orden de venta de toma de ganancia agregada!")
+            # Ordenar Ventas Take Profit
+            data_asset['sell_take_profit'] = sorted(data_asset['sell_take_profit'], key=lambda x: x['price'])
+
         else:
             print(f"Tipo de orden '{order_type}' no válido.")
-            return data_asset
+            return data_asset  # # Devuelve data_asset sin modificar si el tipo no es válido
 
+        return data_asset
         # Actualizar los datos del activo en el objeto data y guardar
         self.save_data_asset(self.data, data_asset, active_symbol)
-        return data_asset
+
+
 
     def save_data_asset(self, data, data_asset, active_symbol):
         """Guarda los datos actualizados del activo en el objeto data y en el archivo."""
@@ -1553,6 +1568,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
+        print(f"get_orders_for_asset - Symbol: '{symbol}', Data for symbol: '{self.data.get(symbol)}'")
+        print(f"Order type: {order_type}")
         if symbol in self.data:
             if order_type == "open":
                 return self.data[symbol].get('open_orders', [])

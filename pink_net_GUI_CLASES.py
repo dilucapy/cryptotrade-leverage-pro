@@ -1243,11 +1243,36 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         }
 
         if order_type == 'open':
-            order['mother_order'] = order_details.get('mother_order', False)
+            is_mother = order_details.get('mother_order', False)
+            order['mother_order'] = is_mother
             order['stop_loss'] = order_details.get('stop_loss')
             order['target'] = order_details.get('target')
             if 'open_orders' not in data_asset:
                 data_asset['open_orders'] = []
+
+            if is_mother:
+                existing_mother_order = None
+                for existing_order in data_asset['open_orders']:
+                    if existing_order.get('mother_order', False):
+                        existing_mother_order = existing_order
+                        break
+
+                if existing_mother_order:
+                    response = self.show_confirmation_dialog(self, "Confirmación", f"Ya existe una orden madre\n¿Desea sobreescribirla?")
+                    if response:
+                        # Eliminar la orden madre existente
+                        data_asset['open_orders'] = [
+                            o for o in data_asset['open_orders'] if not o.get('mother_order', False)
+                        ]
+                        print("Orden madre existente sobreescrita y nueva orden abierta agregada!")
+                    else:
+                        print("Nueva orden madre no agregada.")
+
+                else:
+                    print("Nueva orden madre agregada!")
+            else:
+                print("Nueva orden abierta agregada!")
+
             data_asset['open_orders'].append(order)
             print("Orden abierta agregada!")
             # Ordenar ordenes abiertas por precio
@@ -1275,11 +1300,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             print(f"Tipo de orden '{order_type}' no válido.")
             return data_asset  # # Devuelve data_asset sin modificar si el tipo no es válido
 
-        return data_asset
         # Actualizar los datos del activo en el objeto data y guardar
         self.save_data_asset(self.data, data_asset, active_symbol)
 
-
+        return data_asset
 
     def save_data_asset(self, data, data_asset, active_symbol):
         """Guarda los datos actualizados del activo en el objeto data y en el archivo."""
@@ -1568,8 +1592,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
-        print(f"get_orders_for_asset - Symbol: '{symbol}', Data for symbol: '{self.data.get(symbol)}'")
-        print(f"Order type: {order_type}")
+        #print(f"get_orders_for_asset - Symbol: '{symbol}', Data for symbol: '{self.data.get(symbol)}'")  # Linea par depurar error
+        #print(f"Order type: {order_type}")  # Linea par depurar error
         if symbol in self.data:
             if order_type == "open":
                 return self.data[symbol].get('open_orders', [])

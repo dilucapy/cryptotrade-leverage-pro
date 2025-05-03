@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import tkinter.font as tkFont
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import webbrowser
 
 
 
@@ -506,8 +507,70 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Panel Superior (para etiqueta de titulo y Panel de activos)
         self.top_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
         self.top_panel.pack(side=TOP, fill=X)
-        self.title_label = Label(self.top_panel, text='Herramienta de Gestión de Operaciones Apalancadas de Criptomonedas', fg='#333333', font=('Dosis', 20), bg='burlywood', width=60)
-        self.title_label.grid(row=0, column=0, columnspan=10, pady=5, sticky="w")
+        self.title_label = Label(self.top_panel, text='Herramienta de Gestión de Operaciones Apalancadas de Criptomonedas', fg='#333333', font=('Dosis', 16), bg='burlywood', width=60)
+        self.title_label.grid(row=0, column=0, columnspan=5, pady=5, sticky="w")
+        # label Codigo de invitacion de quantfury
+        label_invitacion= tk.Label(self.top_panel, text="Código Invitacion Quantfury:", font=('Dosis', 12, 'bold'), anchor='w',
+                                    bg='#000a1d', fg='#00cdc3')
+        label_invitacion.grid(row=0, column=5, columnspan=3, sticky="w", padx=(5, 0))
+
+        # Codigo de Invitacion en un Entry (copiable)
+        invitacion_entry = tk.Entry(self.top_panel)
+        invitacion_entry.insert(0, "U23853V6")
+        invitacion_entry.config(state='readonly', font=('Dosis', 12, 'bold'), width=10)
+        invitacion_entry.grid(row=0, column=8, sticky="w")
+
+        # Botón para Copiar codigo de invitacion
+        #self.copiar_icono = None  # Placeholder para el icono
+        def copiar_al_portapapeles(widget_entry):
+            codigo_invitacion = widget_entry.get()
+            self.clipboard_clear()
+            self.clipboard_append(codigo_invitacion)
+            self.update()  # Es necesario para que el portapapeles se actualice inmediatamente
+            print("Código de invitación copiado al portapapeles!")  # Opcional: feedback al usuario
+
+        self.boton_copiar = tk.Button(self.top_panel,
+                                      text="Copiar",
+                                      font=('Dosis', 12, 'bold'),
+                                      padx=3,
+                                      pady=3,
+                                      bg='#000a1d',
+                                      fg='#00cdc3',
+                                      bd=1,
+                                      relief=RAISED,
+                                      cursor='hand2',
+                                      command=lambda: copiar_al_portapapeles(invitacion_entry))
+        self.boton_copiar.grid(row=0, column=9, sticky="w")
+
+        # Boton para ir a sitio quantfury con imagen
+        try:
+            self.quantfury_imagen = tk.PhotoImage(file='image_quantfury.png')
+            self.boton_quantfury = tk.Button(self.top_panel,
+                                             image=self.quantfury_imagen,
+                                             padx=3,
+                                             pady=3,
+                                             bg=self.default_button_bg,
+                                             bd=1,
+                                             relief=tk.RAISED,
+                                             cursor='hand2',
+                                             command=self.abrir_quantfury)
+            self.boton_quantfury.grid(row=0, column=10, sticky="w", padx=(20, 0))
+        except tk.TclError as e:
+            print(f"Error al cargar la imagen: {e}")
+            # Si la imagen no se carga, puedes mostrar un texto alternativo
+            self.boton_quantfury = tk.Button(self.top_panel,
+                                             text="Ir a Quantfury",
+                                             font=('Dosis', 12, 'bold'),
+                                             padx=5,
+                                             pady=5,
+                                             width=10,
+                                             bg=self.default_button_bg,
+                                             fg='white',
+                                             bd=1,
+                                             relief=tk.RAISED,
+                                             cursor='hand2',
+                                             command=self.abrir_quantfury)
+            self.boton_quantfury.grid(row=0, column=10, sticky="w", padx=(20, 0))
 
         # Panel de Activos (para los botones de activos)
         self.asset_menu = Frame(self.top_panel, bd=1, relief=FLAT)
@@ -2465,7 +2528,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             button.pack(pady=4, padx=2, fill=X)
 
-
     def mostrar_promediar_ordenes_form(self):
         """Crea una instancia de la ventana de formulario 'PromediarOrdenesForm'
     (una nueva ventana Toplevel para ingresar y promediar órdenes).
@@ -2474,6 +2536,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     padre de este nuevo formulario Toplevel, haciéndolo dependiente de la
     ventana principal en su comportamiento (por ejemplo, al minimizar)."""
         PromediarOrdenesForm(self)
+
+    def abrir_quantfury(self):
+        url = "https://trading.quantfury.com/"
+        webbrowser.open_new_tab(url)
+
+    def copiar_al_portapapeles(self):
+        codigo_invitacion = "U23853V6"
+        self.master.clipboard_clear()
+        self.master.clipboard_append(codigo_invitacion)
+        self.master.update()  # Es necesario para que el portapapeles se actualice inmediatamente
+
 
 
 if __name__ == "__main__":

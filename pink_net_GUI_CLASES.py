@@ -1251,12 +1251,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 data_asset['open_orders'] = []
 
             if is_mother:
+                # verificar si existe una 'orden madre' en 'open_orders'
                 existing_mother_order = None
                 for existing_order in data_asset['open_orders']:
                     if existing_order.get('mother_order', False):
                         existing_mother_order = existing_order
                         break
 
+                # si existe una 'orden madre', mostrar un dialogo de confirmacion para avisar y confirmar sobreescritura
                 if existing_mother_order:
                     response = self.show_confirmation_dialog(self, "Confirmación", f"Ya existe una orden madre\n¿Desea sobreescribirla?")
                     if response:
@@ -1604,48 +1606,76 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         return []
 
     def show_orders(self, parent_frame, order_type):
-        """Llena el frame con la información de las órdenes del tipo especificado."""
-        # Limpiar los widgets existentes en el parent_frame, excepto los Label
+        """Llena el frame con la información de las órdenes del tipo especificado (con precio copiable)."""
+        # Limpiar los widgets existentes en el parent_frame, excepto los Label y Button
         for widget in parent_frame.winfo_children():
-            if not isinstance(widget, tk.Label):
+            if not isinstance(widget, tk.Label) and not isinstance(widget, tk.Button):
                 widget.destroy()
 
         symbol = self.selected_asset.get()
         orders = self.get_orders_for_asset(symbol, order_type)
 
         for order in orders:
-            # Crear un Frame para contener la información de la orden y el botón
-            order_row_frame = Frame(parent_frame)
+            # Crear un Frame para contener la información de la orden y el botón 'delete'
+            order_row_frame = Frame(parent_frame, bg='lightgray')
             order_row_frame.pack(fill=X, pady=2)  # Empaquetar el frame de la fila
 
-            order_info_parts = [
-                f"Price: {order.get('price', 'N/A')}",
-                f"Amount: {order.get('amount_usdt', 'N/A')} USDT",
-                f"Quantity: {order.get('quantity', 'N/A')}",
-            ]
+            # Label "Precio:"
+            price_label_text = tk.Label(order_row_frame, text="Precio:", font=('Dosis', 10, 'bold'), anchor='w', bg='lightgray')
+            price_label_text.pack(side=LEFT)
+
+            # Precio (copiable)
+            price_entry = tk.Entry(order_row_frame)
+            price_entry.insert(0, order.get('price', 'N/A'))
+            price_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=11)
+            price_entry.pack(side=LEFT, padx=(5, 5))  # Empaquetar el widget para que se muestre
+
+            # Label "Quantity:"
+            quantity_label_text = tk.Label(order_row_frame, text="Quantity:", font=('Dosis', 10, 'bold'), anchor='w', bg='lightgray')
+            quantity_label_text.pack(side=LEFT)
+
+            # Cantidad (copiable)
+            quantity = order.get('quantity', 'N/A')
+            symbol = self.selected_asset.get()  # Obtener el activo seleccionado
+            # bloque para redondear 'quantity' segun sea el simbolo seleccionado
+            if symbol == 'BTC':
+                rounded_quantity = f"{float(quantity):.8f}" if isinstance(quantity, (int, float)) else quantity
+            else:
+                rounded_quantity = f"{float(quantity):.3f}" if isinstance(quantity, (int, float)) else quantity
+
+            quantity_entry = tk.Entry(order_row_frame)
+            quantity_entry.insert(0, rounded_quantity)
+            quantity_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=14)
+            quantity_entry.pack(side=LEFT, padx=(5, 5))
+
+            # Label "Amount:"
+            amount_label_text = tk.Label(order_row_frame, text="Amount (USDT):", font=('Dosis', 10, 'bold'), anchor='w', bg='lightgray')
+            amount_label_text.pack(side=LEFT)
+
+            # Amount (copiable)
+            amount_entry = tk.Entry(order_row_frame)
+            amount_entry.insert(0, order.get('amount_usdt', 'N/A'))
+            amount_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=14)
+            amount_entry.pack(side=LEFT, padx=(5, 5))
 
             if order_type == 'open':
-                order_info_parts.append(f"MO: {order.get('mother_order', False)}")
+                mo_label = tk.Label(order_row_frame, text=f"MO: {order.get('mother_order', False)}", font=('Dosis', 10, 'bold'),
+                                    anchor='w', bg='lightgray')
+                mo_label.pack(side=LEFT)
 
             if order_type != 'sell_take_profit':
-                order_info_parts.append(f"StopLoss: {order.get('stop_loss', 'N/A')}")
-                order_info_parts.append(f"Target: {order.get('target', 'N/A')}")
-
-            order_info = "  >  ".join(order_info_parts)
-
-            order_label = Label(order_row_frame, text=order_info, font=('Dosis', 12, 'bold'))
-            order_label.pack(side=LEFT, anchor='w')  # Empaquetar la etiqueta a la izquierda
+                sl_label = tk.Label(order_row_frame, text=f"SL: {order.get('stop_loss', 'N/A')}", font=('Dosis', 10, 'bold'),
+                                    anchor='w', bg='lightgray')
+                sl_label.pack(side=LEFT, padx=5)
+                tp_label = tk.Label(order_row_frame, text=f"TP: {order.get('target', 'N/A')}", font=('Dosis', 10, 'bold'),
+                                    anchor='w', bg='lightgray')
+                tp_label.pack(side=LEFT)
 
             delete_button = Button(order_row_frame, text="X", fg='white', bg='#C21E29', padx=5,
                                    font=("Segoe UI", 10, 'bold'),
                                    cursor="hand2",
                                    command=lambda oid=order.get('id'): self.delete_order(oid))
-            delete_button.pack(side=RIGHT, padx=5)  # Empaquetar el botón a la derecha
-
-            """# Botón de Editar (opcional para editar ordenes en otras version de sofware futuro)
-            edit_button = Button(order_row_frame, text="Editar",
-                                             command=lambda oid=order.get('id'): self.edit_order(oid))
-            edit_button.pack(side=RIGHT, padx=2)"""
+            delete_button.pack(side=RIGHT)  # Empaquetar el botón a la derecha
 
     def delete_all_asset_data(self):
         """Borra todos los datos del activo seleccionado, mantiene el símbolo y actualiza la interfaz de órdenes."""

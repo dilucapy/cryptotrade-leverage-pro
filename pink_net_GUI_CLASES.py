@@ -1269,7 +1269,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             info_text = f"Símbolo: {symbol}\n"
 
             if current_price is None:
-                print("No se pudo obtener el precio actual.")
+                print(f"No se pudo obtener el precio actual de '{symbol}'")
                 self.info_label.config(text="Error al obtener el precio.")  # Informar del error en la GUI
                 return  # Salir de la función
             else:
@@ -1744,7 +1744,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                    command=lambda oid=order.get('id'): self.delete_order(oid))
             delete_button.pack(side=RIGHT)  # Empaquetar el botón a la derecha
 
-    def delete_all_asset_data(self):
+    def delete_all_asset_data2(self):
         """Borra todos los datos del activo seleccionado, mantiene el símbolo y actualiza la interfaz de órdenes."""
         symbol = self.selected_asset.get()
 
@@ -1766,6 +1766,38 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         else:
             self.show_error_messagebox(f"El símbolo '{symbol}' no existe en los datos.")
+
+    def delete_all_asset_data(self):
+        """Borra todos los datos del activo seleccionado, con confirmación previa."""
+        symbol = self.selected_asset.get()
+
+        if symbol in self.data:
+            # Mostrar diálogo de confirmación
+            confirm = self.show_confirmation_dialog(
+                self,
+                "Confirmar Borrado",
+                f"¿Estás seguro de que deseas borrar todos los datos del activo '{symbol}'?"
+            )
+
+            if confirm:  # Si el usuario hace clic en "Sí" o confirma
+                # Destruir la sección de órdenes actual para una actualización visual instantánea
+                if hasattr(self, 'asset_orders_frame'):
+                    self.asset_orders_frame.destroy()
+
+                self.data[symbol] = {
+                    "margin": 0,
+                    "open_orders": [],
+                    "buy_limits": [],
+                    "sell_take_profit": []
+                }
+                self.save_data()
+                self.update_asset_info_display()
+                self.create_asset_orders_section()  # Volver a crear la sección de órdenes vacía
+            else:
+                pass
+
+        else:
+            self.show_error_messagebox(self, f"El símbolo '{symbol}' no existe en los datos.")
 
     def clear_asset_buttons(self):
         """Elimina todos los botones de activos del panel superior."""
@@ -2526,10 +2558,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
             {"text": "Eliminar Activo", "command": self.delete_asset},
             {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
-            {"text": "Generar PINK NET", "command": self.generate_pink_net},
-            {"text": "Calcular Precio de Quema", "command": self.calculate_burn_price},
+            {"text": "Generar Buy Limits", "command": self.generate_pink_net},
+            {"text": "Calcular Precio de Liquidación", "command": self.calculate_burn_price},
             {"text": "Generar Niveles de Ventas", "command": self.generate_sales_cloud},
-            {"text": "Renderizar Ordenes Abiertas", "command": self.render_open_orders},
+            {"text": "Ver Ordenes Abiertas", "command": self.render_open_orders},
             {"text": "Promediar Ordenes", "command": self.mostrar_promediar_ordenes_form}
         ]
 

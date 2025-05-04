@@ -2501,8 +2501,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.secondary_menu = Frame(self.left_panel, bd=1, relief=FLAT, bg='burlywood')
         self.secondary_menu.pack(side=LEFT, padx=10, pady=10)
 
+        # Bloque para intentar cargar la imagen del logo de Trading View
+        try:
+            self.tradingview_logo = tk.PhotoImage(file='image_tradingview.png')
+            #print(f"Logo cargado: {self.tradingview_logo}")
+        except tk.TclError as e:
+            print(f"Error al cargar el icono de TradingView: {e}")
+            self.tradingview_logo = None
+
         buttons_config = [
             {"text": "<<     Volver", "command": self.return_to_primary_menu},
+            {"text": "Trading View", "command": self.open_tradingview},
             {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
             {"text": "Eliminar Activo", "command": self.delete_asset},
             {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
@@ -2513,19 +2522,30 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Promediar Ordenes", "command": self.mostrar_promediar_ordenes_form}
         ]
 
-        for button_info in buttons_config:
-            button = tk.Button(self.secondary_menu,
-                               text=button_info["text"],
-                               font=('Dosis', 12, 'bold'),
-                               padx=10,
-                               pady=10,
-                               bg=self.default_button_bg,
-                               fg='white',
-                               bd=1,
-                               relief=RAISED,
-                               cursor='hand2',
-                               command=button_info["command"])
+        for i, button_info in enumerate(buttons_config):
+            config = {
+                "text": button_info["text"],
+                "font": ('Dosis', 12, 'bold'),
+                "padx": 10,
+                "pady": 10,
+                "bg": self.default_button_bg,
+                "fg": 'white',
+                "bd": 1,
+                "relief": RAISED,
+                "cursor": 'hand2',
+                "command": button_info["command"]
+            }
 
+            # Carga la imagen del logo de Trading View
+            if i == 1 and self.tradingview_logo:  # Si es el segundo botón y el logo se cargó
+                config["image"] = self.tradingview_logo
+                config["text"] = ""  # No muestra texto si hay imagen
+
+            elif i == 1 and not self.tradingview_logo:  # Si es el segundo botón y el logo no se cargó
+                pass  # Usar el texto predeterminado
+
+            # Crea los botones con sus configuraciones
+            button = tk.Button(self.secondary_menu, **config)
             button.pack(pady=4, padx=2, fill=X)
 
     def mostrar_promediar_ordenes_form(self):
@@ -2546,6 +2566,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.master.clipboard_clear()
         self.master.clipboard_append(codigo_invitacion)
         self.master.update()  # Es necesario para que el portapapeles se actualice inmediatamente
+
+    def open_tradingview(self):
+        """Abre el gráfico del activo seleccionado en TradingView.
+        Este método obtiene el símbolo del activo a través de la variable self.selected_asset.
+        Luego, construye la URL para el gráfico de ese activo en el exchange (BINANCE) emparejado con USDT.
+        Finalmente, utiliza el módulo webbrowser para abrir esta URL en una nueva pestaña
+        del navegador web predeterminado del usuario."""
+        active_symbol = self.selected_asset.get()
+        ticker = f"{active_symbol}USDT"  # Le agregamos USDT al símbolo
+        exchange = "BINANCE"
+        url = f"https://es.tradingview.com/chart/?symbol={exchange}:{ticker}"  # Estructura básica de la URL
+        webbrowser.open_new_tab(url)
 
 
 

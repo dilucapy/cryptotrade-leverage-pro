@@ -1269,7 +1269,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             info_text = f"Símbolo: {symbol}\n"
 
             if current_price is None:
-                self.show_error_messagebox(f"Error al obtener precio\nNo se pudo obtener el precio actual para el activo: {symbol}")
                 print("No se pudo obtener el precio actual.")
                 self.info_label.config(text="Error al obtener el precio.")  # Informar del error en la GUI
                 return  # Salir de la función
@@ -2077,24 +2076,31 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.show_error_messagebox("El precio del nivel no puede ser cero.")
 
     def get_price(self, symbol):
-        """
-        Obtiene el precio actual de un activo en Binance.
-
+        """Obtiene el precio actual de un activo en Binance.
         Parámetros:
-        symbol (str): El símbolo del activo en formato por ej. 'HBAR'
+            symbol (str): El símbolo del activo en formato por ej. 'HBAR'
 
-        Retorna:
-        float: El precio actual del activo, o None si hay un error.
-        """
-        quote = 'USDT'
-        full_symbol = f'{symbol}{quote}'
+            Retorna:
+            float: El precio actual del activo, o None si hay un error."""
+
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}USDT"
         try:
-            response = requests.get(f'https://api.binance.com/api/v3/ticker/price', params={'symbol': full_symbol})
-            response.raise_for_status()
-            data = response.json()
+            response = requests.get(url)
+            response.raise_for_status()  # Lanza una excepción para códigos de error HTTP (4xx o 5xx)
+            data = response.json()  #  toma la respuesta que recibiste de la API y la convierte en una estructura de datos de Python (generalmente un diccionario o una lista de diccionarios)
             return float(data['price'])
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 400:
+                error_message = f"El símbolo '{symbol}' no existe o no es un par válido en Binance."
+            else:
+                error_message = f"Error al obtener el precio de {symbol}:\n{e}"
+            self.show_error_messagebox(self, error_message)
+            return None  # O algún otro valor que indique que no se pudo obtener el precio
         except requests.exceptions.RequestException as e:
-            self.show_error_messagebox(f"Error de API\nError al obtener el precio de {symbol}: {e}")
+            self.show_error_messagebox(self, f"Error de conexión a la API: {e}")
+            return None
+        except Exception as e:
+            self.show_error_messagebox(self, f"Error inesperado al obtener el precio: {e}")
             return None
 
     def calculate_burn_price(self):

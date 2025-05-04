@@ -507,18 +507,23 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Panel Superior (para etiqueta de titulo y Panel de activos)
         self.top_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
         self.top_panel.pack(side=TOP, fill=X)
-        self.title_label = Label(self.top_panel, text='Herramienta de Gestión de Operaciones Apalancadas de Criptomonedas', fg='#333333', font=('Dosis', 16), bg='burlywood', width=60)
+
+        # Panel fila superior (dentro de top panel)
+        self.top_row_frame = Frame(self.top_panel, bd=0, bg='burlywood')
+        self.top_row_frame.grid(row=0, column=0, columnspan=1, sticky="ew")
+
+        self.title_label = Label(self.top_row_frame, text='Herramienta de Gestión de Operaciones Apalancadas de Criptomonedas', fg='#333333', font=('Dosis', 16, 'bold'), bg='burlywood', width=59)
         self.title_label.grid(row=0, column=0, columnspan=5, pady=5, sticky="w")
         # label Codigo de invitacion de quantfury
-        label_invitacion= tk.Label(self.top_panel, text="Código Invitacion Quantfury:", font=('Dosis', 12, 'bold'), anchor='w',
-                                    bg='#000a1d', fg='#00cdc3')
-        label_invitacion.grid(row=0, column=5, columnspan=3, sticky="w", padx=(5, 0))
+        label_invitacion= tk.Label(self.top_row_frame, text="Código Invitacion Quantfury:", font=('Dosis', 12, 'bold'), anchor='w',
+                                   bg='#000a1d', fg='#00cdc3')
+        label_invitacion.grid(row=0, column=5, columnspan=3, sticky="wns", pady=15, padx=(2, 0))
 
         # Codigo de Invitacion en un Entry (copiable)
-        invitacion_entry = tk.Entry(self.top_panel)
+        invitacion_entry = tk.Entry(self.top_row_frame)
         invitacion_entry.insert(0, "U23853V6")
-        invitacion_entry.config(state='readonly', font=('Dosis', 12, 'bold'), width=10)
-        invitacion_entry.grid(row=0, column=8, sticky="w")
+        invitacion_entry.config(state='readonly', font=('Dosis', 12, 'bold'), width=11)
+        invitacion_entry.grid(row=0, column=8, sticky="ns", pady=15)
 
         # Botón para Copiar codigo de invitacion
         #self.copiar_icono = None  # Placeholder para el icono
@@ -529,7 +534,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.update()  # Es necesario para que el portapapeles se actualice inmediatamente
             print("Código de invitación copiado al portapapeles!")  # Opcional: feedback al usuario
 
-        self.boton_copiar = tk.Button(self.top_panel,
+        self.boton_copiar = tk.Button(self.top_row_frame,
                                       text="Copiar",
                                       font=('Dosis', 12, 'bold'),
                                       padx=3,
@@ -542,10 +547,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                       command=lambda: copiar_al_portapapeles(invitacion_entry))
         self.boton_copiar.grid(row=0, column=9, sticky="w")
 
-        # Boton para ir a sitio quantfury con imagen
+        # Boton quantfury (con imagen), dirige a la web
         try:
             self.quantfury_imagen = tk.PhotoImage(file='image_quantfury.png')
-            self.boton_quantfury = tk.Button(self.top_panel,
+            self.boton_quantfury = tk.Button(self.top_row_frame,
                                              image=self.quantfury_imagen,
                                              padx=3,
                                              pady=3,
@@ -554,11 +559,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                              relief=tk.RAISED,
                                              cursor='hand2',
                                              command=self.abrir_quantfury)
-            self.boton_quantfury.grid(row=0, column=10, sticky="w", padx=(20, 0))
+            self.boton_quantfury.grid(row=0, column=10, sticky="w", padx=(16, 0))
         except tk.TclError as e:
             print(f"Error al cargar la imagen: {e}")
             # Si la imagen no se carga, puedes mostrar un texto alternativo
-            self.boton_quantfury = tk.Button(self.top_panel,
+            self.boton_quantfury = tk.Button(self.top_row_frame,
                                              text="Ir a Quantfury",
                                              font=('Dosis', 12, 'bold'),
                                              padx=5,
@@ -570,12 +575,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                              relief=tk.RAISED,
                                              cursor='hand2',
                                              command=self.abrir_quantfury)
-            self.boton_quantfury.grid(row=0, column=10, sticky="w", padx=(20, 0))
+            self.boton_quantfury.grid(row=0, column=10, sticky="ew", padx=(20, 0))
 
-        # Panel de Activos (para los botones de activos)
-        self.asset_menu = Frame(self.top_panel, bd=1, relief=FLAT)
-        self.asset_menu.grid(row=1, column=0, columnspan=5, padx=10, pady=10,
-                             sticky="ew")  # Lo colocamos debajo del título
+        # Panel de Activos (para los botones de activos, dentro de top panel)
+        self.asset_menu_frame = Frame(self.top_panel, bd=1, relief=FLAT, bg='burlywood')
+        self.asset_menu_frame.grid(row=1, column=0, columnspan=1, padx=10, pady=10,
+                                   sticky="ew")  # Lo colocamos debajo del título
         self.create_asset_buttons()
 
         # Panel Derecho (para mostrar información del activo y otras funciones)
@@ -631,7 +636,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         column = 0
         num_columns = 10
         for symbol in list_symbols:
-            button = Button(self.top_panel,
+            button = Button(self.asset_menu_frame,
                             text=symbol,
                             font=('Dosis', 16, 'bold'),
                             padx=5,
@@ -723,7 +728,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         "margin": 0,
                         "open_orders": [],
                         "buy_limits": [],
-                        "sell_limits": []
+                        "sell_take_profit": []
                     }
                     self.save_data()  # Guarda todos los datos, incluyendo el nuevo símbolo
                     self.create_asset_buttons()  # Actualiza los botones de activos en el 'top panel'

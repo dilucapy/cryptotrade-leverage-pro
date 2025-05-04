@@ -230,6 +230,39 @@
                 "target": null
             }
         ],
+        "buy_limits": [
+            {
+                "id": "9ef19922-8a64-4948-8a4d-53840964727e",
+                "price": 0.025,
+                "amount_usdt": 60.0,
+                "quantity": 2400.0,
+                "stop_loss": null,
+                "target": null
+            }
+        ],
+        "sell_take_profit": []
+    },
+    "SOL": {
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_take_profit": []
+    },
+    "ETH": {
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_take_profit": []
+    },
+    "IOTA": {
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_take_profit": []
+    },
+    "CAR": {
+        "margin": 0,
+        "open_orders": [],
         "buy_limits": [],
         "sell_take_profit": []
     }

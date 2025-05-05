@@ -9,6 +9,11 @@ import matplotlib.gridspec as gridspec
 import tkinter.font as tkFont
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import webbrowser
+import os
+from PIL import Image, ImageTk  # Importa Pillow para manejar imágenes
+import pyperclip # Importa la librería pyperclip para el portapapeles
+import smtplib  # Para enviar correos electrónicos
+from email.mime.text import MIMEText
 
 
 
@@ -432,6 +437,19 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.button_bgcolor = "lightgreen"  # Color de fondo predeterminado para los botones
         self.button_relief = tk.FLAT  # Estilo de relieve predeterminado para los botones (sin efecto 3D)
 
+        # Diccionario para almacenar direcciones y rutas de QR
+        self.crypto_info = {
+            "Bitcoin (BTC)": {"address": "34G4JhdkiP9zKo5fbKS96YJSkLc7bXY5dH", "qr_path": "qr_btc.png"},
+            "Ethereum (ETH)": {"address": "0xa19deb3582c3e99f06637b0aad47c8034ada0874", "qr_path": "qr_eth.png"},
+            "USDT (Tether)": {"address": "0x3c332e33e0399aea38c3e393781ecff04226e8bf", "qr_path": "qr_usdt.png"},
+            "Litecoin (LTC)": {"address": "MSbwoT48KJDoA1JQaaAVerXDJdXps6f6Nj", "qr_path": "qr_ltc.png"},
+            "Solana (SOL)": {"address": "3ezjYS8M5ySPixm2N46qFPbTM9BuJi1w1rWpvXz28QDJ", "qr_path": "qr_sol.png"},
+            "Argentine Peso (ARS)": {"address": "gustavo.dilu", "qr_path": None}
+            #"Otra (especificar en el mensaje)": {"address": "", "qr_path": None}
+        }
+        self.developer_email = "dilucapython@gmail.com"  # correo del desarrollador
+        self.qr_image_tk = None  # Para evitar que la imagen sea garbage collected
+
     def load_data(self, filename):
         """Carga los datos desde un archivo JSON. Devuelve un diccionario,
         incluso si el archivo no se encuentra (diccionario vacío)
@@ -611,16 +629,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         a métodos de la clase (por ej., self.add_new_symbol)."""
 
         primary_buttons_config = [
-            {"text": "ADD new symbol", "command": self.add_new_symbol},
-            {"text": "Show MARGINS", "command": self.show_margins},
-            {"text": "Update MARGINS", "command": self.update_margins},
-            {"text": "Mostrar POSICIONES ABIERTAS", "command": self.show_open_positions},
-            {"text": "Calcular LEVERAGE", "command": self.calculate_leverage},
-            {"text": "Calculate BURN PRICES", "command": self.calculate_and_show_all_burning_prices},
-            {"text": "EXIT", "command": self.quit}
+            {"text": "+ Nuevo Símbolo ", "command": self.add_new_symbol},
+            {"text": "Mostrar MARGENES", "command": self.show_margins},
+            {"text": "Actualizar MARGENES", "command": self.update_margins},
+            {"text": "Ver Posiciones Abiertas", "command": self.show_open_positions},
+            {"text": "Apalancamiento", "command": self.calculate_leverage},
+            {"text": "Precios de Liquidación", "command": self.calculate_and_show_all_burning_prices},
+            {"text": "Tutorial", "command": self.tutorial},
+            {"text": "Donación al Proyecto", "command": self.open_donation_window},
+            {"text": "Salir", "command": self.quit}
         ]
         for config in primary_buttons_config:
-            button = Button(self.primary_menu, text=config["text"].title(), font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=10, cursor='hand2', command=config["command"])
+            button = Button(self.primary_menu, text=config["text"], font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=10, cursor='hand2', command=config["command"])
             button.pack(pady=4, fill=X)
 
     def get_symbols_for_buttons(self):
@@ -1744,29 +1764,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                    command=lambda oid=order.get('id'): self.delete_order(oid))
             delete_button.pack(side=RIGHT)  # Empaquetar el botón a la derecha
 
-    def delete_all_asset_data2(self):
-        """Borra todos los datos del activo seleccionado, mantiene el símbolo y actualiza la interfaz de órdenes."""
-        symbol = self.selected_asset.get()
-
-        if symbol in self.data:
-            # Destruir la sección de órdenes actual para una actualización visual instantánea
-            if hasattr(self, 'asset_orders_frame'):
-                self.asset_orders_frame.destroy()
-
-            self.data[symbol] = {
-                "margin": 0,
-                "open_orders": [],
-                "buy_limits": [],
-                "sell_take_profit": []
-            }
-            self.save_data()
-            self.update_asset_info_display()
-            self.create_asset_orders_section()  # Volver a crear la sección de órdenes vacía
-            self.show_info_messagebox(self, "Acción Exitosa", f"Los datos del activo '{symbol}' han sido borrado.")
-
-        else:
-            self.show_error_messagebox(f"El símbolo '{symbol}' no existe en los datos.")
-
     def delete_all_asset_data(self):
         """Borra todos los datos del activo seleccionado, con confirmación previa."""
         symbol = self.selected_asset.get()
@@ -1829,13 +1826,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     # Recrear los widgets con la lista de activos actualizada
                     self.create_widgets()
 
-                    self.show_info_messagebox(self, "Acción Exitosa", f"El activo '{symbol}' ha sido eliminado.")
+                    #self.show_info_messagebox(self, "Acción Exitosa", f"El activo '{symbol}' ha sido eliminado.")
 
                 else:
                     self.show_error_messagebox(f"El activo '{symbol}' no existe en los datos.")
 
             else:
-                self.show_info_messagebox(self, "Eliminación Cancelada", f"Se mantuvo el activo '{symbol}'.")
+                pass
+                #self.show_info_messagebox(self, "Eliminación Cancelada", f"Se mantuvo el activo '{symbol}'.")
 
         else:
             self.show_error_messagebox("Por favor, seleccione un activo para eliminar.")
@@ -1986,7 +1984,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
 
     def generate_pink_net(self):
-        """Abre el formulario para generar la PINK NET (Ordenes de compras pendientes)"""
+        """Abre el formulario para generar Buy Limits (niveles de ordenes de compras pendientes,
+        inicialmente la llamaba con el nombre ficticio Pink Net, por eso ese nombre!)"""
         symbol = self.selected_asset.get()
 
         if not symbol:
@@ -2622,6 +2621,215 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         url = f"https://es.tradingview.com/chart/?symbol={exchange}:{ticker}"  # Estructura básica de la URL
         webbrowser.open_new_tab(url)
 
+    def open_donation_window(self):
+        """Abre una ventana Toplevel para las donaciones."""
+        self.donation_window = tk.Toplevel(self)
+        self.donation_window.title("Apoyar el Proyecto")
+        # Establecer el tamaño fijo de la ventana (en píxeles)
+        ancho = 660
+        alto = 660
+        self.donation_window.geometry(f"{ancho}x{alto}")
+
+        # Deshabilitar la capacidad de redimensionar la ventana (ancho y alto)
+        self.donation_window.resizable(False, False)
+
+        self.create_donation_widgets(self.donation_window)
+
+    def update_donation_info(self, event):
+        """Actualiza la información mostrada en la sección de donaciones
+            basándose en la criptomoneda o la opción seleccionada por el usuario
+            en el desplegable (Combobox).
+
+            Este método se activa cuando el usuario selecciona un nuevo elemento
+            en el Combobox de opciones de donación. Su función principal es:
+                - Obtener la criptomoneda o la opción seleccionada.
+                - Buscar la información correspondiente (dirección/alias y ruta del QR)
+                  en el diccionario `self.crypto_info`(en el construtor de la clase principal)
+                - Actualizar el campo de texto (`self.address_entry`) con la dirección
+                  de la billetera de la criptomoneda seleccionada o el alias de
+                  Mercado Pago para el Peso Argentino.
+                - Manejar la visualización del código QR:
+                    - Si se selecciona Peso Argentino, se limpia la etiqueta del QR
+                      y se muestra un mensaje indicando que se debe copiar el alias.
+                    - Si hay una ruta de archivo QR válida para la criptomoneda
+                      seleccionada, intenta abrir la imagen, redimensionarla y
+                      mostrarla en la etiqueta `self.qr_label`. Si ocurre un error
+                      al cargar la imagen, se muestra un mensaje de error.
+                    - Si no hay una ruta de archivo QR válida, se muestra un mensaje
+                      indicando que el QR no está disponible.
+                - En caso de que la selección no se encuentre en `self.crypto_info`,
+                  se limpia el campo de la dirección y la etiqueta del QR."""
+        selected_crypto = self.selected_crypto.get()
+        info = self.crypto_info.get(selected_crypto)
+        if info:
+            self.address_entry.config(state='normal')
+            self.address_entry.delete(0, tk.END)
+            self.address_entry.insert(0, info["address"])
+            self.address_entry.config(state='readonly')
+
+            qr_path = info["qr_path"]
+
+            if selected_crypto == "Argentine Peso (ARS)":
+                self.qr_label.config(image='')
+                self.qr_label.config(
+                    text="Para donar en Pesos Argentinos\nCopiar ALIAS!", font=('Dosis', 12, 'italic', 'bold'), pady=30)
+
+            elif qr_path and os.path.exists(qr_path):
+                try:
+                    img = Image.open(qr_path)
+                    img = img.resize((150, 150))
+                    self.qr_image_tk = ImageTk.PhotoImage(img)
+                    self.qr_label.config(image=self.qr_image_tk)
+                    self.qr_label.config(text="")  # Limpiar cualquier texto anterior
+                except Exception as e:
+                    self.qr_label.config(image='')
+                    self.qr_label.config(text=f"Error al cargar QR: {e}")
+            else:
+                self.qr_label.config(image='')
+                self.qr_label.config(text="QR no disponible")
+        else:
+            self.address_entry.config(state='normal')
+            self.address_entry.delete(0, tk.END)
+            self.address_entry.config(state='readonly')
+            self.qr_label.config(image='')
+            self.qr_label.config(text="")
+
+    def animate_copy_button(self, button):
+        """Anima el botón de copiar cambiando el texto y el color.
+        Lo use en el toplevel de donaciones"""
+        original_text = button.cget("text")
+        original_fg = button.cget("fg")  # Guarda el color de texto original
+        original_bg = button.cget("bg")  # Guarda el colo de bg original
+        button.config(text="¡Copiado!", state="disabled", fg="red", bg='white')
+        self.after(1000, lambda: button.config(text=original_text, state="normal",
+                                               fg=original_fg,
+                                               bg=original_bg))  # Restaura el texto, estado y color original
+
+    def copy_address_to_clipboard(self):
+        """Copia la dirección de la billetera al portapapeles."""
+        address_to_copy = self.address_entry.get()
+        pyperclip.copy(address_to_copy)
+        self.animate_copy_button(self.copy_address_button)
+
+    def copy_email_to_clipboard(self):
+        """Copia el correo del desarrollador al portapapeles."""
+        pyperclip.copy(self.developer_email)
+        self.animate_copy_button(self.copy_email_button)
+
+    def create_donation_widgets(self, parent_window):
+        """Crea y configura los widgets necesarios para la ventana de donaciones.
+
+            Este método se encarga de construir la interfaz de usuario dentro de la ventana
+            proporcionada como `parent_window`, permitiendo a los usuarios apoyar el proyecto
+            a través de diversas opciones de criptomonedas o mediante Mercado Pago.
+
+            Los widgets creados incluyen:
+                - Una sección de narrativa profesional que agradece al usuario por su apoyo
+                  y explica la importancia de las contribuciones.
+                - Un desplegable (Combobox) que permite al usuario seleccionar la criptomoneda
+                  o la opción de Peso Argentino para su donación.
+                - Una sección para mostrar la dirección de la billetera de la criptomoneda
+                  seleccionada o el alias de Mercado Pago, junto con un botón para copiar
+                  esta información al portapapeles.
+                - Un área para mostrar el código QR correspondiente a la criptomoneda
+                  seleccionada (oculto si se selecciona Peso Argentino).
+                - Una sección que muestra la información de contacto del desarrollador
+                  (su correo electrónico) con un botón para copiarlo al portapapeles.
+
+            La información mostrada (dirección/alias y código QR) se actualiza dinámicamente
+            cuando el usuario selecciona una opción diferente en el Combobox, gracias a la
+            vinculación con el método `self.update_donation_info`.
+            """
+        # --- Narrativa Profesional ---
+        saludo_label = tk.Label(parent_window, text="¡Gracias por ser parte de este proyecto!", font=('Dosis', 14, 'bold'))
+        saludo_label.pack(pady=(10, 5), padx=10, anchor='w')
+
+        narrativa_text = tk.Label(
+            parent_window,
+            text=(
+                "Este proyecto se desarrolla con dedicación y esfuerzo continuo\npara brindarte las mejores herramientas.\n"
+                "Si encuentras valor en esta aplicación, deseas apoyar su crecimiento\ny la incorporación de nuevas funcionalidades,\n"
+                "te invitamos a realizar una contribución, por pequeña que sea.\nTu apoyo nos impulsa a seguir mejorando."
+            ),
+            justify='left', font=('Dosis', 14))
+        narrativa_text.pack(pady=5, padx=(10, 40), anchor='w')
+
+        contribucion_minima_label = tk.Label(parent_window, text="Contribución mínima sugerida: ¡Lo que sientas!", font=('Dosis', 12, 'italic'))
+        contribucion_minima_label.pack(pady=20, padx=10, anchor='w')
+
+        # --- Opción de Criptomoneda ---
+        crypto_label = tk.Label(parent_window, text="Elige una opcion para realizar tu donación:", font=('Dosis', 12, 'bold'))
+        crypto_label.pack(pady=(10, 5), padx=10, anchor='w')
+
+        crypto_options = list(self.crypto_info.keys())
+        self.selected_crypto = tk.StringVar(parent_window)
+        self.selected_crypto.set(crypto_options[0])
+
+        crypto_dropdown = ttk.Combobox(parent_window, textvariable=self.selected_crypto, values=crypto_options, state='readonly', font=('Dosis', 13, 'bold'))
+        crypto_dropdown.pack(pady=5, padx=10, fill='x')
+        crypto_dropdown.bind("<<ComboboxSelected>>", self.update_donation_info)
+
+        # --- Dirección para Copiar y Botón Copiar ---
+        address_frame = tk.Frame(parent_window)  # Nuevo frame para alinear Entry y Button
+        address_frame.pack(pady=(10, 5), padx=10, fill='x')
+
+        address_label = tk.Label(address_frame, text="Dirección:", font=('Dosis', 12, 'bold'), anchor='w')
+        address_label.pack(side=tk.LEFT, padx=(0, 10))
+
+        self.address_entry = tk.Entry(address_frame, state='readonly', font=('Consolas', 13))
+        self.address_entry.pack(side=tk.LEFT, fill='x', expand=True)
+        self.address_entry.insert(0, self.crypto_info[self.selected_crypto.get()]["address"])
+
+        self.copy_address_button = tk.Button(address_frame, text="Copiar",
+                                font=('Dosis', 12, 'bold'),
+                                padx=5,
+                                pady=5,
+                                width=10,
+                                bg=self.default_button_bg,
+                                fg='white',
+                                bd=1,
+                                relief=RAISED,
+                                cursor='hand2',
+                                command=self.copy_address_to_clipboard)
+
+        self.copy_address_button.pack(side=tk.RIGHT, padx=(5, 0))
+
+        # --- Imagen del Código QR ---
+        qr_label_title = tk.Label(parent_window, text="Código QR:", font=('Dosis', 12, 'bold'))
+        qr_label_title.pack(pady=(10, 5), padx=10, anchor='w')
+
+        self.qr_label = tk.Label(parent_window)
+        self.qr_label.pack(pady=5, padx=10)
+        self.update_donation_info(None)
+
+        # --- Contacto del Desarrollador ---
+        contact_dev_frame = tk.Frame(parent_window)
+        contact_dev_frame.pack(pady=(15, 20), padx=10, fill='x')
+
+        contact_dev_label = tk.Label(contact_dev_frame, text="Contacto del Desarrollador: ", font=('Dosis', 13, 'bold'),
+                                     anchor='w')
+        contact_dev_label.pack(side=tk.LEFT)
+
+        dev_email_label = tk.Label(contact_dev_frame, text=self.developer_email, anchor='w', font=('Dosis', 13, 'italic'))
+        dev_email_label.pack(side=tk.LEFT, padx=(5, 20))
+
+        self.copy_email_button = tk.Button(contact_dev_frame, text="Copiar Correo",
+                                      font=('Dosis', 12, 'bold'),
+                                      padx=5,
+                                      pady=5,
+                                      width=10,
+                                      bg=self.default_button_bg,
+                                      fg='white',
+                                      bd=1,
+                                      relief=RAISED,
+                                      cursor='hand2',
+                                      command=self.copy_email_to_clipboard)
+
+        self.copy_email_button.pack(side=tk.RIGHT)
+
+    def tutorial(self):
+        """Falta implementar algo"""
+        pass
 
 
 if __name__ == "__main__":

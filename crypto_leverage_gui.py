@@ -635,7 +635,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Ver Posiciones Abiertas", "command": self.show_open_positions},
             {"text": "Apalancamiento", "command": self.calculate_leverage},
             {"text": "Precios de Liquidación", "command": self.calculate_and_show_all_burning_prices},
-            {"text": "Tutorial", "command": self.tutorial},
             {"text": "Donación al Proyecto", "command": self.open_donation_window},
             {"text": "Salir", "command": self.quit}
         ]
@@ -2826,10 +2825,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                       command=self.copy_email_to_clipboard)
 
         self.copy_email_button.pack(side=tk.RIGHT)
-
-    def tutorial(self):
-        """Falta implementar algo"""
-        pass
 
 
 if __name__ == "__main__":

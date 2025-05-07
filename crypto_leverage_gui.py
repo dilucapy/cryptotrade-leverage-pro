@@ -431,7 +431,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.create_widgets()
 
         # Estilos de apariencia para toplevel y button
-        self.toplevel_bgcolor_generate_pink_net = persian_pink # Color bg solo para ventana generate pink net
         self.toplevel_bgcolor = "#AED5CB"  # (Tonalidad celeste) Color de fondo predeterminado para las ventanas emergentes (Toplevel)
         self.button_font = ("Segoe UI", 12)  # Fuente predeterminada para el texto de los botones (familia, tamaño)
         self.button_bgcolor = "lightgreen"  # Color de fondo predeterminado para los botones
@@ -462,14 +461,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.show_info_messagebox("Información", f"No se encontró el archivo: {filename}. Iniciando con datos vacíos.")
             return {}
         except json.JSONDecodeError:
-            self.show_error_messagebox("Error de Formato", f"El archivo {filename} no tiene un formato JSON válido.")
+            self.show_error_messagebox(self, f"El archivo {filename} no tiene un formato JSON válido.")
             return {}
         except Exception as e:
-            self.show_error_messagebox("Error Inesperado", f"Ocurrió un error al cargar {filename}: {e}")
+            self.show_error_messagebox(self, f"Ocurrió un error al cargar {filename}: {e}")
             return {}
 
     def order_orders(self, data):
-        """Ordena las órdenes abiertas y órdenes límite de activos financieros."""
+        """Ordena todas las órdenes, en base a su precio"""
         for asset, data_asset in data.items():
             # Verificar si data_asset es None
             if data_asset is None:
@@ -520,7 +519,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         return dialog.result, dialog.get_is_mother_order()
 
     def create_widgets(self):
-        """Este método crea todos los widgets de tu GUI
+        """Este método crea todos los widgets de la GUI
         (paneles, etiquetas, menús, botones) y los organiza utilizando .pack()"""
         # Panel Superior (para etiqueta de titulo y Panel de activos)
         self.top_panel = Frame(self.master, bd=1, relief=FLAT, bg='burlywood')
@@ -550,9 +549,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.clipboard_clear()
             self.clipboard_append(codigo_invitacion)
             self.update()  # Es necesario para que el portapapeles se actualice inmediatamente
-            print("Código de invitación copiado al portapapeles!")  # Opcional: feedback al usuario
+            print("Código de invitación copiado al portapapeles!")
 
-            # animacion del boton
+            # animacion del boton copiar
             original_text = self.boton_copiar.cget("text")
             original_fg = self.boton_copiar.cget("fg")  # Guarda el color de texto original
             original_bg = self.boton_copiar.cget("bg")  # Guarda el color de bg original
@@ -561,7 +560,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                                               text=original_text,
                                                               fg=original_fg,
                                                               bg=original_bg))
-
 
         self.boton_copiar = tk.Button(self.top_row_frame,
                                       text="Copiar",
@@ -605,10 +603,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                              bd=1,
                                              relief=tk.RAISED,
                                              cursor='hand2',
-                                             command=self.abrir_quantfury)
+                                             command=self.open_quantfury)
             self.boton_quantfury.grid(row=0, column=10, sticky="ew", padx=(20, 0))
 
-        # Panel de Activos (para los botones de activos, dentro de top panel)
+        # Panel de menu de Activos (para los botones de activos, dentro de top panel)
         self.asset_menu_frame = Frame(self.top_panel, bd=1, relief=FLAT, bg='burlywood')
         self.asset_menu_frame.grid(row=1, column=0, columnspan=1, padx=10, pady=10,
                                    sticky="ew")  # Lo colocamos debajo del título
@@ -663,7 +661,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def create_asset_buttons(self):
         """Crea los botones de los activos en el top_panel."""
-        list_symbols = self.get_symbols_for_buttons()  # llama al método como self.metodo()
+        list_symbols = self.get_symbols_for_buttons()
         row = 1
         column = 0
         num_columns = 10
@@ -753,7 +751,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             new_symbol = symbol_entry.get().strip().upper()
             if new_symbol:
                 if new_symbol in self.data:
-                    self.show_error_messagebox(f"El símbolo '{new_symbol}' ya existe.")
+                    self.show_error_messagebox(self, f"El símbolo '{new_symbol}' ya existe.")
 
                 else:
                     self.data[new_symbol] = {
@@ -767,7 +765,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     self.show_info_messagebox(self, "Éxito", f"Símbolo '{new_symbol}' agregado.")
                     add_symbol_window.destroy()  # llama al metodo para destruir la instacia de toplevel
             else:
-                self.show_error_messagebox("Por favor, introduce un símbolo.")
+                self.show_error_messagebox(self, "Por favor, introduce un símbolo.")
 
 
         save_button = Button(add_symbol_window, text="Guardar Símbolo",
@@ -894,10 +892,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             try:
                 trading_account = float(trading_account_str)
                 if trading_account <= 0:
-                    self.show_error_messagebox("El monto de la cuenta de trading debe ser mayor que cero.")
+                    self.show_error_messagebox(self, "El monto de la cuenta de trading debe ser mayor que cero.")
                     return
             except ValueError:
-                self.show_error_messagebox("Por favor, ingrese un número válido para el monto de la cuenta de trading.")
+                self.show_error_messagebox(self, "Por favor, ingrese un número válido para el monto de la cuenta de trading.")
                 return
 
             total_usdt_open_positions = 0
@@ -909,7 +907,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     current_amounts[symbol] = amount_asset
                     total_usdt_open_positions += amount_asset
                 except ValueError:
-                    self.show_error_messagebox(f"Por favor, ingrese un número válido para la posición abierta de {symbol}.")
+                    self.show_error_messagebox(self, f"Por favor, ingrese un número válido para la posición abierta de {symbol}.")
                     return
 
             if total_usdt_open_positions > 0:
@@ -926,7 +924,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 self.save_data()
                 top_weighted_form.destroy()  # Cerrar el formulario después de calcular
             else:
-                self.show_error_messagebox("El total de las posiciones abiertas debe ser mayor que cero.")
+                self.show_error_messagebox(self, "El total de las posiciones abiertas debe ser mayor que cero.")
 
         # Frame para los botones
         button_frame = tk.Frame(top_weighted_form, bg=self.toplevel_bgcolor)
@@ -1052,8 +1050,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         return total_open_amount, list_symbol, list_amount
 
     def show_open_positions(self):
-        """Muestra los montos totales por activo de todas las órdenes abiertas
-                en un gráfico de barras."""
+        """Muestra los montos totales por activo de todas
+        las órdenes abiertas en un gráfico de barras."""
 
         total_open_amount, list_symbol, list_amount = self.calculate_total_open_amount()
 
@@ -1120,7 +1118,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         label.pack(pady=5)
 
         if trading_account <= 0:
-            self.show_error_messagebox("La cuenta de trading debe ser mayor que cero.")
+            self.show_error_messagebox(self, "La cuenta de trading debe ser mayor que cero.")
             return
 
         leveragex = round(total_open_amount / trading_account, 2)  # Se calcula el apalancamiento actual
@@ -1216,7 +1214,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
                 # Crear un label para el título de la tabla (de precios de quema)
                 self.table_title = Label(self.burn_price_table_frame,
-                                        text="B U R N   P R I C E S",
+                                        text="P R E C I O S    D E    L I Q U I D A C I O N",
                                         font=('Arial', 18, 'bold'))
                 self.table_title.pack()
 
@@ -1237,9 +1235,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 tree.heading("Symbol", text="Símbolo")
                 tree.heading("Current Price", text="Precio Actual (USDT)")
                 tree.heading("Margin", text="Margen (USDT)")
-                tree.heading("Open Orders Qty", text="Total Quantity (Open Orders)")
-                tree.heading("Buy Limits Qty", text="Total Quantity (Buy Limits)")
-                tree.heading("Burn Price", text="Precio de Quema (USDT)")
+                tree.heading("Open Orders Qty", text="Total Cantidad (Open Orders)")
+                tree.heading("Buy Limits Qty", text="Total Cantidad (Buy Limits)")
+                tree.heading("Burn Price", text="Precio Liquidación (USDT)")
 
                 # Ajustar el ancho de las columnas (opcional)
                 tree.column("Symbol", width=80)
@@ -1319,11 +1317,24 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.info_label.config(text="Seleccione un activo para ver su información.")
 
     def create_asset_info_section(self):
+        """Crea y configura la sección de la GUI donde se muestra la información detallada de un activo seleccionado.
+
+        Esta sección se compone de un frame contenedor (`self.asset_info_frame`)
+        y una etiqueta de texto (`self.info_label`) que se actualiza
+        dinámicamente para mostrar el símbolo, precio, margen y otra información relevante del activo
+
+        El frame se empaqueta dentro del panel derecho (`self.right_panel`) y se expande horizontalmente
+        para ocupar todo el ancho disponible.
+        Inicialmente, la etiqueta muestra un mensaje informativo indicando al usuario que seleccione un activo.
+
+        Finalmente, se llama al método `self.update_asset_info_display()` para poblar la etiqueta
+        con la información del activo actualmente seleccionado (si hay alguno).
+        """
         # asset_info_frame (contiene información del activo como símbolo, precio y margin)
         self.asset_info_frame = Frame(self.right_panel)  # Empaquetar este frame en right_panel
         self.asset_info_frame.pack(pady=2, fill=X)
 
-        self.info_label = Label(self.asset_info_frame,  # El Label ahora va dentro del asset_info_frame
+        self.info_label = Label(self.asset_info_frame,  # Etiqueta que se actualiza dinamicamente
                                 text="Seleccione un activo para ver su información.",
                                 font=('Arial', 11, 'bold'))
         self.info_label.pack()
@@ -1359,7 +1370,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
                 # si existe una 'orden madre', mostrar un dialogo de confirmacion para avisar y confirmar sobreescritura
                 if existing_mother_order:
-                    response = self.show_confirmation_dialog(self, "Confirmación", f"Ya existe una orden madre\n¿Desea sobreescribirla?")
+                    response = self.show_confirmation_dialog(self, "Confirmación", "Ya existe una orden madre\n¿Desea sobreescribirla?")
                     if response:
                         # Eliminar la orden madre existente
                         data_asset['open_orders'] = [
@@ -1453,10 +1464,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.update_asset_info_display()
             self.new_order_data = None  # Resetear los datos del formulario
         elif not active_symbol:
-            self.show_error_messagebox("Por favor, seleccione un activo primero.")
+            self.show_error_messagebox(self, "Por favor, seleccione un activo primero.")
 
         elif not self.new_order_data:
-            self.show_error_messagebox("No se ingresaron datos en el formulario.")
+            self.show_error_messagebox(self, "No se ingresaron datos en el formulario.")
 
     def show_new_order_form(self, order_type):
         """Esta función es llamada cuando el usuario hace clic en uno de los botones de
@@ -1597,7 +1608,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.handle_add_new_order(order_type)  # llama al metodo manejar la adición de la nueva orden
             form.destroy()  # destruye la ventana del formulario
         except ValueError:
-            self.show_error_messagebox("Por favor, ingrese valores numéricos válidos.")
+            self.show_error_messagebox(self, "Por favor, ingrese valores numéricos válidos.")
 
     def delete_order(self, order_id):
         """Pide Confirmacion al usuario para eliminar una orden del activo seleccionado basándose en su ID."""
@@ -1653,7 +1664,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Add OPEN ORDER", "command": lambda: self.show_new_order_form('open')},
             {"text": "Add BUY LIMIT", "command": lambda: self.show_new_order_form('pending_buy')},
             {"text": "Add SELL TAKE PROFIT", "command": lambda: self.show_new_order_form('sell_take_profit')},
-            # Agrega aquí más botones de creación si es necesario
         ]
 
         buttons_frame = Frame(self.asset_orders_frame)  # Frame contenedor para los botones
@@ -1782,11 +1792,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         if symbol in self.data:
             # Mostrar diálogo de confirmación
-            confirm = self.show_confirmation_dialog(
-                self,
-                "Confirmar Borrado",
-                f"¿Estás seguro de que deseas borrar todos los datos del activo '{symbol}'?"
-            )
+            confirm = self.show_confirmation_dialog(self, "Confirmar Borrado",
+                                                    f"¿Estás seguro de que deseas borrar todos los datos del activo '{symbol}'?")
 
             if confirm:  # Si el usuario hace clic en "Sí" o confirma
                 # Destruir la sección de órdenes actual para una actualización visual instantánea
@@ -1841,21 +1848,21 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     #self.show_info_messagebox(self, "Acción Exitosa", f"El activo '{symbol}' ha sido eliminado.")
 
                 else:
-                    self.show_error_messagebox(f"El activo '{symbol}' no existe en los datos.")
+                    self.show_error_messagebox(self, f"El activo '{symbol}' no existe en los datos.")
 
             else:
                 pass
                 #self.show_info_messagebox(self, "Eliminación Cancelada", f"Se mantuvo el activo '{symbol}'.")
 
         else:
-            self.show_error_messagebox("Por favor, seleccione un activo para eliminar.")
+            self.show_error_messagebox(self, "Por favor, seleccione un activo para eliminar.")
 
     def calculate_mother_order(self):
         """Abre el formulario para calcular la orden madre."""
         symbol = self.selected_asset.get()
 
         if not symbol:
-            self.show_error_messagebox("Por favor, selecciona un activo primero.")
+            self.show_error_messagebox(self, "Por favor, selecciona un activo primero.")
             return
         # muestra el formulario para ingresar los datos necesarios para calcular la orden madre
         self.show_calculate_mother_order_form(symbol)
@@ -1953,7 +1960,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                 ]
                                 new_order = {
                                     "id": str(uuid.uuid4()),
-                                    "type": "open",
                                     "price": price_mother_order_rounded,
                                     "amount_usdt": open_position_usdt,
                                     "quantity": quantity_mother_order,
@@ -1967,12 +1973,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                 self.show_info_messagebox(self, "Orden Guardada",
                                                           "La orden madre se ha sobreescrito!")
                             else:
-                                self.show_info_messagebox(self, "Operación Cancelada",
-                                                          "La nueva orden madre no ha sido guardada.")
+                                pass
+                                #self.show_info_messagebox(self, "Operación Cancelada", "La nueva orden madre no ha sido guardada.")
                         else:
                             new_order = {
                                 "id": str(uuid.uuid4()),
-                                "type": "open",
                                 "price": price_mother_order_rounded,
                                 "amount_usdt": open_position_usdt,
                                 "quantity": quantity_mother_order,
@@ -1986,14 +1991,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                             self.show_info_messagebox(self, "Orden Guardada",
                                                       "La orden madre ha sido guardada en órdenes abiertas.")
                     else:
-                        self.show_error_messagebox(self, "Error", "Por favor, seleccione un activo primero.")
+                        self.show_error_messagebox(self, "Por favor, seleccione un activo primero.")
 
                 form_window.destroy()  # Cerrar el formulario después del cálculo y (opcional) guardado de la orden
             else:
-                self.show_error_messagebox("La cantidad de la orden madre no puede ser cero.")
+                self.show_error_messagebox(self, "La cantidad de la orden madre no puede ser cero.")
 
         except ValueError:
-            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
+            self.show_error_messagebox(self, "Por favor, introduce valores numéricos válidos en todos los campos.")
 
     def generate_pink_net(self):
         """Abre el formulario para generar Buy Limits (niveles de ordenes de compras pendientes,
@@ -2001,35 +2006,34 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
 
         if not symbol:
-            self.show_error_messagebox("Por favor, selecciona un activo primero.")
+            self.show_error_messagebox(self, "Por favor, selecciona un activo primero.")
             return
 
         self.show_generate_pink_net_form(symbol)
 
     def show_generate_pink_net_form(self, symbol):
-        """Crea y muestra el formulario para generar la PINK NET."""
+        """Crea y muestra el formulario para generar la PINK NET (niveles de compras pendientes)."""
         top = tk.Toplevel(self)
-        top.config(bg=self.toplevel_bgcolor_generate_pink_net)
         top.geometry('400x320')
-        top.title(f"Generar PINK NET para {symbol}")
+        top.title(f"Generar BUY LIMITS para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
-        tk.Label(top, text="Precio (Nivel Inicial):", bg=self.toplevel_bgcolor_generate_pink_net,
+        tk.Label(top, text="Precio (Nivel Inicial):",
                          font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky="e")
         entry_initial_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_initial_level.grid(row=0, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Precio (Nivel Final):", bg=self.toplevel_bgcolor_generate_pink_net,
+        tk.Label(top, text="Precio (Nivel Final):",
                          font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky="e")
         entry_final_level = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_final_level.grid(row=1, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Cantidad de Niveles:", bg=self.toplevel_bgcolor_generate_pink_net,
+        tk.Label(top, text="Cantidad de Niveles:",
                  font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky="e")
         entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_levels.grid(row=2, column=1, padx=5, pady=10)
 
-        tk.Label(top, text="Monto Total a Invertir (USDT):", bg=self.toplevel_bgcolor_generate_pink_net,
+        tk.Label(top, text="Monto Total a Invertir (USDT):",
                          font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky="e")
         entry_investment_amount = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_investment_amount.grid(row=3, column=1, padx=5, pady=10)
@@ -2068,7 +2072,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             investment_amount = float(investment_amount_str)
 
             if levels <= 0 or investment_amount <= 0:
-                self.show_error_messagebox("La cantidad de niveles y el monto de inversión deben ser mayores que cero.")
+                self.show_error_messagebox(self, "La cantidad de niveles y el monto de inversión deben ser mayores que cero.")
                 return
 
             pink_net = []
@@ -2088,13 +2092,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 }
                 pink_net.append(level_pink_net)
 
-            result_message = "PINK NET Generada:\n\n"
+            result_message = "Niveles BUY LIMITS Generados:\n\n"
             for level in pink_net:
                 result_message += f"Precio: {level['price']}, Monto: {level['amount_usdt']} USDT, Cantidad: {level['quantity']}\n"
 
-            self.show_info_messagebox(self, "PINK NET Generada", result_message )
+            self.show_info_messagebox(self, "Niveles BUY LIMITS Generados!", result_message )
 
-            save_confirmation = self.show_confirmation_dialog(self, "Guardar PINK NET", "¿Desea guardar estos niveles como órdenes límite de compra?")
+            save_confirmation = self.show_confirmation_dialog(self, "Guardar niveles BUY LIMITS", "¿Desea guardar estos niveles como órdenes límite de compra?")
 
             if save_confirmation:
                 if symbol in self.data:
@@ -2105,18 +2109,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         self.data[symbol]["buy_limits"] = pink_net
                         self.save_data()
                         self.create_asset_orders_section()  # Actualizar la sección de órdenes
-                        self.show_info_messagebox(self, "PINK NET Guardada", "La PINK NET ha sido guardada en órdenes límite de compra.")
+                        self.show_info_messagebox(self, "Niveles BUY LIMITS Guardados", "Los niveles de compras pendientes han sido guardado en órdenes BUY LIMITS.")
 
                 else:
-                    self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
+                    self.show_error_messagebox(self, f"El símbolo '{symbol}' ya no existe en los datos.")
 
             form_window.destroy()
 
         except ValueError:
-            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
+            self.show_error_messagebox(self, "Por favor, introduce valores numéricos válidos en todos los campos.")
 
         except ZeroDivisionError:
-            self.show_error_messagebox("El precio del nivel no puede ser cero.")
+            self.show_error_messagebox(self, "El precio del nivel no puede ser cero.")
 
     def get_price(self, symbol):
         """Obtiene el precio actual de un activo en Binance.
@@ -2155,7 +2159,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
 
         if not symbol:
-            self.show_error_messagebox("Por favor, selecciona un activo primero.")
+            self.show_error_messagebox(self, "Por favor, selecciona un activo primero.")
             return
 
         current_price = self.get_price(symbol)
@@ -2166,10 +2170,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 margin = data_asset.get("margin", 0)
 
                 if margin == 0:
-                    self.show_info_messagebox(self, "Información", "No se puede calcular BURN PRICE\nMargin = 0\nActualizar Margin!")
+                    self.show_info_messagebox(self, "Información", "No se puede calcular Precio de Liquidación\nMargin = 0\nActualizar Margin!")
 
                 else:
-                    burn_price_message = f"  BURN PRICE {symbol}  ".center(74, '*') + "\n\n"
+                    burn_price_message = f"  PRECIO LIQUIDACION: {symbol}  ".center(70, '*') + "\n\n"
                     burn_price_message += "Advertencia: tener actualizada las OPEN ORDERS y el MARGIN!\n\n"
                     burn_price_message += f"CURRENT PRICE: {current_price}\n"
                     burn_price_message += f"MARGIN: {margin} USDT\n\n"
@@ -2199,7 +2203,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
                     total_quantity = quantity_open_orders + total_quantity_buy_limits
                     if total_quantity == 0:
-                        self.show_error_messagebox("No se puede calcular BURN PRICE\n No existen OPEN ORDERS ni BUY LIMITS")
+                        self.show_error_messagebox(self, "No se puede calcular PRECIO DE LIQUIDACION\n No existen OPEN ORDERS ni BUY LIMITS")
 
                     else:
                         burn_price = ((current_price * quantity_open_orders) + total_amount_buy_limits - margin) / total_quantity
@@ -2208,19 +2212,19 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         self.show_info_messagebox(self, "Resultado Burn Price", burn_price_message)  # se llama al metodo que encapsula la clase personalizada 'CustomInfoDialog'
 
             else:
-                self.show_error_messagebox(f"No esta ingresado '{symbol}' en el data.")
+                self.show_error_messagebox(self, f"No esta ingresado '{symbol}' en el data.")
 
         else:
             # Manejar el caso en que no se pudo obtener el precio de la API
             pass  # El error ya se mostró en get_price()
 
     def generate_sales_cloud(self):
-        """Abre el formulario para generar la NUBE DE VENTAS.
+        """Abre el formulario para generar la NUBE DE VENTAS
         (genera los Niveles de Venta de Toma de Ganancia)"""
         symbol = self.selected_asset.get()
 
         if not symbol:
-            self.show_error_messagebox("Por favor, selecciona un activo primero.")
+            self.show_error_messagebox(self, "Por favor, selecciona un activo primero.")
             return
 
         self.show_generate_sales_cloud_form(symbol)
@@ -2297,7 +2301,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 return
 
             if levels <= 0 or withdrawal_amount <= 0:
-                self.show_error_messagebox("La cantidad de niveles y el monto total a reducir deben ser mayores que cero.")
+                self.show_error_messagebox(self, "La cantidad de niveles y el monto total a reducir deben ser mayores que cero.")
                 return
 
             sales_cloud = []
@@ -2334,15 +2338,15 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         self.show_info_messagebox(self, "Niveles VENTAS de Toma de Ganancias Guardada", "Los Niveles de VENTAS han sido guardado!")
 
                 else:
-                    self.show_error_messagebox(f"El símbolo '{symbol}' ya no existe en los datos.")
+                    self.show_error_messagebox(self, f"El símbolo '{symbol}' ya no existe en los datos.")
 
             form_window.destroy()
 
         except ValueError:
-            self.show_error_messagebox("Por favor, introduce valores numéricos válidos en todos los campos.")
+            self.show_error_messagebox(self, "Por favor, introduce valores numéricos válidos en todos los campos.")
 
         except ZeroDivisionError:
-            self.show_error_messagebox("El precio del nivel no puede ser cero.")
+            self.show_error_messagebox(self, "El precio del nivel no puede ser cero.")
 
     def plot_open_orders_window(self, data_asset, current_price, active_symbol):
         """Genera y muestra el gráfico de órdenes abiertas para el activo seleccionado
@@ -2358,7 +2362,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         non_mother_orders = [order for order in open_orders if not order.get('mother_order', False)]  # # Filtra las órdenes no madre.
 
         if len(mother_orders) > 1:
-            self.show_error_messagebox(self, "Hay más de una orden madre. Solo se permite una.")
+            self.show_error_messagebox(self, "Hay más de una orden madre!\nSolo se permite una.")
             return
 
         # --- DATOS orden madre --- (Inicializar en caso de que no haya órdenes madre)
@@ -2558,7 +2562,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Bloque para intentar cargar la imagen del logo de Trading View
         try:
             self.tradingview_logo = tk.PhotoImage(file='image_tradingview.png')
-            #print(f"Logo cargado: {self.tradingview_logo}")
+
         except tk.TclError as e:
             print(f"Error al cargar el icono de TradingView: {e}")
             self.tradingview_logo = None
@@ -2612,10 +2616,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         PromediarOrdenesForm(self)
 
     def open_quantfury(self):
+        """Abre la plataforma de trading Quantfury en una nueva pestaña
+        del navegador web predeterminado del usuario.
+        Utiliza la biblioteca `webbrowser` para abrir la URL"""
         url = "https://trading.quantfury.com/"
         webbrowser.open_new_tab(url)
 
     def copiar_al_portapapeles(self):
+        """Copia el código de invitación al portapapeles del sistema."""
         codigo_invitacion = "U23853V6"
         self.master.clipboard_clear()
         self.master.clipboard_append(codigo_invitacion)

@@ -4,7 +4,6 @@
         "open_orders": [
             {
                 "id": "415436d1-8727-48f1-ae88-e5ffb9befcfc",
-                "type": "open",
                 "price": 0.865,
                 "amount_usdt": 50.0,
                 "quantity": 75.011,
@@ -21,7 +20,6 @@
         "open_orders": [
             {
                 "id": "461c0c17-782e-4a24-89df-09f14f1b39d9",
-                "type": "open",
                 "price": 247631.251,
                 "amount_usdt": 50.0,
                 "quantity": 0.00059209,
@@ -38,7 +36,6 @@
         "open_orders": [
             {
                 "id": "303d3a7f-0889-49d7-98b3-7ae3fbd90e6d",
-                "type": "open",
                 "price": 2.124,
                 "amount_usdt": 250.0,
                 "quantity": 115.5415,
@@ -62,10 +59,43 @@
         "open_orders": [
             {
                 "id": "28625319-231f-42da-97c4-e72e5a407bc5",
-                "type": "open",
                 "price": 0.385,
                 "amount_usdt": 50.0,
                 "quantity": 284.8,
+                "stop_loss": null,
+                "target": null,
+                "mother_order": true
+            }
+        ],
+        "buy_limits": [],
+        "sell_take_profit": []
+    },
+    "ETH": {
+        "margin": 0,
+        "open_orders": [
+            {
+                "id": "708f06eb-ade8-4bf0-afed-3e052bdead1f",
+                "price": 1000.0,
+                "amount_usdt": 50.0,
+                "quantity": 0.05,
+                "mother_order": false,
+                "stop_loss": null,
+                "target": null
+            },
+            {
+                "id": "cb20ed20-7187-4be6-8c5d-e110028d9468",
+                "price": 1500.0,
+                "amount_usdt": 150.0,
+                "quantity": 0.1,
+                "mother_order": false,
+                "stop_loss": null,
+                "target": null
+            },
+            {
+                "id": "46ff01c1-cfec-4e1e-a6a5-0fae3a03fed8",
+                "price": 1800.0,
+                "amount_usdt": 300.0,
+                "quantity": 0.5,
                 "stop_loss": null,
                 "target": null,
                 "mother_order": true

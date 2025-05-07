@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 
 
 # ruta del archivo JSON
-filename = 'pink_net_data_3_GUI.json'
+filename = 'assets_data.json'
 
 """ Utilizar clases para gestionar el estado y la lógica de tu GUI es una práctica
  fundamental para construir aplicaciones más complejas y mantenibles:"""
@@ -535,12 +535,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # label Codigo de invitacion de quantfury
         label_invitacion= tk.Label(self.top_row_frame, text="Código Invitacion Quantfury:", font=('Dosis', 12, 'bold'), anchor='w',
                                    bg='#000a1d', fg='#00cdc3')
-        label_invitacion.grid(row=0, column=5, columnspan=3, sticky="wns", pady=15, padx=(2, 0))
+        label_invitacion.grid(row=0, column=5, columnspan=3, sticky="wns", pady=15, padx=(1, 0))
 
         # Codigo de Invitacion en un Entry (copiable)
         invitacion_entry = tk.Entry(self.top_row_frame)
         invitacion_entry.insert(0, "U23853V6")
-        invitacion_entry.config(state='readonly', font=('Dosis', 12, 'bold'), width=11)
+        invitacion_entry.config(state='readonly', font=('Dosis', 12, 'bold'), width=10)
         invitacion_entry.grid(row=0, column=8, sticky="ns", pady=15)
 
         # Botón para Copiar codigo de invitacion
@@ -552,17 +552,30 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.update()  # Es necesario para que el portapapeles se actualice inmediatamente
             print("Código de invitación copiado al portapapeles!")  # Opcional: feedback al usuario
 
+            # animacion del boton
+            original_text = self.boton_copiar.cget("text")
+            original_fg = self.boton_copiar.cget("fg")  # Guarda el color de texto original
+            original_bg = self.boton_copiar.cget("bg")  # Guarda el color de bg original
+            self.boton_copiar.config(text="Ok", state="disabled", fg="red", bg='white')
+            self.after(1000, lambda: self.boton_copiar.config(state="normal",
+                                                              text=original_text,
+                                                              fg=original_fg,
+                                                              bg=original_bg))
+
+
         self.boton_copiar = tk.Button(self.top_row_frame,
                                       text="Copiar",
                                       font=('Dosis', 12, 'bold'),
                                       padx=3,
                                       pady=3,
+                                      width=6,
                                       bg='#000a1d',
                                       fg='#00cdc3',
                                       bd=1,
                                       relief=RAISED,
                                       cursor='hand2',
                                       command=lambda: copiar_al_portapapeles(invitacion_entry))
+
         self.boton_copiar.grid(row=0, column=9, sticky="w")
 
         # Boton quantfury (con imagen), dirige a la web
@@ -576,7 +589,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                              bd=1,
                                              relief=tk.RAISED,
                                              cursor='hand2',
-                                             command=self.abrir_quantfury)
+                                             command=self.open_quantfury)
             self.boton_quantfury.grid(row=0, column=10, sticky="w", padx=(16, 0))
         except tk.TclError as e:
             print(f"Error al cargar la imagen: {e}")
@@ -2598,7 +2611,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     ventana principal en su comportamiento (por ejemplo, al minimizar)."""
         PromediarOrdenesForm(self)
 
-    def abrir_quantfury(self):
+    def open_quantfury(self):
         url = "https://trading.quantfury.com/"
         webbrowser.open_new_tab(url)
 

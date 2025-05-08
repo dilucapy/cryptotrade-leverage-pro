@@ -438,13 +438,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Diccionario para almacenar direcciones y rutas de QR
         self.crypto_info = {
-            "Bitcoin (BTC)": {"address": "34G4JhdkiP9zKo5fbKS96YJSkLc7bXY5dH", "qr_path": "qr_btc.png"},
-            "Ethereum (ETH)": {"address": "0xa19deb3582c3e99f06637b0aad47c8034ada0874", "qr_path": "qr_eth.png"},
-            "USDT (Tether)": {"address": "0x3c332e33e0399aea38c3e393781ecff04226e8bf", "qr_path": "qr_usdt.png"},
-            "Litecoin (LTC)": {"address": "MSbwoT48KJDoA1JQaaAVerXDJdXps6f6Nj", "qr_path": "qr_ltc.png"},
-            "Solana (SOL)": {"address": "3ezjYS8M5ySPixm2N46qFPbTM9BuJi1w1rWpvXz28QDJ", "qr_path": "qr_sol.png"},
+            "Bitcoin (BTC)": {"address": "34G4JhdkiP9zKo5fbKS96YJSkLc7bXY5dH", "qr_path": "images/qr_btc.png"},
+            "Ethereum (ETH)": {"address": "0xa19deb3582c3e99f06637b0aad47c8034ada0874", "qr_path": "images/qr_eth.png"},
+            "USDT (Tether)": {"address": "0x3c332e33e0399aea38c3e393781ecff04226e8bf", "qr_path": "images/qr_usdt.png"},
+            "Litecoin (LTC)": {"address": "MSbwoT48KJDoA1JQaaAVerXDJdXps6f6Nj", "qr_path": "images/qr_ltc.png"},
+            "Solana (SOL)": {"address": "3ezjYS8M5ySPixm2N46qFPbTM9BuJi1w1rWpvXz28QDJ", "qr_path": "images/qr_sol.png"},
             "Argentine Peso (ARS)": {"address": "gustavo.dilu", "qr_path": None}
-            #"Otra (especificar en el mensaje)": {"address": "", "qr_path": None}
         }
         self.developer_email = "dilucapython@gmail.com"  # correo del desarrollador
         self.qr_image_tk = None  # Para evitar que la imagen sea garbage collected
@@ -578,7 +577,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Boton quantfury (con imagen), dirige a la web
         try:
-            self.quantfury_imagen = tk.PhotoImage(file='image_quantfury.png')
+            self.quantfury_imagen = tk.PhotoImage(file='images/image_quantfury.png')
             self.boton_quantfury = tk.Button(self.top_row_frame,
                                              image=self.quantfury_imagen,
                                              padx=3,
@@ -2561,7 +2560,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Bloque para intentar cargar la imagen del logo de Trading View
         try:
-            self.tradingview_logo = tk.PhotoImage(file='image_tradingview.png')
+            self.tradingview_logo = tk.PhotoImage(file='images/image_tradingview.png')
 
         except tk.TclError as e:
             print(f"Error al cargar el icono de TradingView: {e}")

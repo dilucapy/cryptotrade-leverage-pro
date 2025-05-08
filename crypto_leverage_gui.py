@@ -173,7 +173,7 @@ class CustomAskFloatDialog(tk.Toplevel):
             self.result = float(self.entry.get())
             self.destroy()
         except ValueError:
-            tk.messagebox.showerror("Error", "Por favor, ingrese un número válido.")
+            self.master.show_error_messagebox(self.master, "Por favor, ingrese un número válido.")
             self.entry.focus_set()
 
     def cancel(self):
@@ -830,6 +830,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         dialog = CustomAskFloatDialog(parent,
                                       title="Monto Cuenta de Trading",
                                       prompt="Ingrese Monto Cuenta de Trading:")
+        if dialog.result is None:
+            return
+        elif dialog.result == 0:
+            self.show_error_messagebox(self, "El monto de la cuenta de trading debe ser mayor que cero.")
+        elif dialog.result < 0:
+            self.show_error_messagebox(self, "Monto de Cuenta de Trading, no puede ser negativo!")
+            return
         return dialog.result
 
     def calculate_equitable_margin(self):
@@ -854,53 +861,66 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             else:
                 self.show_error_messagebox(self, "No hay activos para calcular el margen.")
 
-        elif trading_account is not None:
-            self.show_error_messagebox(self, "El monto de la cuenta de trading debe ser mayor que cero.")
-
     def calculate_weighted_margin_form(self):
         """Muestra un formulario para ingresar los montos de posición abierta
         de cada activo y calcula los márgenes ponderados."""
 
         top_weighted_form = tk.Toplevel(self)
-        top_weighted_form.title("Ponderación NO Equitativa")
+        top_weighted_form.title("Ponderación Manual")
         top_weighted_form.config(bg=self.toplevel_bgcolor)
-        top_weighted_form.geometry('400x350')
+        top_weighted_form.geometry('500x370')
 
         row = 0
+        # Frame para etiqueta de sugerencia
+        suggestion_frame = tk.Frame(top_weighted_form)
+        suggestion_frame.grid(row=row, column=0, columnspan=2, sticky="w")
+        row += 1
+        # etiqueta de sugerencia
+        label = tk.Label(suggestion_frame,
+                         text="Sugerencia:\nCalcular Ponderaciones en base a la posicion abierta de cada activo",
+                         bg=self.toplevel_bgcolor,
+                         font=("Arial", 12, "italic"), justify="left", pady=5)
+        label.grid()
+
 
         # Etiqueta para el monto total de la cuenta de trading
         label = tk.Label(top_weighted_form,
-                         text="Monto Total de la Cuenta de Trading (USDT):",
+                         text="Monto Cuenta de Trading (USDT):",
                          bg=self.toplevel_bgcolor,
-                         font=("Arial", 10, "bold"))
-        label.grid(row=row, column=0, padx=5, pady=5, sticky="w")
+                         font=("Arial", 11, "bold"))
+        label.grid(row=row, column=0, padx=5, pady=10, sticky="e")
 
         entry_trading_account = tk.Entry(top_weighted_form, font=("Arial", 12, "bold"))
-        entry_trading_account.grid(row=row, column=1, padx=5, pady=5, sticky="ew")
+        entry_trading_account.grid(row=row, column=1, padx=(5, 140), pady=(5, 20), sticky="ew")
         row += 1
 
         # Etiquetas y campos de entrada para cada activo
         entry_amounts = {}
         for symbol in self.data:
             label_asset = tk.Label(top_weighted_form,
-                                   text=f"Posición Abierta en USDT para {symbol}:",
+                                   text=f"{symbol}:",
                                    bg=self.toplevel_bgcolor,
-                                   font=("Arial", 10, "bold"))
-            label_asset.grid(row=row, column=0, padx=5, pady=10, sticky="w")
+                                   font=("Arial", 11, "bold"))
+            label_asset.grid(row=row, column=0, padx=5, pady=10, sticky="e")
             entry = tk.Entry(top_weighted_form, font=("Arial", 12, "bold"))
-            entry.grid(row=row, column=1, padx=5, pady=10, sticky="ew")
+            entry.grid(row=row, column=1, padx=(5, 140), pady=10, sticky="ew")
             entry_amounts[symbol] = entry
             row += 1
 
         def calculate_and_show():
             trading_account_str = entry_trading_account.get()
             try:
-                trading_account = float(trading_account_str)
-                if trading_account <= 0:
-                    self.show_error_messagebox(self, "El monto de la cuenta de trading debe ser mayor que cero.")
-                    return
+                trading_account = float(trading_account_str)  # Intenta convertir a float
             except ValueError:
-                self.show_error_messagebox(self, "Por favor, ingrese un número válido para el monto de la cuenta de trading.")
+                self.show_error_messagebox(self, "Por favor, ingrese un número válido para la Cuenta de Trading.")
+                top_weighted_form.destroy()
+                return  # Sale de la función si la conversión falla
+
+            if trading_account is None:
+                return  # El usuario canceló, no hay nada que calcular ni mostrar
+            elif trading_account == 0:
+                self.show_error_messagebox(self, "La cuenta de Trading debe ser mayor a cero!")
+                top_weighted_form.destroy()
                 return
 
             total_usdt_open_positions = 0
@@ -943,7 +963,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                      pady=5,
                                      padx=20,
                                      command=calculate_and_show)
-        calculate_button.pack(side=tk.LEFT, padx=10)
+        calculate_button.pack(side=tk.LEFT, padx=10, pady=20)
 
         # Botón Cancelar
         cancel_button = tk.Button(button_frame,
@@ -956,6 +976,31 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button.pack(side=tk.LEFT, padx=10)
 
         top_weighted_form.grid_columnconfigure(1, weight=1)  # Hacer que la columna de entrada se expanda
+
+    def calculate_weighted_automatic_margin_form(self):
+        trading_account = self.ask_trading_account(self)
+
+        if trading_account is not None and trading_account > 0:
+
+            total_open_amount, list_symbol, list_amount = self.calculate_total_open_amount()
+
+            if not list_amount:
+                self.show_info_messagebox(self, "Información",
+                                          "No hay órdenes abiertas guardadas para mostrar los montos.")
+                return 0  # Devuelve 0 si no hay datos
+
+            report = "  Symbol        MARGIN (USDT)   Weight Automatic\n"
+            report += "  " + "-" * 80 + "\n"
+
+            for symbol, amount in zip(list_symbol, list_amount):
+                weight_automatic = round(amount / total_open_amount, 3)
+                margin_automatic = round(trading_account * weight_automatic)
+
+                self.data[symbol]['margin'] = margin_automatic
+                report += f"  {symbol:<13}      {margin_automatic:<19.2f}         {weight_automatic:<10}\n"
+
+            self.show_info_messagebox(self, "Márgenes Actualizados (Ponderacion Automática)", report)
+            self.save_data()
 
     def _calculate_equitable_and_destroy_window(self, selection_window):
         """(Metodo interno en update_margins)
@@ -974,6 +1019,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.calculate_weighted_margin_form()
         selection_window.destroy()
 
+    def _calculate_weighted_automatic_form_and_destroy_window(self, selection_window):
+        self.calculate_weighted_automatic_margin_form()
+        selection_window.destroy()
+
     def update_margins(self):
         """Permite al usuario actualizar los márgenes de los activos
         mediante división equitativa o ponderación."""
@@ -984,17 +1033,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Si 'self.data' no está vacío, se crea una nueva ventana Toplevel
         top = tk.Toplevel(self)
         top.config(bg=self.toplevel_bgcolor)
-        top.geometry('400x260')
+        top.geometry('420x300')
         top.title("Actualizar Márgenes de Activos")
 
         # Se crea un widget Label de Tkinter para mostrar texto al usuario.
         label = tk.Label(top, text="Elige una opción para calcular los márgenes:",
                          bg=self.toplevel_bgcolor,
                          font=("Arial", 12, "bold"))
-        label.pack(pady=10)
+        label.pack(pady=20, padx=10)
 
         equitable_button = tk.Button(top,
-                                     text="División Equitativa",
+                                     text="Margenes Equitativo",
                                      pady=5,
                                      font=self.button_font,
                                      cursor="hand2",
@@ -1002,12 +1051,25 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         equitable_button.pack(fill='x', pady=5, padx=60)
 
         weighted_button = tk.Button(top,
-                                    text="Ponderación NO Equitativa",
+                                    text="Margenes Ponderación manual",
                                     pady=5,
                                     font=self.button_font,
                                     cursor="hand2",
                                     command=lambda: self._calculate_weighted_form_and_destroy_window(top))
         weighted_button.pack(fill='x', pady=5, padx=60)
+
+        automatic_weighting_button = tk.Button(top,
+                                    text="Margenes Ponderación Automática",
+                                    pady=5,
+                                    font=self.button_font,
+                                    cursor="hand2",
+                                    command=lambda: self._calculate_weighted_automatic_form_and_destroy_window(top))
+        automatic_weighting_button.pack(fill='x', pady=5, padx=60)
+
+        label = tk.Label(top, text="(RECOMENDADO)",
+                         bg=self.toplevel_bgcolor,
+                         font=("Arial", 9, "italic"))
+        label.pack()
 
         cancel_button = tk.Button(top,
                                   text="Cancel",

@@ -1,16 +1,7 @@
 {
     "ADA": {
-        "margin": 13,
+        "margin": 0,
         "open_orders": [
-            {
-                "id": "22f9a5db-a223-4eaf-a60b-1f8194aa5954",
-                "price": 0.7054,
-                "amount_usdt": 50.0,
-                "quantity": 70.88176921,
-                "mother_order": false,
-                "stop_loss": null,
-                "target": null
-            },
             {
                 "id": "415436d1-8727-48f1-ae88-e5ffb9befcfc",
                 "price": 0.865,
@@ -19,13 +10,22 @@
                 "stop_loss": null,
                 "target": null,
                 "mother_order": true
+            },
+            {
+                "id": "22f9a5db-a223-4eaf-a60b-1f8194aa5954",
+                "price": 0.7054,
+                "amount_usdt": 50.0,
+                "quantity": 70.88176921,
+                "mother_order": false,
+                "stop_loss": null,
+                "target": null
             }
         ],
         "buy_limits": [],
         "sell_take_profit": []
     },
     "BTC": {
-        "margin": 7,
+        "margin": 0,
         "open_orders": [
             {
                 "id": "461c0c17-782e-4a24-89df-09f14f1b39d9",
@@ -41,7 +41,7 @@
         "sell_take_profit": []
     },
     "XRP": {
-        "margin": 40,
+        "margin": 0,
         "open_orders": [
             {
                 "id": "303d3a7f-0889-49d7-98b3-7ae3fbd90e6d",
@@ -73,17 +73,8 @@
         ]
     },
     "HBAR": {
-        "margin": 13,
+        "margin": 0,
         "open_orders": [
-            {
-                "id": "45c56fbb-8aff-4d09-a1c0-bb568459acbc",
-                "price": 0.17731,
-                "amount_usdt": 50.0,
-                "quantity": 281.99199143,
-                "mother_order": false,
-                "stop_loss": null,
-                "target": null
-            },
             {
                 "id": "28625319-231f-42da-97c4-e72e5a407bc5",
                 "price": 0.385,
@@ -92,6 +83,15 @@
                 "stop_loss": null,
                 "target": null,
                 "mother_order": true
+            },
+            {
+                "id": "45c56fbb-8aff-4d09-a1c0-bb568459acbc",
+                "price": 0.17731,
+                "amount_usdt": 50.0,
+                "quantity": 281.99199143,
+                "mother_order": false,
+                "stop_loss": null,
+                "target": null
             }
         ],
         "buy_limits": [],

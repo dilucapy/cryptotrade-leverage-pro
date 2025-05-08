@@ -320,7 +320,13 @@ class PromediarOrdenesForm(tk.Toplevel):
             monto_str = data['monto'].get()
             try:
                 precio = float(precio_str)
+                if precio < 0:
+                    self.parent.show_error_messagebox(self.parent,  "El precio NO puede ser negativo!")
+                    return
                 monto_usdt = float(monto_str)
+                if monto_usdt < 0:
+                    self.parent.show_error_messagebox(self.parent,  "El monto NO puede ser negativo!")
+                    return
                 order_values.append({'precio': precio, 'monto_usdt': monto_usdt})
             except ValueError:
                 self.parent.show_error_messagebox(self.parent, "Por favor, ingrese valores numéricos válidos para todos los precios y montos.")
@@ -2182,6 +2188,12 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     if 'open_orders' in data_asset:
                         for order in data_asset['open_orders']:
                             quantity_open_orders += order['quantity']
+
+                    # Para redondear la cantidad segun sea el simbolo
+                    if symbol == 'BTC':
+                        quantity_open_orders = round(quantity_open_orders, 8)
+                    else:
+                        quantity_open_orders = round(quantity_open_orders, 3)
 
                     if quantity_open_orders == 0:
                         burn_price_message += "No hay Ordenes Abiertas!\n"

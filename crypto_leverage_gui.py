@@ -792,7 +792,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         ordenados por margen de mayor a menor."""
         total_margin = 0
         asset_margins = []
-        margins_report = "  Symbol        MARGIN (USDT)   Weight\n"
+        margins_report = "  SIMBOLO         MARGEN (USDT)   PONDERACION\n"
         margins_report += "  " + "-" * 80 + "\n"
 
         # Primer bucle: Se itera sobre todos los activos para calcular la suma total de los márgenes y almacenar los márgenes con sus símbolos
@@ -818,11 +818,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             else:
                 ponderacion = 0.0
 
-            margins_report += f"  {symbol:<13}      {margin:<17.2f}         {ponderacion:<10}\n"
+            margins_report += f"{symbol:<17}      {margin:<18.2f}          {ponderacion:<10}\n"
 
-        margins_report += f"\n\n  TOTAL MARGINS: {int(total_margin)} USDT"
+        margins_report += f"\n\n  MARGEN TOTAL: {int(total_margin)} USDT"
 
-        self.show_info_messagebox(self, "Márgenes y Total", margins_report)
+        self.show_info_messagebox(self, "Margen por activo y Margen Total", margins_report)
 
     def ask_trading_account(self, parent):
         """Método que muestra la ventana de diálogo personalizado
@@ -1136,7 +1136,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         x = range(len(sorted_amounts))
 
         # Gráficos de barras
-        bars_amounts = plt.bar(x, sorted_amounts, width=bar_width, label='Amount', color='orange', alpha=0.7)
+        bars_amounts = plt.bar(x, sorted_amounts, width=bar_width, label='Monto por Activo (USDT)', color='orange', alpha=0.7)
 
         # Añadir etiquetas sobre cada barra
         for bar in bars_amounts:
@@ -1145,9 +1145,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                      ha='center', va='bottom', fontsize=11, weight='bold')
 
         # Etiquetas y título
-        plt.xlabel('ASSETS')
-        plt.ylabel('Amount (USDT)')
-        plt.title(f'TOTAL OPEN AMOUNT: {total_open_amount} USDT', ha='center', weight='bold')
+        plt.xlabel('A C T I V O S')
+        plt.ylabel('U S D T')
+        plt.title(f'MONTO TOTAL ABIERTO: {total_open_amount} USDT', ha='center', weight='bold')
 
         # Configurar marcas en el eje x con los símbolos
         plt.xticks(x, sorted_symbols, weight='bold', rotation=45)

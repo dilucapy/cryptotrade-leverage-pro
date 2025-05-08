@@ -1180,7 +1180,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         top = tk.Toplevel(self)
         top.title("Calcular Apalancamiento")
 
-        label = tk.Label(top, text="Leveraged Amount and Reduce Position by Leverage Level",
+        label = tk.Label(top, text="Monto apalancado y reducción de posición por nivel de apalancamiento",
                          font=('Arial', 12, 'bold'))
         label.pack(pady=5)
 
@@ -1191,7 +1191,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         leveragex = round(total_open_amount / trading_account, 2)  # Se calcula el apalancamiento actual
 
         # Cálculo de montos apalancados y reducción de posición
-        leverage_levels = [2, 3, 4, 5, 6, 7, 8]
+        leverage_levels = [2, 3, 4, 5, 6, 7, 8, 9, 10]
         leveraged_amounts = []
         reduce_positions = []
 
@@ -1207,10 +1207,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         x = range(len(leverage_levels))
 
         # Gráficos de barras
-        bars1 = ax.bar(x, leveraged_amounts, width=bar_width, label='Leveraged Amount', color='blue', alpha=0.6)
+        bars1 = ax.bar(x, leveraged_amounts, width=bar_width, label='Monto apalancado', color='blue', alpha=0.6)
 
         bars2 = ax.bar([i + bar_width for i in x], reduce_positions, width=bar_width,
-                       label='Reduce Position USDT',
+                       label='Reducir posición USDT',
                        color=['red' if reduce <= 0 else 'forestgreen' for reduce in reduce_positions], alpha=0.6)
 
         # Añadir etiquetas sobre cada barra
@@ -1224,10 +1224,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     ha='center', va='bottom', fontsize=9, weight='bold')
 
         # Etiquetas y título
-        ax.set_xlabel('Leverage')
-        ax.set_ylabel('Amount (USDT)')
+        ax.set_xlabel('N I V E L   D E   A P A L A N C A M I E N T O')
+        ax.set_ylabel('M O N T O  (USDT)')
         ax.set_title(
-            f'TOTAL OPEN AMOUNT ---> {int(total_open_amount)} USDT\nTRADING ACCOUNT ---> {int(trading_account)} USDT\nLEVERAGE ---> {leveragex:.2f}  X')
+            f'MONT0 TOTAL ABIERTO: {int(total_open_amount)} USDT\nCUENTA DE TRADING: {int(trading_account)} USDT\nAPALANCAMIENTO: {leveragex:.2f}  X')
         ax.set_xticks([i + bar_width / 2 for i in x])
         ax.set_xticklabels(leverage_levels)
         ax.legend()

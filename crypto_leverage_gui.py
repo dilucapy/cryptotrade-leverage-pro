@@ -2079,7 +2079,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.show_generate_pink_net_form(symbol)
 
     def show_generate_pink_net_form(self, symbol):
-        """Crea y muestra el formulario para generar la PINK NET (niveles de compras pendientes)."""
+        """Crea y muestra el formulario para generar la PINK NET (niveles de compras pendientes).
+        (son BUY LIMITS)"""
         top = tk.Toplevel(self)
         top.geometry('400x320')
         top.title(f"Generar BUY LIMITS para {symbol}")
@@ -2101,7 +2102,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         entry_levels.grid(row=2, column=1, padx=5, pady=10)
 
         tk.Label(top, text="Monto Total a Invertir (USDT):",
-                         font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky="e")
+                         font=("Arial", 12, "bold")).grid(row=3, column=0, padx=(20, 5), pady=5, sticky="e")
         entry_investment_amount = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_investment_amount.grid(row=3, column=1, padx=5, pady=10)
 
@@ -2140,6 +2141,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             if levels <= 0 or investment_amount <= 0:
                 self.show_error_messagebox(self, "La cantidad de niveles y el monto de inversión deben ser mayores que cero.")
+                form_window.destroy()
+                return
+
+            current_price = self.get_price(symbol)
+            if initial_level > current_price or final_level > current_price:
+                self.show_error_messagebox(self,
+                                           "Los niveles de precios deben ser menor al precio actual!")
+                form_window.destroy()
                 return
 
             pink_net = []
@@ -2151,6 +2160,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 price = initial_level - i * increment
                 quantity = amount_per_level / price if price > 0 else 0
                 level_pink_net = {
+                    'id': str(uuid.uuid4()),  # Generar el 'id' único aquí
                     'price': round(price, 3),
                     'amount_usdt': round(amount_per_level, 2),
                     'quantity': round(quantity, 5),
@@ -2170,7 +2180,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             if save_confirmation:
                 if symbol in self.data:
                     # Advertir al usuario sobre la sobreescritura
-                    overwrite = self.show_confirmation_dialog(self, "Advertencia", "Guardar la PINK NET sobreescribirá las órdenes límite de compra existentes. ¿Continuar?")
+                    overwrite = self.show_confirmation_dialog(self, "Advertencia", "Guardar las BUY LIMITS sobreescribirá las órdenes límite de compra existentes. ¿Continuar?")
 
                     if overwrite:
                         self.data[symbol]["buy_limits"] = pink_net

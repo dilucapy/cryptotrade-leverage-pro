@@ -1989,16 +1989,26 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button.grid(row=4, column=0, pady=30)
 
     def perform_mother_order_calculation(self, symbol, avg_price_str, open_pos_str, profit_str, qty_str, form_window):
-        """Realiza el cálculo de la orden madre y pregunta si se guarda."""
+        """Realiza validaciones, el cálculo de la orden madre y pregunta si se guarda."""
         try:
             average_purchase_price = float(avg_price_str)
             open_position_usdt = float(open_pos_str)
             profits_taken = float(profit_str)
             quantity_mother_order = float(qty_str)
 
+            if average_purchase_price == 0 or average_purchase_price < 0:
+                self.show_error_messagebox(self, "Precio promedio de compra debe ser mayor a cero.")
+                form_window.destroy()
+                return
+
+            if open_position_usdt == 0 or open_position_usdt < 0:
+                self.show_error_messagebox(self, "Monto de Posición Abierta debe ser mayor a cero.")
+                form_window.destroy()
+                return
+
             if quantity_mother_order != 0:
                 price_mother_order = average_purchase_price - (profits_taken / quantity_mother_order)
-                price_mother_order_rounded = round(price_mother_order, 3)
+                price_mother_order_rounded = round(price_mother_order, 4)
 
                 result_message = (
                     f"---------- Mother Order {symbol} ----------\n\n"
@@ -2063,9 +2073,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 form_window.destroy()  # Cerrar el formulario después del cálculo y (opcional) guardado de la orden
             else:
                 self.show_error_messagebox(self, "La cantidad de la orden madre no puede ser cero.")
-
+                form_window.destroy()
         except ValueError:
             self.show_error_messagebox(self, "Por favor, introduce valores numéricos válidos en todos los campos.")
+            form_window.destroy()
 
     def generate_pink_net(self):
         """Abre el formulario para generar Buy Limits (niveles de ordenes de compras pendientes,
@@ -2377,14 +2388,17 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             if initial_level < current_price:
                 self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser mayor al Precio Actual")
+                form_window.destroy()  # cierra la ventana
                 return
 
             if initial_level > final_level:
                 self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser menor al Nivel Final")
+                form_window.destroy()  # cierra la ventana
                 return
 
             if levels <= 0 or withdrawal_amount <= 0:
                 self.show_error_messagebox(self, "La cantidad de niveles y el monto total a reducir deben ser mayores que cero.")
+                form_window.destroy()  # cierra la ventana
                 return
 
             sales_cloud = []
@@ -2592,9 +2606,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                      weight='bold')
 
         # Añade un texto con el precio actual y el beneficio total a la figura.
-        fig.text(0.22, 0.98, f'CURRENT PRICE {active_symbol}: {current_price}      TOTAL PROFIT: {round(mother_profit + total_non_mother_profits, 2)} USDT',
-                 ha='center', fontsize=12, color='blue',
+        text_color = '#e90400' if round(mother_profit + total_non_mother_profits, 2) <= 0 else '#088304'
+        fig.text(0.22, 0.98, f'     PRECIO ACTUAL {active_symbol}: {current_price}      BENEFICIO TOTAL: {round(mother_profit + total_non_mother_profits, 2)} USDT',
+                 ha='center', fontsize=12, color=text_color,
                  weight='bold')
+
         fig.tight_layout()
 
         top_level = tk.Toplevel(self)  # Crea una nueva ventana Toplevel (independiente) para el gráfico.

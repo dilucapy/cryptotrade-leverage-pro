@@ -54,7 +54,16 @@
                 "target": null
             }
         ],
-        "buy_limits": [],
+        "buy_limits": [
+            {
+                "id": "f030ff61-36bd-4e13-8760-7e3f479bc317",
+                "price": 2.25,
+                "amount_usdt": 50.0,
+                "quantity": 22.22222222,
+                "stop_loss": null,
+                "target": null
+            }
+        ],
         "sell_take_profit": []
     },
     "HBAR": {
@@ -70,7 +79,16 @@
                 "mother_order": true
             }
         ],
-        "buy_limits": [],
+        "buy_limits": [
+            {
+                "id": "18be7de2-0fce-4568-879b-dc3b2a8922e2",
+                "price": 0.198,
+                "amount_usdt": 50.0,
+                "quantity": 252.52525253,
+                "stop_loss": null,
+                "target": null
+            }
+        ],
         "sell_take_profit": []
     },
     "LTC": {

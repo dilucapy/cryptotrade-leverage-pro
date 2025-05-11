@@ -1392,9 +1392,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 total_quantity_rounded = round(total_quantity, 3)
 
             info_text += f"           Cantidad: {total_quantity_rounded}"
-            info_text += f"           Posicion Abierta: {int(total_quantity * current_price)} USDT\n"
+            info_text += f"           Posicion Abierta: {int(total_quantity * current_price)} USDT"
 
-            self.info_label.config(text=info_text)
+            self.info_label.config(text=info_text, bg='#0CCE6B', pady=10)
             self.asset_info_frame.config(bg='#0CCE6B')  # establecemos bg (verde emeralda) al asset_info_label_frame
 
         else:
@@ -1416,11 +1416,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         """
         # asset_info_frame (contiene información del activo como símbolo, precio y margin)
         self.asset_info_frame = Frame(self.right_panel)  # Empaquetar este frame en right_panel
-        self.asset_info_frame.pack(pady=2, fill=X)
+        self.asset_info_frame.pack(pady=5, fill=X)
 
         self.info_label = Label(self.asset_info_frame,  # Etiqueta que se actualiza dinamicamente
                                 text="Seleccione un activo para ver su información.",
-                                font=('Arial', 12, 'bold'))
+                                font=('Arial', 12, 'bold'), anchor="center", pady=5)
         self.info_label.pack()
 
         self.update_asset_info_display()  # llama a este metodo que actualiza la info en el label del activo seleccionado

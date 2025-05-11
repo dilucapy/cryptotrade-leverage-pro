@@ -161,8 +161,9 @@ class CustomAskFloatDialog(tk.Toplevel):
         button_frame = tk.Frame(self)
         button_frame.pack(pady=10)
 
+        tk.Button(button_frame, text="Cancelar", cursor="hand2", font=("Segoe UI", 12), command=self.cancel, padx=10,
+                  pady=5).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame, text="Aceptar", cursor="hand2", font=("Segoe UI", 12), command=self.ok, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Cancelar", cursor="hand2", font=("Segoe UI", 12), command=self.cancel, padx=10, pady=5).pack(side=tk.LEFT, padx=5)
 
         self.transient(parent)
         self.grab_set()
@@ -1363,22 +1364,38 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             symbol = self.selected_asset.get()  # Obtiene el valor del StringVar como string
             current_price = self.get_price(symbol)
 
-            info_text = f"Símbolo: {symbol}\n"
+            info_text = f"Símbolo: {symbol}"
 
             if current_price is None:
                 print(f"No se pudo obtener el precio actual de '{symbol}'")
                 self.info_label.config(text="Error al obtener el precio.")  # Informar del error en la GUI
                 return  # Salir de la función
             else:
-                info_text += f"Precio actual: {current_price}\n"
+                info_text += f"           Precio actual: {current_price}"
 
             if 'margin' in self.selected_asset_data:
                 margin = self.selected_asset_data['margin']
-                info_text += f"Margin: {margin}\n"
+                info_text += f"           Margin: {margin}"
             else:
-                info_text += "Margin: No disponible\n"
+                info_text += "           Margin: No disponible"
+
+            # Calcular cantidad total de activo en pocisiones abiertas
+            total_quantity = 0
+            for order in self.selected_asset_data['open_orders']:
+                quantity = order.get('quantity', 0)
+                total_quantity += quantity
+
+            # Redondear cantidad segun sea el activo seleccionado
+            if symbol == 'BTC':
+                total_quantity_rounded = round(total_quantity, 8)
+            else:
+                total_quantity_rounded = round(total_quantity, 3)
+
+            info_text += f"           Cantidad: {total_quantity_rounded}"
+            info_text += f"           Posicion Abierta: {int(total_quantity * current_price)} USDT\n"
 
             self.info_label.config(text=info_text)
+            self.asset_info_frame.config(bg='#0CCE6B')  # establecemos bg (verde emeralda) al asset_info_label_frame
 
         else:
             self.info_label.config(text="Seleccione un activo para ver su información.")
@@ -1403,7 +1420,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         self.info_label = Label(self.asset_info_frame,  # Etiqueta que se actualiza dinamicamente
                                 text="Seleccione un activo para ver su información.",
-                                font=('Arial', 11, 'bold'))
+                                font=('Arial', 12, 'bold'))
         self.info_label.pack()
 
         self.update_asset_info_display()  # llama a este metodo que actualiza la info en el label del activo seleccionado

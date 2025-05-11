@@ -1,6 +1,6 @@
 {
     "ADA": {
-        "margin": 35,
+        "margin": 44,
         "open_orders": [
             {
                 "id": "aff3b494-d189-4c75-b165-0e203a451dc6",
@@ -16,7 +16,7 @@
         "sell_take_profit": []
     },
     "BTC": {
-        "margin": 7,
+        "margin": 8,
         "open_orders": [
             {
                 "id": "f94b36fb-3b8b-4fcd-b8e2-86afaefe2dfd",
@@ -32,7 +32,7 @@
         "sell_take_profit": []
     },
     "XRP": {
-        "margin": 50,
+        "margin": 62,
         "open_orders": [
             {
                 "id": "45c47797-568d-41f5-975c-bce94cfd2c1d",
@@ -58,7 +58,7 @@
         "sell_take_profit": []
     },
     "HBAR": {
-        "margin": 25,
+        "margin": 32,
         "open_orders": [
             {
                 "id": "6fd41dd7-b1c8-470c-a74e-3940c469730c",
@@ -74,7 +74,7 @@
         "sell_take_profit": []
     },
     "LTC": {
-        "margin": 24,
+        "margin": 30,
         "open_orders": [
             {
                 "id": "05775818-e12e-4702-8ac9-cd5830ac126d",
@@ -86,12 +86,6 @@
                 "target": null
             }
         ],
-        "buy_limits": [],
-        "sell_take_profit": []
-    },
-    "ETH": {
-        "margin": 0,
-        "open_orders": [],
         "buy_limits": [],
         "sell_take_profit": []
     }

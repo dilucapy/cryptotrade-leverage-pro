@@ -1224,6 +1224,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     f"{bar2.get_height()} USDT",
                     ha='center', va='bottom', fontsize=9, weight='bold')
 
+        # Añadir línea vertical para el apalancamiento actual
+        ax.axvline(x=leveragex - 2, color='orange', linestyle='-', linewidth=2,
+                   label=f'Apalancamiento Actual: {leveragex:.2f} X')  # Ajusta la posición x
+
         # Etiquetas y título
         ax.set_xlabel('N I V E L   D E   A P A L A N C A M I E N T O')
         ax.set_ylabel('M O N T O  (USDT)')
@@ -1231,6 +1235,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             f'MONT0 TOTAL ABIERTO: {int(total_open_amount)} USDT\nCUENTA DE TRADING: {int(trading_account)} USDT\nAPALANCAMIENTO: {leveragex:.2f}  X')
         ax.set_xticks([i + bar_width / 2 for i in x])
         ax.set_xticklabels(leverage_levels)
+        # Añadir un elemento de leyenda personalizado
+        ax.plot([], [], color='forestgreen', marker='_', markersize=3,
+                label='Monto disponible', linewidth=6, alpha=0.6)
         ax.legend()
         ax.grid(axis='y', linestyle='--', alpha=0.7)
 

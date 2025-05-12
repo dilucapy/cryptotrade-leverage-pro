@@ -106,5 +106,11 @@
         ],
         "buy_limits": [],
         "sell_take_profit": []
+    },
+    "ETH": {
+        "margin": 0,
+        "open_orders": [],
+        "buy_limits": [],
+        "sell_take_profit": []
     }
 }

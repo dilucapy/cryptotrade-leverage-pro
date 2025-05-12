@@ -363,7 +363,7 @@ class PromediarOrdenesForm(tk.Toplevel):
         if active_symbol == "BTC":
             cantidad_promedio = round(cantidad_total_activo, 8)
         else:
-            cantidad_promedio = round(cantidad_total_activo, 3)
+            cantidad_promedio = round(cantidad_total_activo, 4)
 
         # llamamos a nuestro metodo personalizado de dialogo de confirmacion con casilla de verificacion
         guardar, is_mother_order = self.parent.show_confirmation_dialog_with_mother_order(self.parent, "Guardar Orden Promedio",
@@ -1396,7 +1396,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             if symbol == 'BTC':
                 total_quantity_rounded = round(total_quantity, 8)
             else:
-                total_quantity_rounded = round(total_quantity, 3)
+                total_quantity_rounded = round(total_quantity, 4)
 
             info_text += f"           Cantidad: {total_quantity_rounded}"
             info_text += f"           Posicion Abierta: {int(total_quantity * current_price)} USDT"
@@ -1435,12 +1435,19 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def add_new_order(self, data_asset, active_symbol, order_type, order_details):
         """Agrega una nueva orden del tipo especificado a los datos del activo."""
 
+        # Redondear cantidad segun sea el activo seleccionado
+        if active_symbol == 'BTC':
+            quantity_rounded = round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
+                              8) if order_details.get('price', 1) != 0 else 0
+        else:
+            quantity_rounded = round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
+                              4) if order_details.get('price', 1) != 0 else 0
+
         order = {
             'id': order_details.get('id'),
-            'price': order_details.get('price'),
-            'amount_usdt': order_details.get('amount_usdt'),
-            'quantity': round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
-                              8) if order_details.get('price', 1) != 0 else 0,
+            'price': round(order_details.get('price'), 4),
+            'amount_usdt': round(order_details.get('amount_usdt'), 2),
+            'quantity': quantity_rounded
         }
 
         if order_type == 'open':
@@ -1826,7 +1833,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             # Precio (copiable)
             price_entry = tk.Entry(order_row_frame)
-            price_entry.insert(0, order.get('price', 'N/A'))
+            price_rounded = round(order.get('price', 'N/A'), 4)
+            price_entry.insert(0, price_rounded)
             price_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=11)
             price_entry.pack(side=LEFT, padx=(5, 5))  # Empaquetar el widget para que se muestre
 
@@ -1841,7 +1849,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             if symbol == 'BTC':
                 rounded_quantity = f"{float(quantity):.8f}" if isinstance(quantity, (int, float)) else quantity
             else:
-                rounded_quantity = f"{float(quantity):.3f}" if isinstance(quantity, (int, float)) else quantity
+                rounded_quantity = f"{float(quantity):.4f}" if isinstance(quantity, (int, float)) else quantity
 
             quantity_entry = tk.Entry(order_row_frame)
             quantity_entry.insert(0, rounded_quantity)
@@ -2544,7 +2552,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             # Texto de la etiqueta
             ax1.text(1, mother_profit,
                      f"P: {mother_price}\nI: {mother_amount_usdt}\nPf: {round(mother_profit, 2)}\n{round(mother_percentage * 100, 2)}%",
-                     ha='center', va='bottom', fontsize=10)
+                     ha='center', va='bottom', fontsize=10, fontweight='bold')
             # Límites del eje Y (de Mother Order)
             margen_porcentual = 0.6  # 60% de margen
             y_max = abs(mother_profit) * (1 + margen_porcentual)
@@ -2598,7 +2606,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 yval = bar.get_height()
                 ax2.text(bar.get_x() + bar.get_width() / 2, yval,
                          f"P: {price}\nI: {int(amount_usdt)}\nPf: {round(yval, 2)}\n{round(percentage * 100, 2)}%",
-                         ha='center', va='bottom', fontsize=10)
+                         ha='center', va='bottom', fontsize=10, fontweight='bold')
             ax2.set_xticks(x2)
             ax2.set_xticklabels(x2)
 

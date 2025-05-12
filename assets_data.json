@@ -1,6 +1,6 @@
 {
     "ADA": {
-        "margin": 44,
+        "margin": 54,
         "open_orders": [
             {
                 "id": "aff3b494-d189-4c75-b165-0e203a451dc6",
@@ -16,7 +16,7 @@
         "sell_take_profit": []
     },
     "BTC": {
-        "margin": 8,
+        "margin": 10,
         "open_orders": [
             {
                 "id": "f94b36fb-3b8b-4fcd-b8e2-86afaefe2dfd",
@@ -32,34 +32,24 @@
         "sell_take_profit": []
     },
     "XRP": {
-        "margin": 62,
+        "margin": 85,
         "open_orders": [
             {
-                "id": "45c47797-568d-41f5-975c-bce94cfd2c1d",
-                "type": "open",
-                "price": 2.13246,
-                "amount_usdt": 300.0,
-                "quantity": 140.683,
+                "id": "795316e2-69a9-4819-9090-16d23b017150",
+                "price": 2.2176,
+                "amount_usdt": 450.0,
+                "quantity": 195.59085467,
                 "stop_loss": null,
                 "target": null,
                 "mother_order": true
-            },
-            {
-                "id": "dc12c578-ac3b-486f-8e81-c46cbda09ad4",
-                "price": 2.347,
-                "amount_usdt": 100.0,
-                "quantity": 42.60758415,
-                "mother_order": false,
-                "stop_loss": null,
-                "target": null
             }
         ],
         "buy_limits": [
             {
-                "id": "f030ff61-36bd-4e13-8760-7e3f479bc317",
-                "price": 2.25,
+                "id": "7b7e180b-88f2-471c-84c9-93c38f9d425f",
+                "price": 2.52,
                 "amount_usdt": 50.0,
-                "quantity": 22.22222222,
+                "quantity": 19.8413,
                 "stop_loss": null,
                 "target": null
             }
@@ -67,7 +57,7 @@
         "sell_take_profit": []
     },
     "HBAR": {
-        "margin": 32,
+        "margin": 40,
         "open_orders": [
             {
                 "id": "6fd41dd7-b1c8-470c-a74e-3940c469730c",
@@ -92,7 +82,7 @@
         "sell_take_profit": []
     },
     "LTC": {
-        "margin": 30,
+        "margin": 44,
         "open_orders": [
             {
                 "id": "05775818-e12e-4702-8ac9-cd5830ac126d",
@@ -102,15 +92,25 @@
                 "mother_order": true,
                 "stop_loss": null,
                 "target": null
+            },
+            {
+                "id": "6828475e-eef1-4794-bb60-c6cab8d0e6e4",
+                "price": 102.86,
+                "amount_usdt": 50.0,
+                "quantity": 0.48609761,
+                "mother_order": false,
+                "stop_loss": null,
+                "target": null
             }
         ],
         "buy_limits": [],
-        "sell_take_profit": []
-    },
-    "ETH": {
-        "margin": 0,
-        "open_orders": [],
-        "buy_limits": [],
-        "sell_take_profit": []
+        "sell_take_profit": [
+            {
+                "id": "0cd7b5ad-bbe8-4102-a3c4-0c8101c20f9e",
+                "price": 127.0,
+                "amount_usdt": 50.0,
+                "quantity": 0.3937
+            }
+        ]
     }
 }

@@ -2985,8 +2985,3 @@ if __name__ == "__main__":
 
     # Iniciar el loop principal de Tkinter (mantiene la ventana abierta y responde a los eventos)
     gui.mainloop()
-
-
-
-
-

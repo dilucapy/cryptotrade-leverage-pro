@@ -153,7 +153,24 @@
                 "target": null
             }
         ],
-        "buy_limits": [],
+        "buy_limits": [
+            {
+                "id": "f85b089d-91ad-49ff-953f-ffead0deb322",
+                "price": 89.0,
+                "amount_usdt": 50.0,
+                "quantity": 0.5618,
+                "stop_loss": null,
+                "target": null
+            },
+            {
+                "id": "61c6ab54-2935-4f58-809b-48659c94ab0f",
+                "price": 95.0,
+                "amount_usdt": 100.0,
+                "quantity": 1.0526,
+                "stop_loss": null,
+                "target": null
+            }
+        ],
         "sell_take_profit": [
             {
                 "id": "c79aafe1-f7da-4485-9259-4fe47039c652",

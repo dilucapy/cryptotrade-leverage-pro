@@ -1401,8 +1401,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             info_text += f"           Cantidad: {total_quantity_rounded}"
             info_text += f"           Posicion Abierta: {int(total_quantity * current_price)} USDT"
 
-            self.info_label.config(text=info_text, bg='#0CCE6B', pady=10)
-            self.asset_info_frame.config(bg='#0CCE6B')  # establecemos bg (verde emeralda) al asset_info_label_frame
+            self.info_label.config(text=info_text, bg='lightgray', pady=10)
+            self.asset_info_frame.config(bg='lightgray')  # establecemos bg (gris claro) al asset_info_label_frame
 
         else:
             self.info_label.config(text="Seleccione un activo para ver su información.")
@@ -1736,6 +1736,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         print(f"No se encontró ninguna orden con ID '{order_id}' para eliminar.")
 
+    def calculate_total_amount_sell_take_profit(self):
+        """Calcula monto total de todas las ordenes ventas de toma de ganancia
+        y devuelte el resultado"""
+
+        if self.selected_asset_data.get('sell_take_profit'):
+            total_amount_sell_take_profit = 0
+            for order in self.selected_asset_data['sell_take_profit']:
+                amount = order.get('amount_usdt', 0)
+                total_amount_sell_take_profit += amount
+
+            return total_amount_sell_take_profit
+
     def create_asset_orders_section(self):
         """Crea la sección para mostrar los botones de creación de ordenes y las órdenes del activo."""
         # Destruir los frames de las órdenes antiguas si existen
@@ -1786,17 +1798,25 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Sección para las listas de órdenes (abiertas, compras pendientes y ventas pendientes)
         self.open_orders_frame = Frame(self.asset_orders_frame)
         self.open_orders_frame.pack(fill=X, pady=2)
-        Label(self.open_orders_frame, text="Órdenes Abiertas").pack(anchor='w')
+        Label(self.open_orders_frame, text="Órdenes Abiertas", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
         self.show_orders(self.open_orders_frame, "open")
 
         self.pending_buy_orders_frame = Frame(self.asset_orders_frame)
         self.pending_buy_orders_frame.pack(fill=X, pady=2)
-        Label(self.pending_buy_orders_frame, text="Compras Pendientes").pack(anchor='w')
+        Label(self.pending_buy_orders_frame, text="Compras Pendientes", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
         self.show_orders(self.pending_buy_orders_frame, "pending_buy")
 
         self.sell_take_profit_frame = Frame(self.asset_orders_frame)
         self.sell_take_profit_frame.pack(fill=X, pady=2)
-        Label(self.sell_take_profit_frame, text="Ventas Take Profit").pack(anchor='w')
+        # calcula el profit total de todas las ordenes de ventas
+        total_amount_sell_take_profit = self.calculate_total_amount_sell_take_profit()
+        if total_amount_sell_take_profit:
+            text_profit = f"{total_amount_sell_take_profit} USDT"
+        else:
+            text_profit = ""
+        Label(self.sell_take_profit_frame, text=f"Ventas Take Profit\t\t\t\t\t\t   Total Profit: {text_profit}",
+              font=("Arial", 9, "italic", "bold")).pack(anchor='w')
+
         self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
 
     def get_orders_for_asset(self, symbol, order_type):
@@ -1822,13 +1842,21 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         symbol = self.selected_asset.get()
         orders = self.get_orders_for_asset(symbol, order_type)
 
+        # colores bg segun typo de orden (anteriomerte tenias todas bg='lightgray' )
+        if order_type == 'open':
+            bg_by_order_type = '#71B340'  # verde claro
+        elif order_type == 'pending_buy':
+            bg_by_order_type = '#FFFC47'  # amarillo claro
+        else:
+            bg_by_order_type = '#96CDFF'  # celeste claro
+
         for order in orders:
             # Crear un Frame para contener la información de la orden y el botón 'delete'
-            order_row_frame = Frame(parent_frame, bg='lightgray')
+            order_row_frame = Frame(parent_frame, bg=bg_by_order_type)
             order_row_frame.pack(fill=X, pady=2)  # Empaquetar el frame de la fila
 
             # Label "Precio:"
-            price_label_text = tk.Label(order_row_frame, text="Precio:", font=('Dosis', 10, 'bold'), anchor='w', bg='lightgray')
+            price_label_text = tk.Label(order_row_frame, text="Precio:", font=('Dosis', 10, 'bold'), anchor='w', bg=bg_by_order_type)
             price_label_text.pack(side=LEFT)
 
             # Precio (copiable)
@@ -1839,7 +1867,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             price_entry.pack(side=LEFT, padx=(5, 5))  # Empaquetar el widget para que se muestre
 
             # Label "Quantity:"
-            quantity_label_text = tk.Label(order_row_frame, text="Quantity:", font=('Dosis', 10, 'bold'), anchor='w', bg='lightgray')
+            quantity_label_text = tk.Label(order_row_frame, text="Quantity:", font=('Dosis', 10, 'bold'), anchor='w', bg=bg_by_order_type)
             quantity_label_text.pack(side=LEFT)
 
             # Cantidad (copiable)
@@ -1857,7 +1885,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             quantity_entry.pack(side=LEFT, padx=(5, 5))
 
             # Label "Amount:"
-            amount_label_text = tk.Label(order_row_frame, text="Amount (USDT):", font=('Dosis', 10, 'bold'), anchor='w', bg='lightgray')
+            amount_label_text = tk.Label(order_row_frame, text="Amount (USDT):", font=('Dosis', 10, 'bold'), anchor='w', bg=bg_by_order_type)
             amount_label_text.pack(side=LEFT)
 
             # Amount (copiable)
@@ -1868,15 +1896,15 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             if order_type == 'open':
                 mo_label = tk.Label(order_row_frame, text=f"MO: {order.get('mother_order', False)}", font=('Dosis', 10, 'bold'),
-                                    anchor='w', bg='lightgray')
+                                    anchor='w', bg=bg_by_order_type)
                 mo_label.pack(side=LEFT)
 
             if order_type != 'sell_take_profit':
                 sl_label = tk.Label(order_row_frame, text=f"SL: {order.get('stop_loss', 'N/A')}", font=('Dosis', 10, 'bold'),
-                                    anchor='w', bg='lightgray')
+                                    anchor='w', bg=bg_by_order_type)
                 sl_label.pack(side=LEFT, padx=5)
                 tp_label = tk.Label(order_row_frame, text=f"TP: {order.get('target', 'N/A')}", font=('Dosis', 10, 'bold'),
-                                    anchor='w', bg='lightgray')
+                                    anchor='w', bg=bg_by_order_type)
                 tp_label.pack(side=LEFT)
 
             delete_button = Button(order_row_frame, text="X", fg='white', bg='#C21E29', padx=5,
@@ -2360,7 +2388,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         genera ordenes de ventas de toma de ganacia"""
         top = tk.Toplevel(self)
         top.config(bg=self.toplevel_bgcolor, padx=50, pady=20)
-        #top.geometry('420x280')
         top.title(f"Generar Niveles de Ventas para {symbol}")
 
         # --- Etiquetas y campos de entrada ---

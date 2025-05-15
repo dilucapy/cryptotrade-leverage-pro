@@ -1,6 +1,6 @@
 {
     "ADA": {
-        "margin": 45,
+        "margin": 40,
         "open_orders": [
             {
                 "id": "aff3b494-d189-4c75-b165-0e203a451dc6",
@@ -16,7 +16,7 @@
         "sell_take_profit": []
     },
     "BTC": {
-        "margin": 9,
+        "margin": 8,
         "open_orders": [
             {
                 "id": "f94b36fb-3b8b-4fcd-b8e2-86afaefe2dfd",
@@ -29,10 +29,29 @@
             }
         ],
         "buy_limits": [],
-        "sell_take_profit": []
+        "sell_take_profit": [
+            {
+                "id": "bb7cd405-fb36-4650-820b-c2565ef086fe",
+                "price": 130000.0,
+                "amount_usdt": 200.0,
+                "quantity": 0.00154
+            },
+            {
+                "id": "92d34cab-0f2d-444e-a807-5e0306ed5d24",
+                "price": 160000.0,
+                "amount_usdt": 200.0,
+                "quantity": 0.00125
+            },
+            {
+                "id": "bfa13103-7961-4e77-9fc3-092627e98c0c",
+                "price": 190000.0,
+                "amount_usdt": 200.0,
+                "quantity": 0.00105
+            }
+        ]
     },
     "XRP": {
-        "margin": 77,
+        "margin": 70,
         "open_orders": [
             {
                 "id": "d673924e-8443-49c6-ab74-b312c85fe3a5",
@@ -46,10 +65,10 @@
         ],
         "buy_limits": [
             {
-                "id": "71d252fc-017d-49eb-909c-4f1752fe667a",
-                "price": 2.51,
+                "id": "df2a99c3-1437-45dd-85f3-493d22cc7e7e",
+                "price": 2.48,
                 "amount_usdt": 50.0,
-                "quantity": 19.9203,
+                "quantity": 20.1613,
                 "stop_loss": null,
                 "target": null
             }
@@ -57,17 +76,8 @@
         "sell_take_profit": []
     },
     "HBAR": {
-        "margin": 39,
+        "margin": 35,
         "open_orders": [
-            {
-                "id": "42e460ca-9d12-46af-9364-94d75126b56d",
-                "price": 0.203,
-                "amount_usdt": 50.0,
-                "quantity": 246.2569,
-                "mother_order": false,
-                "stop_loss": null,
-                "target": null
-            },
             {
                 "id": "6fd41dd7-b1c8-470c-a74e-3940c469730c",
                 "price": 0.2384,
@@ -76,13 +86,53 @@
                 "stop_loss": null,
                 "target": null,
                 "mother_order": true
+            },
+            {
+                "id": "42e460ca-9d12-46af-9364-94d75126b56d",
+                "price": 0.203,
+                "amount_usdt": 50.0,
+                "quantity": 246.2569,
+                "mother_order": false,
+                "stop_loss": null,
+                "target": null
             }
         ],
         "buy_limits": [],
-        "sell_take_profit": []
+        "sell_take_profit": [
+            {
+                "id": "5426bf78-e881-4ca1-a0fc-726c9f36bb4e",
+                "price": 0.58,
+                "amount_usdt": 150,
+                "quantity": 267.01435
+            },
+            {
+                "id": "9cdda2b4-5fee-4e5f-a3ff-a97a9118bbd3",
+                "price": 0.735,
+                "amount_usdt": 200,
+                "quantity": 267.01435
+            },
+            {
+                "id": "033314e4-cb93-4716-97c4-af4936361534",
+                "price": 0.89,
+                "amount_usdt": 240,
+                "quantity": 267.01435
+            },
+            {
+                "id": "b2578082-fa67-4b95-b703-9e37842825b7",
+                "price": 1.045,
+                "amount_usdt": 280,
+                "quantity": 267.01435
+            },
+            {
+                "id": "75da1102-b564-4615-8c39-ef271ec9444e",
+                "price": 1.2,
+                "amount_usdt": 320,
+                "quantity": 267.01435
+            }
+        ]
     },
     "LTC": {
-        "margin": 37,
+        "margin": 34,
         "open_orders": [
             {
                 "id": "05775818-e12e-4702-8ac9-cd5830ac126d",
@@ -106,16 +156,22 @@
         "buy_limits": [],
         "sell_take_profit": [
             {
-                "id": "0cd7b5ad-bbe8-4102-a3c4-0c8101c20f9e",
-                "price": 127.0,
-                "amount_usdt": 50.0,
-                "quantity": 0.3937
+                "id": "c79aafe1-f7da-4485-9259-4fe47039c652",
+                "price": 112.0,
+                "amount_usdt": 100,
+                "quantity": 0.8678
             },
             {
-                "id": "69b81e33-e062-47b4-83a8-4629b50009e9",
-                "price": 142.0,
-                "amount_usdt": 200.0,
-                "quantity": 1.4085
+                "id": "1e7a8a4c-63b7-4d9c-b247-c2006b2ff713",
+                "price": 216.0,
+                "amount_usdt": 190,
+                "quantity": 0.8678
+            },
+            {
+                "id": "5dce7944-24f7-4f78-81dc-7cd14815c4ce",
+                "price": 320.0,
+                "amount_usdt": 280,
+                "quantity": 0.8678
             }
         ]
     }

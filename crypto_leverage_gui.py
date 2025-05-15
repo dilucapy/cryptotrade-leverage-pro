@@ -2356,10 +2356,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.show_generate_sales_cloud_form(symbol)
 
     def show_generate_sales_cloud_form(self, symbol):
-        """Crea y muestra el formulario para generar la NUBE DE VENTAS."""
+        """Crea y muestra el formulario para generar la NUBE DE VENTAS.
+        genera ordenes de ventas de toma de ganacia"""
         top = tk.Toplevel(self)
-        top.config(bg=self.toplevel_bgcolor)
-        top.geometry('420x280')
+        top.config(bg=self.toplevel_bgcolor, padx=50, pady=20)
+        #top.geometry('420x280')
         top.title(f"Generar Niveles de Ventas para {symbol}")
 
         # --- Etiquetas y campos de entrada ---
@@ -2378,11 +2379,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         entry_levels = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
         entry_levels.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Monto Total a Reducir (USDT):", bg=self.toplevel_bgcolor,
-                         font=("Arial", 12, "bold")).grid(row=3, column=0, padx=5, pady=5, sticky='e')
-        entry_withdrawal_amount = tk.Entry(top, font=("Arial", 12, "bold"), width=12)
-        entry_withdrawal_amount.grid(row=3, column=1, padx=5, pady=5)
-
         # --- Botones ---
         generate_button = tk.Button(top, text="Generar",
                                     pady=5,
@@ -2395,10 +2391,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                         entry_levels.get(),
                                         entry_initial_level.get(),
                                         entry_final_level.get(),
-                                        entry_withdrawal_amount.get(),
                                         top  # Pasar la ventana Toplevel para cerrarla
                                     ))
-        generate_button.grid(row=4, column=0, columnspan=2, pady=10)
+        generate_button.grid(row=4, column=0, columnspan=2, pady=10, sticky='we')
 
         cancel_button = tk.Button(top, text="Cancelar",
                                   pady=5,
@@ -2407,16 +2402,28 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                   font=self.button_font,
                                   cursor="hand2",
                                   command=top.destroy)
-        cancel_button.grid(row=5, column=0, columnspan=2, pady=5)
+        cancel_button.grid(row=5, column=0, columnspan=2, pady=5, sticky='we')
 
-    def calculate_sales_cloud_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, withdrawal_amount_str, form_window):
+    def calculate_total_open_quantity(self):
+        """Calcula cantidad total de activo de todas las operaciones abiertas
+        y devuelte el resultado"""
+
+        if self.selected_asset_data.get('open_orders'):
+            total_quantity = 0
+            for order in self.selected_asset_data['open_orders']:
+                quantity = order.get('quantity', 0)
+                total_quantity += quantity
+
+            return total_quantity
+
+    def calculate_sales_cloud_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, form_window):
         """Realiza el cálculo de los niveles de ventas y pregunta si se guarda."""
         try:
             levels = int(levels_str)
             initial_level = float(initial_level_str)
             final_level = float(final_level_str)
-            withdrawal_amount = float(withdrawal_amount_str)
             current_price = self.get_price(symbol)
+            total_quantity = self.calculate_total_open_quantity()
 
             if initial_level < current_price:
                 self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser mayor al Precio Actual")
@@ -2428,24 +2435,25 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 form_window.destroy()  # cierra la ventana
                 return
 
-            if levels <= 0 or withdrawal_amount <= 0:
-                self.show_error_messagebox(self, "La cantidad de niveles y el monto total a reducir deben ser mayores que cero.")
+            if levels <= 0:
+                self.show_error_messagebox(self, "La cantidad de niveles debe ser mayor que cero.")
                 form_window.destroy()  # cierra la ventana
                 return
 
             sales_cloud = []
             price_range = final_level - initial_level
             increment = price_range / (levels - 1) if levels > 1 else 0
-            amount_per_level = withdrawal_amount / levels
 
             for i in range(levels):
-                price = initial_level + i * increment
-                quantity = amount_per_level / price if price > 0 else 0
+                price_per_level = initial_level + i * increment
+                quantity_per_level = total_quantity / levels
+                amount_per_level = quantity_per_level * price_per_level
+                rounded_amount = round(amount_per_level / 10) * 10  # Para redondear a los 10 dólares más cercanos
                 level_cloud = {
                     'id': str(uuid.uuid4()),  # Generar 'id' único para cada orden de venta
-                    'price': round(price, 3),
-                    'amount_usdt': round(amount_per_level, 2),
-                    'quantity': round(quantity, 5)}
+                    'price': round(price_per_level, 3),
+                    'amount_usdt': rounded_amount,
+                    'quantity': round(quantity_per_level, 5)}
 
                 sales_cloud.append(level_cloud)
 
@@ -2455,16 +2463,19 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             self.show_info_messagebox(self, "VENTAS de Toma de Ganancia Generada", result_message)
 
-            save_confirmation = self.show_confirmation_dialog(self, "Guardar Niveles de VENTAS", "¿Desea guardar estos niveles como SELL TAKE PROFIT?")
+            save_confirmation = self.show_confirmation_dialog(self, "Guardar Niveles de VENTAS",
+                                                              "¿Desea guardar estos niveles como SELL TAKE PROFIT?")
             if save_confirmation:
                 if symbol in self.data:
                     # Advertir al usuario sobre la sobreescritura
-                    overwrite = self.show_confirmation_dialog(self, "Advertencia", "Guardar la Niveles de Toma de Ganancias, sobreescribirá \n las órdenes existentes en SELL TAKE PROFIT. ¿Continuar?")
+                    overwrite = self.show_confirmation_dialog(self, "Advertencia",
+                                                              "Guardar la Niveles de Toma de Ganancias, sobreescribirá \n las órdenes existentes en SELL TAKE PROFIT. ¿Continuar?")
                     if overwrite:
                         self.data[symbol]["sell_take_profit"] = sales_cloud
                         self.save_data()
                         self.create_asset_orders_section()  # Actualizar la sección de órdenes
-                        self.show_info_messagebox(self, "Niveles VENTAS de Toma de Ganancias Guardada", "Los Niveles de VENTAS han sido guardado!")
+                        self.show_info_messagebox(self, "Niveles VENTAS de Toma de Ganancias Guardada",
+                                                  "Los Niveles de VENTAS han sido guardado!")
 
                 else:
                     self.show_error_messagebox(self, f"El símbolo '{symbol}' ya no existe en los datos.")

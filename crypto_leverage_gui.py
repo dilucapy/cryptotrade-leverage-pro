@@ -1386,7 +1386,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             else:
                 info_text += "           Margin: No disponible"
 
-            # Calcular cantidad total de activo en pocisiones abiertas
+            # Calcular cantidad total de activo seleccionado en ordenes abiertas
             total_quantity = 0
             for order in self.selected_asset_data['open_orders']:
                 quantity = order.get('quantity', 0)
@@ -1796,25 +1796,25 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         #Label(self.asset_orders_frame, text="Órdenes del Activo", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
 
         # Sección para las listas de órdenes (abiertas, compras pendientes y ventas pendientes)
+        # --- Ordenes abiertas ---
         self.open_orders_frame = Frame(self.asset_orders_frame)
         self.open_orders_frame.pack(fill=X, pady=2)
         Label(self.open_orders_frame, text="Órdenes Abiertas", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
         self.show_orders(self.open_orders_frame, "open")
 
+        # --- Ordenes BUY LIMITS ---
         self.pending_buy_orders_frame = Frame(self.asset_orders_frame)
         self.pending_buy_orders_frame.pack(fill=X, pady=2)
         Label(self.pending_buy_orders_frame, text="Compras Pendientes", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
         self.show_orders(self.pending_buy_orders_frame, "pending_buy")
 
+        # --- Ordenes Sell Take Profit ---
         self.sell_take_profit_frame = Frame(self.asset_orders_frame)
         self.sell_take_profit_frame.pack(fill=X, pady=2)
-        # calcula el profit total de todas las ordenes de ventas
-        total_amount_sell_take_profit = self.calculate_total_amount_sell_take_profit()
-        if total_amount_sell_take_profit:
-            text_profit = f"{total_amount_sell_take_profit} USDT"
-        else:
-            text_profit = ""
-        Label(self.sell_take_profit_frame, text=f"Ventas Take Profit\t\t\t\t\t\t   Total Profit: {text_profit}",
+        # calcula el profit total de todas las ordenes de ventas para incluirlo en el label
+        total_profit_sales = self.calculate_total_profit_sales()
+        formatted_text = f"Ventas Take Profit:{'':<{140}}Total Ganancias: {total_profit_sales:.2f}"
+        Label(self.sell_take_profit_frame, text=formatted_text,
               font=("Arial", 9, "italic", "bold")).pack(anchor='w')
 
         self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
@@ -1831,6 +1831,34 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             elif order_type == "sell_take_profit":
                 return self.data[symbol].get('sell_take_profit', [])
         return []
+
+    def calculate_average_price_open_orders(self):
+        """Calcula precio promedio de todas las ordenes abiertas,
+        del activo seleccionado"""
+        # Calcular total de cantidad y monto de ordenes abiertas
+        total_quantity = 0
+        total_amount = 0
+        for order in self.selected_asset_data['open_orders']:
+            quantity = order.get('quantity', 0)
+            total_quantity += quantity
+            amount = order.get('amount_usdt', 0)
+            total_amount += amount
+
+        average_price_open_orders = round(total_amount / total_quantity, 5)
+        return average_price_open_orders
+
+    def calculate_total_profit_sales(self):
+        """Calculamos el total de ganancias de todas las ventas del activo seleccionado"""
+        total_profit = 0
+        for order in self.selected_asset_data['sell_take_profit']:
+            # Calculamos ganancia por orden de venta
+            entry_average_price = self.calculate_average_price_open_orders()
+            sale_price = order.get('price', 0)
+            sale_quantity = order.get('quantity', 0)
+            sale_profit = (sale_price - entry_average_price) * sale_quantity
+            total_profit += sale_profit
+
+        return round(total_profit, 2)
 
     def show_orders(self, parent_frame, order_type):
         """Llena el frame con la información de las órdenes del tipo especificado (con precio copiable)."""
@@ -1867,7 +1895,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             price_entry.pack(side=LEFT, padx=(5, 5))  # Empaquetar el widget para que se muestre
 
             # Label "Quantity:"
-            quantity_label_text = tk.Label(order_row_frame, text="Quantity:", font=('Dosis', 10, 'bold'), anchor='w', bg=bg_by_order_type)
+            quantity_label_text = tk.Label(order_row_frame, text="Cantidad:", font=('Dosis', 10, 'bold'), anchor='w', bg=bg_by_order_type)
             quantity_label_text.pack(side=LEFT)
 
             # Cantidad (copiable)
@@ -1885,7 +1913,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             quantity_entry.pack(side=LEFT, padx=(5, 5))
 
             # Label "Amount:"
-            amount_label_text = tk.Label(order_row_frame, text="Amount (USDT):", font=('Dosis', 10, 'bold'), anchor='w', bg=bg_by_order_type)
+            amount_label_text = tk.Label(order_row_frame, text="Monto (USDT):", font=('Dosis', 10, 'bold'), anchor='w', bg=bg_by_order_type)
             amount_label_text.pack(side=LEFT)
 
             # Amount (copiable)
@@ -1906,6 +1934,24 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 tp_label = tk.Label(order_row_frame, text=f"TP: {order.get('target', 'N/A')}", font=('Dosis', 10, 'bold'),
                                     anchor='w', bg=bg_by_order_type)
                 tp_label.pack(side=LEFT)
+
+            if order_type == 'sell_take_profit':
+                # Creamos una etiqueta 'ganancias' por orden de venta
+                tp_label = tk.Label(order_row_frame, text="Ganancia",
+                                    font=('Dosis', 10, 'bold'),
+                                    anchor='w', bg=bg_by_order_type)
+                tp_label.pack(side=LEFT)
+                # Calculamos ganancia por orden de venta
+                entry_average_price = self.calculate_average_price_open_orders()
+                sale_price = order.get('price', 0)
+                sale_quantity = order.get('quantity', 0)
+                sale_profit = round((sale_price - entry_average_price) * sale_quantity, 2)
+
+                # Generamos un entry para mostrar ganancia por orden de venta
+                amount_entry = tk.Entry(order_row_frame)
+                amount_entry.insert(0, sale_profit)
+                amount_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=14)
+                amount_entry.pack(side=LEFT, padx=(5, 5))
 
             delete_button = Button(order_row_frame, text="X", fg='white', bg='#C21E29', padx=5,
                                    font=("Segoe UI", 10, 'bold'),

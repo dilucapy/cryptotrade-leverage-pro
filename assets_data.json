@@ -38,35 +38,19 @@
             }
         ],
         "buy_limits": [],
-        "sell_take_profit": [
-            {
-                "id": "32ee43f5-6e4c-4b6c-adb6-0fa70ed9b5e8",
-                "price": 150000.0,
-                "amount_usdt": 50.0,
-                "quantity": 0.00033333
-            }
-        ]
+        "sell_take_profit": []
     },
     "XRP": {
         "margin": 70,
         "open_orders": [
             {
-                "id": "dfd2695e-6c73-4a67-82f2-959de196d198",
-                "price": 2.2362,
-                "amount_usdt": 300.0,
-                "quantity": 134.1562,
-                "mother_order": true,
+                "id": "02602834-a79b-4487-95d9-1954208370a9",
+                "price": 2.2538,
+                "amount_usdt": 500.0,
+                "quantity": 209.90278159,
                 "stop_loss": null,
-                "target": null
-            },
-            {
-                "id": "1ce0fd33-a181-408a-862a-16881342a489",
-                "price": 2.4303,
-                "amount_usdt": 300.0,
-                "quantity": 123.4416,
-                "mother_order": false,
-                "stop_loss": null,
-                "target": null
+                "target": null,
+                "mother_order": true
             }
         ],
         "buy_limits": [
@@ -81,22 +65,22 @@
         ],
         "sell_take_profit": [
             {
-                "id": "b55bc277-22ff-4200-af9d-c7bfe37ee4d9",
-                "price": 4.1,
-                "amount_usdt": 350,
-                "quantity": 85.86593
+                "id": "ffca900e-6654-440f-8368-d0f8697504e7",
+                "price": 4.2,
+                "amount_usdt": 170,
+                "quantity": 71.36695
             },
             {
-                "id": "80ab08f2-6855-48d6-8fa6-009f0edb9a50",
+                "id": "45468e80-e02c-4847-9b43-d6d3bbcde5e4",
+                "price": 5.55,
+                "amount_usdt": 170,
+                "quantity": 71.36695
+            },
+            {
+                "id": "9466374b-b9a6-481b-a86c-7dec16200613",
                 "price": 6.9,
-                "amount_usdt": 590,
-                "quantity": 85.86593
-            },
-            {
-                "id": "6e393a50-4290-4926-bc35-636f642f11ec",
-                "price": 9.7,
-                "amount_usdt": 830,
-                "quantity": 85.86593
+                "amount_usdt": 160,
+                "quantity": 67.16889
             }
         ]
     },
@@ -148,29 +132,11 @@
         "margin": 34,
         "open_orders": [
             {
-                "id": "d3515480-b11b-4dcc-9baf-aa18b96d40a2",
-                "price": 85.0,
-                "amount_usdt": 10.0,
-                "quantity": 0.1176,
-                "mother_order": false,
-                "stop_loss": null,
-                "target": null
-            },
-            {
                 "id": "05775818-e12e-4702-8ac9-cd5830ac126d",
                 "price": 94.46,
                 "amount_usdt": 200.0,
                 "quantity": 2.11729833,
                 "mother_order": true,
-                "stop_loss": null,
-                "target": null
-            },
-            {
-                "id": "ee564fdd-6286-4a10-b2e8-d5055fd326dc",
-                "price": 96.0,
-                "amount_usdt": 20.0,
-                "quantity": 0.2083,
-                "mother_order": false,
                 "stop_loss": null,
                 "target": null
             },
@@ -204,22 +170,16 @@
         ],
         "sell_take_profit": [
             {
-                "id": "8d5462d6-c16c-4b8e-bcd3-f249872c9a7f",
-                "price": 150.0,
-                "amount_usdt": 90,
-                "quantity": 0.97643
+                "id": "5035e84e-0da8-4d31-b177-82b620fcbc81",
+                "price": 170.0,
+                "amount_usdt": 80,
+                "quantity": 0.8678
             },
             {
-                "id": "a8f6cfb5-0b63-49ca-a268-746824ecb26e",
-                "price": 175.0,
-                "amount_usdt": 90,
-                "quantity": 0.97643
-            },
-            {
-                "id": "06302ff7-72ad-4b03-af97-2e4537304bb3",
-                "price": 200.0,
-                "amount_usdt": 100,
-                "quantity": 0.97643
+                "id": "dc7badc0-c9c4-4f12-bc08-1cd6c3e14cdb",
+                "price": 190.0,
+                "amount_usdt": 80,
+                "quantity": 0.8678
             }
         ]
     },

@@ -737,9 +737,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # verificamos si hay suficiente monto de activo disponible (en open orders) para cubrir las órdenes de venta.
         total_amount_open = self.calculate_open_amount_of_selected_asset()
-        print(f"total amount open: {total_amount_open}")
         total_amount_sales = self.calculate_total_amount_sell_take_profit()
-        print(f"total quantity sales: {total_amount_sales}")
 
         if total_amount_sales > total_amount_open:
             self.show_info_messagebox(self, "Órdenes de Venta Desactualizadas",
@@ -1454,9 +1452,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def calculate_amount_in_sales(self):
         """Calcula el monto total de todas las ordenes sell take profit del activo seleccionado """
         total_amount = 0
-        for order in self.selected_asset_data['sell_take_profit']:
-            amount_order = order.get('amount_usdt', 0)
-            total_amount += amount_order
+        if self.selected_asset_data['sell_take_profit']:
+            for order in self.selected_asset_data['sell_take_profit']:
+                amount_order = order.get('amount_usdt', 0)
+                total_amount += amount_order
+
         return total_amount
 
     def add_new_order(self, data_asset, active_symbol, order_type, order_details):
@@ -1772,9 +1772,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         print(f"Orden con ID '{order_id}' eliminada de {order_type_key} para {symbol}.")
                         self.save_data_asset(self.data, self.data[symbol], symbol)
                         # Recargar y mostrar las órdenes actualizadas
-                        self.show_orders(self.open_orders_frame, "open")
+                        """self.show_orders(self.open_orders_frame, "open")
                         self.show_orders(self.pending_buy_orders_frame, "pending_buy")
-                        self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
+                        self.show_orders(self.sell_take_profit_frame, "sell_take_profit")"""
+                        self.create_asset_orders_section()  # use este metodo (asi me actualiza el total de profit de las ventas)
                         return  # Salir de la función una vez que se elimina la orden
 
         print(f"No se encontró ninguna orden con ID '{order_id}' para eliminar.")
@@ -1888,12 +1889,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         """Calculamos el total de ganancias de todas las ventas del activo seleccionado"""
         entry_average_price = self.calculate_average_price_open_orders()
         total_profit = 0
-        for order in self.selected_asset_data['sell_take_profit']:
-            # Calculamos ganancia por orden de venta
-            sale_price = order.get('price', 0)
-            sale_quantity = order.get('quantity', 0)
-            sale_profit = (sale_price - entry_average_price) * sale_quantity
-            total_profit += sale_profit
+        if self.selected_asset_data['sell_take_profit']:
+            for order in self.selected_asset_data['sell_take_profit']:
+                # Calculamos ganancia por orden de venta
+                sale_price = order.get('price', 0)
+                sale_quantity = order.get('quantity', 0)
+                sale_profit = (sale_price - entry_average_price) * sale_quantity
+                total_profit += sale_profit
 
         return round(total_profit, 2)
 
@@ -2550,7 +2552,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         return total_amount
 
-
     def calculate_sales_cloud_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, form_window):
         """Realiza el cálculo de los niveles de ventas y pregunta si se guarda."""
         try:
@@ -2588,9 +2589,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             for i in range(levels):
                 price_per_level = initial_level + i * increment
-                quantity_per_level = total_quantity / levels
-                amount_per_level = int(total_amount / levels)
-                rounded_amount_per_level = round(amount_per_level / 10) * 10  # Para redondear a los 10 dólares más cercanos
+                amount_equal_per_level = int(total_amount / levels)
+                rounded_amount_per_level = round(amount_equal_per_level / 10) * 10  # Para redondear a los 10 dólares más cercanos
                 # verificar si sobra un min de 10 usdt o mas para agregar a la ultima orden de venta y equilibrar con el monto abierto
                 if i == range(levels)[-1]:
                     total_amount_levels = levels * rounded_amount_per_level
@@ -2598,9 +2598,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     if sobrante >= 10:
                         coef = int(sobrante/10)
                         rounded_amount_per_level = rounded_amount_per_level + (coef * 10)
+
                     elif sobrante <= -10:
                         coef = int(sobrante / 10)
                         rounded_amount_per_level = rounded_amount_per_level + (coef * 10)
+
+                # calculamos cantidad de activo segun monto reducido para cada nivel
+                quantity_per_level = (rounded_amount_per_level * total_quantity) / total_amount
 
                 level_cloud = {
                     'id': str(uuid.uuid4()),  # Generar 'id' único para cada orden de venta

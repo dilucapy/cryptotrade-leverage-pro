@@ -735,6 +735,16 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Crear y mostrar los botones del menú secundario en el panel izquierdo
         self.create_left_secondary_menu_buttons()
 
+        # verificamos si hay suficiente monto de activo disponible (en open orders) para cubrir las órdenes de venta.
+        total_amount_open = self.calculate_open_amount_of_selected_asset()
+        print(f"total amount open: {total_amount_open}")
+        total_amount_sales = self.calculate_total_amount_sell_take_profit()
+        print(f"total quantity sales: {total_amount_sales}")
+
+        if total_amount_sales > total_amount_open:
+            self.show_info_messagebox(self, "Órdenes de Venta Desactualizadas",
+                                      "\nOrdenes de Ventas Take Profit Desactualizadas!\n\nNo hay suficiente activo disponible\npara cubrir las ordenes de ventas\n")
+
     def add_new_symbol(self):
         """Muestra una ventana de nivel superior (encimna de la ventana principal)
         para agregar un nuevo símbolo de activo."""
@@ -772,7 +782,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     add_symbol_window.destroy()  # llama al metodo para destruir la instacia de toplevel
             else:
                 self.show_error_messagebox(self, "Por favor, introduce un símbolo.")
-
 
         save_button = Button(add_symbol_window, text="Guardar Símbolo",
                              pady=5,
@@ -1386,11 +1395,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             else:
                 info_text += "           Margin: No disponible"
 
-            # Calcular cantidad total de activo seleccionado en ordenes abiertas
-            total_quantity = 0
-            for order in self.selected_asset_data['open_orders']:
-                quantity = order.get('quantity', 0)
-                total_quantity += quantity
+            # Calcular cantidad total en ordenes abiertas del activo seleccionado
+            total_quantity = self.calculate_total_open_quantity()
 
             # Redondear cantidad segun sea el activo seleccionado
             if symbol == 'BTC':
@@ -1432,16 +1438,42 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         self.update_asset_info_display()  # llama a este metodo que actualiza la info en el label del activo seleccionado
 
+    def calculate_sales_quantity_by_amount_reduced(self, amount_to_reduce):
+        """Calcula la cantidad de activo segun el monto a reducir"""
+        total_quantity_open = self.calculate_total_open_quantity()
+        total_amount_open = self.calculate_open_amount_of_selected_asset()
+        sales_quantity = (amount_to_reduce * total_quantity_open) / total_amount_open
+        # Redondear cantidad segun sea el activo seleccionado
+        if self.selected_asset == 'BTC':
+            sales_quantity_rounded = round(sales_quantity, 8)
+        else:
+            sales_quantity_rounded = round(sales_quantity, 4)
+
+        return sales_quantity_rounded
+
+    def calculate_amount_in_sales(self):
+        """Calcula el monto total de todas las ordenes sell take profit del activo seleccionado """
+        total_amount = 0
+        for order in self.selected_asset_data['sell_take_profit']:
+            amount_order = order.get('amount_usdt', 0)
+            total_amount += amount_order
+        return total_amount
+
     def add_new_order(self, data_asset, active_symbol, order_type, order_details):
         """Agrega una nueva orden del tipo especificado a los datos del activo."""
 
-        # Redondear cantidad segun sea el activo seleccionado
-        if active_symbol == 'BTC':
-            quantity_rounded = round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
-                              8) if order_details.get('price', 1) != 0 else 0
+        if order_type != 'sell_take_profit':
+            # Calcular la cantidad de activo de la siguiente forma
+            # Redondear cantidad segun sea el activo seleccionado
+            if active_symbol == 'BTC':
+                quantity_rounded = round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
+                                  8) if order_details.get('price', 1) != 0 else 0
+            else:
+                quantity_rounded = round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
+                                  4) if order_details.get('price', 1) != 0 else 0
         else:
-            quantity_rounded = round(order_details.get('amount_usdt', 0) / order_details.get('price', 1),
-                              4) if order_details.get('price', 1) != 0 else 0
+            amount_to_reduce = order_details.get('amount_usdt', 0)
+            quantity_rounded = self.calculate_sales_quantity_by_amount_reduced(amount_to_reduce)
 
         order = {
             'id': order_details.get('id'),
@@ -1594,7 +1626,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             form.geometry('400x300')
             titulo = 'BUY LIMIT'
         elif order_type == 'sell_take_profit':
-            form.geometry('400x260')
+            form.geometry('440x240')
             titulo = 'SELL TAKE PROFIT'
 
         form.title(f"Nueva Orden: {titulo}")
@@ -1613,6 +1645,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         amount_label.grid(row=row_num, column=0, padx=5, pady=5, sticky="e")
         amount_entry = Entry(form, font=("Arial", 12, "bold"), width=12)
         amount_entry.grid(row=row_num, column=1, padx=5, pady=5)
+        if order_type == 'sell_take_profit':
+            amount_label.config(text="Monto a reducir (USDT):")
+
         row_num += 1
 
         stoploss_label = None
@@ -1699,8 +1734,16 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 order_data['stop_loss'] = float(sl) if sl else None
                 order_data['target'] = float(tp) if tp else None
             elif order_type == 'sell_take_profit':
-                # No se agregan stop_loss ni target para sell_take_profit
-                pass
+                # Verifica si el monto a reducir es psoible con la existencia en ordenes abiertas
+                total_amount_open = self.calculate_open_amount_of_selected_asset()
+                total_amount_sales = self.calculate_amount_in_sales()
+                amount_avaible_to_reduce = total_amount_open - total_amount_sales
+                if amount_val <= total_amount_open - total_amount_sales:
+                    pass
+                else:
+                    self.show_error_messagebox(self, f"\nNo puedes reducir el monto de: {amount_val} USDT!\n\nMonto disponible para reducir:\n{amount_avaible_to_reduce} USDT")
+                    form.destroy()
+                    return
 
             self.new_order_data = order_data  # almacena la nueva orden en el atributo 'new_order_data'
             self.handle_add_new_order(order_type)  # llama al metodo manejar la adición de la nueva orden
@@ -1767,9 +1810,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.asset_orders_frame.pack(pady=10, fill=BOTH, expand=True)
 
         # Sección para los botones de creación de nuevas órdenes
-        # new_order_label = Label(self.asset_orders_frame, text="Crear Nueva Orden:", font=('Dosis', 12, 'italic'))
-        # new_order_label.pack(anchor='w', pady=(10, 2))
-
         actions = [
             {"text": "Add OPEN ORDER", "command": lambda: self.show_new_order_form('open')},
             {"text": "Add BUY LIMIT", "command": lambda: self.show_new_order_form('pending_buy')},
@@ -1793,8 +1833,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                             command=action["command"])
             button.pack(side=LEFT, padx=5, pady=2)  # Empaquetamos los botones a la izquierda
 
-        #Label(self.asset_orders_frame, text="Órdenes del Activo", font=('Dosis', 14, 'bold')).pack(pady=5, anchor='w')
-
         # Sección para las listas de órdenes (abiertas, compras pendientes y ventas pendientes)
         # --- Ordenes abiertas ---
         self.open_orders_frame = Frame(self.asset_orders_frame)
@@ -1816,7 +1854,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         formatted_text = f"Ventas Take Profit:{'':<{140}}Total Ganancias: {total_profit_sales:.2f}"
         Label(self.sell_take_profit_frame, text=formatted_text,
               font=("Arial", 9, "italic", "bold")).pack(anchor='w')
-
         self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
 
     def get_orders_for_asset(self, symbol, order_type):
@@ -1849,10 +1886,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def calculate_total_profit_sales(self):
         """Calculamos el total de ganancias de todas las ventas del activo seleccionado"""
+        entry_average_price = self.calculate_average_price_open_orders()
         total_profit = 0
         for order in self.selected_asset_data['sell_take_profit']:
             # Calculamos ganancia por orden de venta
-            entry_average_price = self.calculate_average_price_open_orders()
             sale_price = order.get('price', 0)
             sale_quantity = order.get('quantity', 0)
             sale_profit = (sale_price - entry_average_price) * sale_quantity
@@ -2478,16 +2515,41 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cancel_button.grid(row=5, column=0, columnspan=2, pady=5, sticky='we')
 
     def calculate_total_open_quantity(self):
-        """Calcula cantidad total de activo de todas las operaciones abiertas
-        y devuelte el resultado"""
+        """Calcula cantidad total del activo seleccionado
+         de todas las ordenes abiertas y devuelte el resultado.
+         Si no existe ordenes devuelve cero"""
 
         if self.selected_asset_data.get('open_orders'):
             total_quantity = 0
             for order in self.selected_asset_data['open_orders']:
                 quantity = order.get('quantity', 0)
                 total_quantity += quantity
-
             return total_quantity
+        else:
+            return 0
+
+    def calculate_total_sales_quantity(self):
+        """Calcula cantidad total del activo seleccionado
+         de todas las ordenes de ventas y devuelte el resultado.
+         Si no existe ordenes devuelve cero"""
+        total_quantity = 0
+        if self.selected_asset_data.get('sell_take_profit'):
+            for order in self.selected_asset_data['sell_take_profit']:
+                quantity = order.get('quantity', 0)
+                total_quantity += quantity
+
+        return total_quantity
+
+    def calculate_open_amount_of_selected_asset(self):
+        """Calcula el monto total inicial de todas las ordenes abiertas del activo seleccionado """
+        total_amount = 0
+        if self.selected_asset_data['open_orders']:
+            for order in self.selected_asset_data['open_orders']:
+                amount_order = order.get('amount_usdt', 0)
+                total_amount += amount_order
+
+        return total_amount
+
 
     def calculate_sales_cloud_and_ask_save(self, symbol, levels_str, initial_level_str, final_level_str, form_window):
         """Realiza el cálculo de los niveles de ventas y pregunta si se guarda."""
@@ -2497,11 +2559,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             final_level = float(final_level_str)
             current_price = self.get_price(symbol)
             total_quantity = self.calculate_total_open_quantity()
+            total_amount = self.calculate_open_amount_of_selected_asset()
 
-            if initial_level < current_price:
-                self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser mayor al Precio Actual")
+            if total_quantity == 0:
+                self.show_info_messagebox(self, "Advertencia", "\nNo se puede generar ventas de toma de ganancia\nNo tienes ordenes abiertas!")
                 form_window.destroy()  # cierra la ventana
                 return
+
+            if current_price:
+                if initial_level < current_price:
+                    self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser mayor al Precio Actual")
+                    form_window.destroy()  # cierra la ventana
+                    return
 
             if initial_level > final_level:
                 self.show_info_messagebox(self, "Advertencia", "\nEl Nivel Inicial debe ser menor al Nivel Final")
@@ -2520,12 +2589,23 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             for i in range(levels):
                 price_per_level = initial_level + i * increment
                 quantity_per_level = total_quantity / levels
-                amount_per_level = quantity_per_level * price_per_level
-                rounded_amount = round(amount_per_level / 10) * 10  # Para redondear a los 10 dólares más cercanos
+                amount_per_level = int(total_amount / levels)
+                rounded_amount_per_level = round(amount_per_level / 10) * 10  # Para redondear a los 10 dólares más cercanos
+                # verificar si sobra un min de 10 usdt o mas para agregar a la ultima orden de venta y equilibrar con el monto abierto
+                if i == range(levels)[-1]:
+                    total_amount_levels = levels * rounded_amount_per_level
+                    sobrante = total_amount - total_amount_levels
+                    if sobrante >= 10:
+                        coef = int(sobrante/10)
+                        rounded_amount_per_level = rounded_amount_per_level + (coef * 10)
+                    elif sobrante <= -10:
+                        coef = int(sobrante / 10)
+                        rounded_amount_per_level = rounded_amount_per_level + (coef * 10)
+
                 level_cloud = {
                     'id': str(uuid.uuid4()),  # Generar 'id' único para cada orden de venta
                     'price': round(price_per_level, 3),
-                    'amount_usdt': rounded_amount,
+                    'amount_usdt': rounded_amount_per_level,
                     'quantity': round(quantity_per_level, 5)}
 
                 sales_cloud.append(level_cloud)
@@ -2547,8 +2627,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         self.data[symbol]["sell_take_profit"] = sales_cloud
                         self.save_data()
                         self.create_asset_orders_section()  # Actualizar la sección de órdenes
-                        self.show_info_messagebox(self, "Niveles VENTAS de Toma de Ganancias Guardada",
-                                                  "Los Niveles de VENTAS han sido guardado!")
+                        #self.show_info_messagebox(self, "Niveles VENTAS de Toma de Ganancias Guardada", "Los Niveles de VENTAS han sido guardado!")
 
                 else:
                     self.show_error_messagebox(self, f"El símbolo '{symbol}' ya no existe en los datos.")

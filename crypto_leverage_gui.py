@@ -1376,6 +1376,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         if self.selected_asset and self.selected_asset_data:
             # obtener precio actual del activo
             symbol = self.selected_asset.get()  # Obtiene el valor del StringVar como string
+
+            if symbol in self.data:
+                self.selected_asset_data = self.data[symbol]
+
             current_price = self.get_price(symbol)
 
             info_text = f"Símbolo: {symbol}"
@@ -1783,14 +1787,78 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def calculate_total_amount_sell_take_profit(self):
         """Calcula monto total de todas las ordenes ventas de toma de ganancia
         y devuelte el resultado"""
-
+        total_amount_sell_take_profit = 0
         if self.selected_asset_data.get('sell_take_profit'):
-            total_amount_sell_take_profit = 0
             for order in self.selected_asset_data['sell_take_profit']:
                 amount = order.get('amount_usdt', 0)
                 total_amount_sell_take_profit += amount
 
-            return total_amount_sell_take_profit
+        return total_amount_sell_take_profit
+
+    def delete_all_buy_limits(self):
+        """Elimina todas las órdenes buy limits del activo actualmente seleccionado.
+        Muestra un mensaje de confirmación o error al usuario.
+        """
+        symbol = self.selected_asset.get()
+
+        # Verificar si el símbolo del activo existe en los datos
+        if symbol not in self.data:
+            self.show_error_messagebox(self,
+                                       f"El activo '{symbol}' no se encuentra en los datos de la aplicación.")
+            return
+
+        # Acceder a los datos específicos del activo
+        asset_data = self.data[symbol]
+
+        # Verificar si 'buy_limits' existe y es una lista para el activo seleccionado
+        if 'buy_limits' in asset_data and isinstance(asset_data['buy_limits'], list):
+            # Verificar si la lista de 'buy_limits' no está vacía antes de intentar borrar
+            if asset_data['buy_limits']:
+                confirmation = self.show_confirmation_dialog(self, "Confirmar Eliminación",
+                                                             f"¿Está seguro de eliminar todas las BUY LIMITS?")
+                if confirmation:
+                    asset_data['buy_limits'].clear()  # Elimina todos los elementos de la lista
+                    self.save_data()  # Guarda los cambios
+                    self.create_asset_orders_section()
+
+            else:
+                self.show_info_messagebox(self, "Información", f"No hay órdenes BUY LIMITS para eliminar en {symbol}.")
+        else:
+            # Mensaje más específico si la clave no existe o no es una lista
+            self.show_info_messagebox(self, "Información",
+                                      f"La sección de órdenes BUY LIMITS para {symbol}\nno existe o no es una lista válida.")
+
+    def delete_all_sell_take_profit(self):
+        """Elimina todas las órdenes de ventas de toma de ganancia del activo actualmente seleccionado.
+        Muestra un mensaje de confirmación o error al usuario."""
+        symbol = self.selected_asset.get()
+
+        # Verificar si el símbolo del activo existe en los datos
+        if symbol not in self.data:
+            self.show_error_messagebox(self,
+                                       f"El activo '{symbol}' no se encuentra en los datos de la aplicación.")
+            return
+
+        # Acceder a los datos específicos del activo
+        asset_data = self.data[symbol]
+
+        # Verificar si 'sell_take_prfit' existe y es una lista para el activo seleccionado
+        if 'sell_take_profit' in asset_data and isinstance(asset_data['sell_take_profit'], list):
+            # Verificar si la lista de 'sell_take_profit' no está vacía antes de intentar borrar
+            if asset_data['sell_take_profit']:
+                confirmation = self.show_confirmation_dialog(self, "Confirmar Eliminación",
+                                                             f"¿Está seguro de eliminar todas las Ordenes Target?")
+                if confirmation:
+                    asset_data['sell_take_profit'].clear()  # Elimina todos los elementos de la lista
+                    self.save_data()  # Guarda los cambios
+                    self.create_asset_orders_section()
+
+            else:
+                self.show_info_messagebox(self, "Información", f"No hay órdenes Target para eliminar en {symbol}.")
+        else:
+            # Mensaje más específico si la clave no existe o no es una lista
+            self.show_info_messagebox(self, "Información",
+                                      f"La sección de órdenes Target para {symbol}\nno existe o no es una lista válida.")
 
     def create_asset_orders_section(self):
         """Crea la sección para mostrar los botones de creación de ordenes y las órdenes del activo."""
@@ -1810,15 +1878,16 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.asset_orders_frame = Frame(self.right_panel, bd=1, relief=SUNKEN)
         self.asset_orders_frame.pack(pady=10, fill=BOTH, expand=True)
 
-        # Sección para los botones de creación de nuevas órdenes
-        actions = [
-            {"text": "Add OPEN ORDER", "command": lambda: self.show_new_order_form('open')},
-            {"text": "Add BUY LIMIT", "command": lambda: self.show_new_order_form('pending_buy')},
-            {"text": "Add SELL TAKE PROFIT", "command": lambda: self.show_new_order_form('sell_take_profit')},
-        ]
-
-        buttons_frame = Frame(self.asset_orders_frame)  # Frame contenedor para los botones
+        # Frame contenedor para los botones de agregar ordenes nuevas y eliminar conjunto de ordenes
+        buttons_frame = Frame(self.asset_orders_frame)
         buttons_frame.pack(fill=tk.X)
+
+        # Botones para creación de nuevas órdenes
+        actions = [
+            {"text": "+ Orden Abierta", "command": lambda: self.show_new_order_form('open')},
+            {"text": "+ BUY LIMIT", "command": lambda: self.show_new_order_form('pending_buy')},
+            {"text": "+ Orden Target", "command": lambda: self.show_new_order_form('sell_take_profit')},
+        ]
 
         for action in actions:
             button = Button(buttons_frame,
@@ -1834,17 +1903,37 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                             command=action["command"])
             button.pack(side=LEFT, padx=5, pady=2)  # Empaquetamos los botones a la izquierda
 
+        # Botones de borrado de conjunto de ordenes
+        actions2 = [
+            {"text": "Borrar Ordenes Target", "command": self.delete_all_sell_take_profit},
+            {"text": "Borrar BUY LIMITS", "command": self.delete_all_buy_limits},
+            {"text": "Borrar todo", "command": self.delete_all_asset_data},
+        ]
+        for action in actions2:
+            button = Button(buttons_frame,
+                            text=action["text"],
+                            font=('Dosis', 10, 'italic', 'bold'),
+                            padx=10,
+                            pady=10,
+                            bg='#C21E29',
+                            fg='white',
+                            bd=1,
+                            relief=RAISED,
+                            cursor='hand2',
+                            command=action["command"])
+            button.pack(side=RIGHT, padx=5, pady=2)  # Empaquetamos los botones a la derecha
+
         # Sección para las listas de órdenes (abiertas, compras pendientes y ventas pendientes)
         # --- Ordenes abiertas ---
         self.open_orders_frame = Frame(self.asset_orders_frame)
         self.open_orders_frame.pack(fill=X, pady=2)
-        Label(self.open_orders_frame, text="Órdenes Abiertas", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
+        Label(self.open_orders_frame, text="Ordenes Abiertas", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
         self.show_orders(self.open_orders_frame, "open")
 
         # --- Ordenes BUY LIMITS ---
         self.pending_buy_orders_frame = Frame(self.asset_orders_frame)
         self.pending_buy_orders_frame.pack(fill=X, pady=2)
-        Label(self.pending_buy_orders_frame, text="Compras Pendientes", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
+        Label(self.pending_buy_orders_frame, text="Ordenes BUY LIMITS (compras pendientes)", font=("Arial", 9, "italic", "bold")).pack(anchor='w')
         self.show_orders(self.pending_buy_orders_frame, "pending_buy")
 
         # --- Ordenes Sell Take Profit ---
@@ -1852,7 +1941,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.sell_take_profit_frame.pack(fill=X, pady=2)
         # calcula el profit total de todas las ordenes de ventas para incluirlo en el label
         total_profit_sales = self.calculate_total_profit_sales()
-        formatted_text = f"Ventas Take Profit:{'':<{140}}Total Ganancias: {total_profit_sales:.2f}"
+        formatted_text = f"Ordenes Target (Ventas Toma de ganancia):{'':<{100}}Total Ganancias: {total_profit_sales:.2f}"
         Label(self.sell_take_profit_frame, text=formatted_text,
               font=("Arial", 9, "italic", "bold")).pack(anchor='w')
         self.show_orders(self.sell_take_profit_frame, "sell_take_profit")
@@ -1882,7 +1971,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             amount = order.get('amount_usdt', 0)
             total_amount += amount
 
-        average_price_open_orders = round(total_amount / total_quantity, 5)
+        if total_quantity == 0:
+            average_price_open_orders = 0
+        else:
+            average_price_open_orders = round(total_amount / total_quantity, 5)
+
         return average_price_open_orders
 
     def calculate_total_profit_sales(self):
@@ -2868,7 +2961,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         buttons_config = [
             {"text": "<<     Volver", "command": self.return_to_primary_menu},
             {"text": "Trading View", "command": self.open_tradingview},
-            {"text": "Borrar Datos del Activo", "command": self.delete_all_asset_data},
             {"text": "Eliminar Activo", "command": self.delete_asset},
             {"text": "Calcular Orden Madre", "command": self.calculate_mother_order},
             {"text": "Generar Buy Limits", "command": self.generate_pink_net},

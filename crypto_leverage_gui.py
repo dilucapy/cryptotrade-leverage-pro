@@ -1144,7 +1144,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         x = range(len(sorted_amounts))
 
         # Gráficos de barras
-        bars_amounts = plt.bar(x, sorted_amounts, width=bar_width, label='Monto por Activo (USDT)', color='orange', alpha=0.7)
+        bars_amounts = plt.bar(x, sorted_amounts, width=bar_width, label='Valoracion por Activo (USDT)', color='orange', alpha=0.7)
 
         # Añadir etiquetas sobre cada barra
         for bar in bars_amounts:
@@ -1155,7 +1155,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Etiquetas y título
         plt.xlabel('A C T I V O S')
         plt.ylabel('U S D T')
-        plt.title(f'MONTO TOTAL ABIERTO: {total_open_amount} USDT', ha='center', weight='bold')
+        plt.title(f'VALUACION DE CARTERA DE INVERSION: {total_open_amount} USDT\nVALORACION DE ACTIVOS DE LA CARTERA:', ha='center', weight='bold')
 
         # Configurar marcas en el eje x con los símbolos
         plt.xticks(x, sorted_symbols, weight='bold', rotation=45)
@@ -2053,18 +2053,33 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             amount_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=14)
             amount_entry.pack(side=LEFT, padx=(5, 5))
 
+            if order_type != 'sell_take_profit':
+                # Label Stop Loss
+                sl_label = tk.Label(order_row_frame, text=f"Stop Loss:",
+                                    font=('Dosis', 10, 'bold'),
+                                    anchor='w', bg=bg_by_order_type)
+                sl_label.pack(side=LEFT)
+
+                # Stop loss (copiable)
+                sl_entry = tk.Entry(order_row_frame)
+                stop_loss = str(order.get('stop_loss', 'N/A') if order.get('stop_loss', 'N/A') else '   ----')  # se convierte explicitamente a string para insertarlo en el entry
+                sl_entry.insert(0, stop_loss)
+                sl_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=14)
+                sl_entry.pack(side=LEFT, padx=(5, 5))
+
             if order_type == 'open':
-                mo_label = tk.Label(order_row_frame, text=f"MO: {order.get('mother_order', False)}", font=('Dosis', 10, 'bold'),
+                # Label Mother Order (Orden Madre)
+                mo_label = tk.Label(order_row_frame, text=f"O.Madre:",
+                                    font=('Dosis', 10, 'bold'),
                                     anchor='w', bg=bg_by_order_type)
                 mo_label.pack(side=LEFT)
 
-            if order_type != 'sell_take_profit':
-                sl_label = tk.Label(order_row_frame, text=f"SL: {order.get('stop_loss', 'N/A')}", font=('Dosis', 10, 'bold'),
-                                    anchor='w', bg=bg_by_order_type)
-                sl_label.pack(side=LEFT, padx=5)
-                tp_label = tk.Label(order_row_frame, text=f"TP: {order.get('target', 'N/A')}", font=('Dosis', 10, 'bold'),
-                                    anchor='w', bg=bg_by_order_type)
-                tp_label.pack(side=LEFT)
+                # Stop loss (copiable)
+                mo_entry = tk.Entry(order_row_frame)
+                is_mother = 'Sí' if order.get('mother_order', 'N/A') else 'No'
+                mo_entry.insert(0, is_mother)
+                mo_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=6)
+                mo_entry.pack(side=LEFT, padx=(5, 5))
 
             if order_type == 'sell_take_profit':
                 # Creamos una etiqueta 'ganancias' por orden de venta

@@ -16,7 +16,7 @@ from tkinter import messagebox, scrolledtext # Importamos scrolledtext para mens
 
 
 
-# ruta del archivo JSON
+# ruta del archivo JSON 
 filename = 'assets_data.json'
 
 """ Utilizar clases para gestionar el estado y la lógica de tu GUI es una práctica
@@ -2139,6 +2139,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 mo_entry.config(state='readonly', font=('Dosis', 10, 'bold'), width=6)
                 mo_entry.pack(side=LEFT, padx=(5, 5))
 
+            if order_type == 'pending_buy':
+                executed_button = Button(order_row_frame, text="Ejecutar", fg='white', padx=5,
+                                       font=("Segoe UI", 10, 'bold'),
+                                       bg=self.default_button_bg,
+                                       cursor="hand2",
+                                       command=lambda oid=order.get('id'): self.execute_buy_limit(symbol, oid))
+                executed_button.pack(side=LEFT, padx=(10, 0))  # Empaquetar el botón a la derecha
+
             if order_type == 'sell_take_profit':
                 # Creamos una etiqueta 'ganancias' por orden de venta
                 tp_label = tk.Label(order_row_frame, text="Ganancia",
@@ -3686,6 +3694,53 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         else:
             pass
+
+    def execute_buy_limit(self, symbol, order_id):
+        """Mueve una orden de 'buy_limits' a 'open_orders' para el activo seleccionado.
+        Args: order_id (str): El ID de la orden buy limit a ejecutar."""
+
+        asset_data = self.data[symbol]
+        buy_limits = asset_data.get('buy_limits', [])
+        open_orders = asset_data.get('open_orders', [])
+
+        found_order = None
+        order_index = -1
+
+        # Buscar la orden en la lista de buy_limits
+        for i, order in enumerate(buy_limits):
+            if order.get('id') == order_id:
+                found_order = order
+                order_index = i
+                break
+
+        if found_order is None:
+            self.show_error_messagebox(self, f"La orden con ID '{order_id}' no se encontró en BUY LIMITS de '{symbol}'.")
+            return
+
+        # Eliminar la orden de buy_limits
+        buy_limits.pop(order_index)
+
+        # Establecemos el campo 'mother_order' en False para esta orden buy limit ejecutada
+        found_order['mother_order'] = False
+
+        # agregamos la orden buy limit a la lista de ordenes abiertas
+        open_orders.append(found_order)
+
+        # Actualizar la estructura de datos
+        asset_data['buy_limits'] = buy_limits
+        asset_data['open_orders'] = open_orders
+
+        # Ordenamos las ordenes (la que nos interesa en este caso es ordenar open de menor a mayor)
+        self.order_orders(self.data)
+
+        # Guardamos los cambio en archivo json
+        self.save_data_asset(self.data, asset_data, symbol)
+
+        # Metodo para refrescar la GUI que muestra las órdenes
+        self.create_asset_orders_section()
+
+
+
 
 
 if __name__ == "__main__":

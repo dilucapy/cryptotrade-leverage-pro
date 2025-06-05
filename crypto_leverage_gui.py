@@ -14,13 +14,8 @@ from PIL import Image, ImageTk  # Importa Pillow para manejar imágenes
 import pyperclip # Importa la librería pyperclip para el portapapeles
 from tkinter import messagebox, scrolledtext # Importamos scrolledtext para mensajes largos
 
-
-
 # ruta del archivo JSON 
 filename = 'assets_data.json'
-
-""" Utilizar clases para gestionar el estado y la lógica de tu GUI es una práctica
- fundamental para construir aplicaciones más complejas y mantenibles:"""
 
 # Colores para usar
 mandarina_atomica = '#FEB285'
@@ -405,7 +400,8 @@ class PromediarOrdenesForm(tk.Toplevel):
 
         self.destroy()
 
-
+""" Utilizar clases para gestionar el estado y la lógica de tu GUI es una práctica
+ fundamental para construir aplicaciones más complejas y mantenibles"""
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
@@ -1371,7 +1367,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                             if burn_price is None:
                                 burn_price = '(Revisar Datos)'
                             else:
-                                burn_price = round(burn_price, 3)
+                                burn_price = round(burn_price, 4)
                             tree.insert("", tk.END, values=(
                                 symbol, current_price, margin, quantity_open_orders, total_quantity_buy_limits,
                                 burn_price if burn_price is not None else "N/A"))
@@ -3738,9 +3734,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Metodo para refrescar la GUI que muestra las órdenes
         self.create_asset_orders_section()
-
-
-
 
 
 if __name__ == "__main__":

@@ -94,33 +94,18 @@
     },
     "LTC": {
         "margin": 100.0,
-        "open_orders": [],
-        "buy_limits": [
+        "open_orders": [
             {
-                "id": "c7e8851e-b523-4d16-af7a-9d5921050a9d",
-                "price": 85.0,
-                "amount_usdt": 100.0,
-                "quantity": 1.17647059,
-                "stop_loss": 75.0,
-                "target": null
-            },
-            {
-                "id": "619a9f1f-7ddd-4132-8d42-2ac680e1a91c",
-                "price": 80.0,
-                "amount_usdt": 100.0,
-                "quantity": 1.25,
-                "stop_loss": 70.0,
-                "target": null
-            },
-            {
-                "id": "7c80b4bf-1641-4d5a-bb2d-ed9e78ef9499",
-                "price": 79.0,
-                "amount_usdt": 300.0,
-                "quantity": 3.79746835,
-                "stop_loss": 45.0,
+                "id": "93465723-2a39-4401-b6ae-fbb26c489be8",
+                "price": 69.0,
+                "amount_usdt": 1000.0,
+                "quantity": 14.49275362,
+                "mother_order": false,
+                "stop_loss": 55.0,
                 "target": null
             }
         ],
+        "buy_limits": [],
         "sell_take_profit": []
     }
 }

@@ -2687,35 +2687,31 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 total_quantity_open += quantity
 
         if total_quantity_open > 0:
-            # Calculamos el precio de liquidacion para las ordenes OPEN sin conciderar stop loss
-            burn_price_open = ((current_price * total_quantity_open) - margin)/total_quantity_open
-
-            burn_price_message = " ORDENES ABIERTAS ".center(70, '*')
-            #burn_price_message += "\n"
-            """if burn_price_open < 0:
-                burn_price_open = 0  # si el resultado es menor a cero mostramo el valor cero"""
-            #burn_price_message = f"\nPrecalculo PRECIO LIQUIDACION de ordenes abiertas (sin conciderar stop Loss): {round(burn_price_open, 2)} USDT\n"
-
-            # Asignamos los datos de cada orden a la categoria que corresponde
+            burn_price = 0
+            total_quantity_open = 0
             total_quantity_open_sl_up = 0  # Total de cantidad de activo de ordenes con SL ejecutadas (antes de llegar al precio de liquidacion)
             total_amount_lost_open = 0  # Total de monto por perdida de Stop Loss ejecutado de ordenes abiertas
             total_quantity_open_sl_down = 0  # Cantidad total de activo CON SL NO ejecutado
             total_quantity_open_without_sl = 0  # Cantidad total de activo SIN SL
             total_amount_open_sl_down = 0  # Monto total de apertura de ordenes con SL NO ejecutado
-            burn_price = 0
             amount_lost_sl = 0
             total_orders = len(data_asset['open_orders'])  # es para que la ultima orden no dibuje la linea divisoria de asteriscos
+            burn_price_message = " ORDENES ABIERTAS ".center(70, '*')
             for index, order in enumerate(data_asset['open_orders']):
-                price_sl = order.get('stop_loss')
-                quantity = order.get('quantity')
-                amount = order.get('amount_usdt')
                 price_entry = order.get('price')
-                burn_price_message += f"\nPrice entry OPEN: {price_entry} USDT\n"
+                quantity = order.get('quantity')
+                price_sl = order.get('stop_loss')
+                amount = order.get('amount_usdt')
                 show_amount_lost = False
+                total_quantity_open += quantity
+                burn_price_message += f"\nPrice entry OPEN: {price_entry} USDT\n"
+
+                # Calculamos el precio de liquidacion para dicha orden sin conciderar stop loss (aunque lo tenga)
+                burn_price = ((current_price * total_quantity_open) - margin)/total_quantity_open
 
                 # Verificamos si la orden tiene stop loss
                 if price_sl:
-                    if price_sl > burn_price_open:
+                    if price_sl > burn_price:
                         amount_lost_sl = (current_price - price_sl) * quantity
                         total_amount_lost_open += amount_lost_sl
                         total_quantity_open_sl_up += quantity
@@ -2727,18 +2723,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 else:
                     total_quantity_open_without_sl += quantity
 
-                # Calculamos precio de liquidacion con mas exactitud al condiderar ordenes open con Stop Loss ejecutados
+                # Calculamos precio de liquidacion con mas exactitud al condiderar Stop Loss si lo tiene ejecutados
                 if total_quantity_open_without_sl + total_quantity_open_sl_down > 0:
                     # Calculamos precio de liquidacion con mas exactitud al condiderar ordenes open con Stop Loss ejecutados
                     burn_price = (current_price * (total_quantity_open_without_sl + total_quantity_open_sl_down) - margin + total_amount_lost_open)/(total_quantity_open_without_sl + total_quantity_open_sl_down)
                 else:
                     # caso cuando existen solamente orden open con Stop Loss ejecutados
                     if total_amount_lost_open < margin:
-                        burn_price = 0
-                        remaining_margin = margin - total_amount_lost_open
-                        burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
+                            burn_price = 0
+                            remaining_margin = margin - total_amount_lost_open
+                            burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
                     else:
-                        # caso cuando exosten solamente orden open con Stop loss pero esta orden en cuestion no llega a ejecutar su SL
+                        # caso cuando existen solamente orden open con Stop loss pero esta orden en cuestion no llega a ejecutar su SL
                         total_quantity_open_sl_up -= quantity
                         total_quantity_open_sl_down += quantity
                         amount_lost_sl = (current_price - price_sl) * quantity
@@ -2759,10 +2755,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     burn_price_message += "".center(50, '*')
 
             burn_price_message += " ORDENES BUY LIMITS ".center(70, '*')
-            #burn_price_message += "\n"
 
             # Inicializamos burn price por si no existen ordenes buy limits
-            burn_price = 0
             amount_lost_sl = 0
 
             # Ahora vamos a ir barriendo cada orden BUY LIMIT (de mayor precio de entrada a menor) e ir integrandola
@@ -2863,7 +2857,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         burn_price_message += "".center(50, '*')
 
             else:
-                burn_price_message += f"\nNo hay existencias de ordenes BUY LIMITS!\n"
+                burn_price_message += f"\n\nNo hay existencias de ordenes BUY LIMITS!\n"
                 burn_price_message += "".center(70, '*')
 
             # Avisamos con un cuadro de dialogo si existen ordenes fuera de alcance
@@ -2946,7 +2940,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                 # si la orden no tiene Stop Loss se suma cantidad y monto a sus totales correspondientes
                                 total_quantity_buy_limits_without_sl += quantity
                                 total_amount_buy_limits_without_sl += amount
-                                # burn_price_message += f"PRECIO LIQUIDACION BL SIN SL: {round(burn_price, 2)} USDT\n\n\n"
 
                         # Finalmente calculamos el precio de liquidacion integrando la orden BUY LIMIT actual
                         # Primero obtenemos sumatoria de monto de ordenes BUY LIMITS SIN SL y BUY LIMITS con SL DOWN (excluyendo ordenes BUY LIMITS con SL UP)
@@ -2958,9 +2951,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         else:
                             # escenario donde el denominador total_amount_buy_limits_without_sl_up es cero (existen todas ordenes BUY LIMITS en un principio con SL up, SL ejecutado)
                             # pero hay que chequear si el margen alcanza sino la orden pasaria a un estado de SL DOWN
-                            #amount_lost_sl = (price_entry - price_sl) * quantity
-                            #total_amount_lost_buy_limits += amount_lost_sl
-
                             if total_amount_lost_buy_limits < margin:
                                 burn_price = 0
                                 amount_lost_sl = (price_entry - price_sl) * quantity
@@ -2985,7 +2975,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         burn_price_message += "".center(50, '*')
 
             else:
-                burn_price_message += f"\nNo hay existencias de ordenes  BUY LIMITS!\n"
+                burn_price_message += f"\n\nNo hay existencias de ordenes  BUY LIMITS!\n"
                 burn_price_message += "".center(70, '*')
 
             # Avisamos con un cuadro de dialogo si existen ordenes fuera de alcance
@@ -2995,9 +2985,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 self.show_info_messagebox(self, "Ordenes BUY LIMITS fuera de alcance",
                                           f"\nOrdenes BUY LIMITS con precios de entrada:\n\n{prices_formatted}\n\npor debajo del precio de Liquidacion:\n\n{round(burn_price, 3)} USDT\n\nCerrar dichas ordenes o aumentar el margin diponible!")
                 return
-
-            """if burn_price < 0:
-                burn_price = 0  # si el resultado es menor a cero mostramo el valor cero"""
 
             # Este metoddo muestra un top level personalizado con cuadro copiable para el precio de liquidacion final
             self.show_burn_price_dialog(f'Calculo Precio Liquidación para "{symbol}"', burn_price_message, round(burn_price, 4))

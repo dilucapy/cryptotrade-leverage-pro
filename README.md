@@ -57,7 +57,7 @@ CryptoTrade Leverage Pro ofrece un conjunto de funciones, organizadas de manera 
     * División equitativa.
     * Ponderaciones manuales.
     * Ponderaciones automáticas (basadas en la valuación de la posición abierta de cada activo).
-* **Mostrar posiciones abiertas**: Visualiza tus posiciones abiertas y su valoración en tiempo real, con **gráficos de barra interactivos de Matplotlib**.
+* **Ver cartera**: Visualiza tu cartera de inversión y su valoración en tiempo real de los activos, con **gráficos de barra interactivos de Matplotlib**.
 * **Medir apalancamiento**: Calcula el apalancamiento actual y simula diferentes niveles de apalancamiento en **gráficos de Matplotlib**.
 * **Calcular precios de liquidación para cada activo del portafolio**: Determina los precios de liquidación para todos los activos de tu portafolio, basándote en los márgenes estimados para cada uno.
 * **Donaciones**: Este botón te permite apoyar el proyecto mediante donaciones en diversas criptomonedas o pesos argentinos (ARS). Se proporciona la dirección de la wallet y un código QR para facilitar el proceso. También puedes contactarme por correo electrónico para dejar un mensaje o comentario. ¡Tu apoyo es fundamental para el crecimiento de esta herramienta de código abierto!

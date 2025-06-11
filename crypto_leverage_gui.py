@@ -644,10 +644,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "+ Nuevo Símbolo ", "command": self.add_new_symbol},
             {"text": "Mostrar MARGENES", "command": self.show_margins},
             {"text": "Actualizar MARGENES", "command": self.update_margins},
-            {"text": "Ver Posiciones Abiertas", "command": self.show_open_positions},
+            {"text": "Ver Cartera", "command": self.show_open_positions},
             {"text": "Apalancamiento", "command": self.calculate_leverage},
             {"text": "Precios de Liquidación", "command": self.calculate_and_show_all_burning_prices},
-            {"text": "Donación al Proyecto", "command": self.open_donation_window},
+            {"text": "Donación", "command": self.open_donation_window},
             {"text": "Salir", "command": self.quit}
         ]
         for config in primary_buttons_config:

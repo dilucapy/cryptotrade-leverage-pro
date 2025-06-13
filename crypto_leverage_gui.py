@@ -11,8 +11,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import webbrowser
 import os
 from PIL import Image, ImageTk  # Importa Pillow para manejar imágenes
-import pyperclip # Importa la librería pyperclip para el portapapeles
-from tkinter import messagebox, scrolledtext # Importamos scrolledtext para mensajes largos
+import pyperclip  # Importa la librería pyperclip para el portapapeles
+from tkinter import scrolledtext # Importamos scrolledtext para mensajes largos
 
 # ruta del archivo JSON 
 filename = 'assets_data.json'
@@ -450,6 +450,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.developer_email = "dilucapython@gmail.com"  # correo del desarrollador
         self.qr_image_tk = None  # Para evitar que la imagen sea garbage collected
 
+        # Sirve para cargar las imagenes de tutoriales para canva de la pestaña del widget notebook
+        self.image_refs = {}
+
     def load_data(self, filename):
         """Carga los datos desde un archivo JSON. Devuelve un diccionario,
         incluso si el archivo no se encuentra (diccionario vacío)
@@ -648,6 +651,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Apalancamiento", "command": self.calculate_leverage},
             {"text": "Precios de Liquidación", "command": self.calculate_and_show_all_burning_prices},
             {"text": "Donación", "command": self.open_donation_window},
+            {"text": "Manual de Usuario", "command": self.show_help},
             {"text": "Salir", "command": self.quit}
         ]
         for config in primary_buttons_config:
@@ -1249,7 +1253,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         ax.set_ylabel('M O N T O  (USDT)')
         ax.set_title(
             f'MONT0 TOTAL ABIERTO: {int(total_open_amount)} USDT\nCUENTA DE TRADING: {int(trading_account)} USDT\nAPALANCAMIENTO: {leveragex:.2f}  X')
-        ax.set_xticks([i + bar_width / 2 for i in x])
+        ax.set_xticks([i + (-0.125 * bar_width)/2 for i in x])
         ax.set_xticklabels(leverage_levels)
         # Añadir un elemento de leyenda personalizado
         ax.plot([], [], color='forestgreen', marker='_', markersize=3,
@@ -2705,7 +2709,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 amount = order.get('amount_usdt')
                 show_amount_lost = False
                 total_quantity_open += quantity
-                burn_price_message += f"\nPrice entry OPEN: {price_entry} USDT\n"
+                burn_price_message += f"\nPrecio entrada: {price_entry} USDT\n"
 
                 # Calculamos el precio de liquidacion para dicha orden sin conciderar stop loss (aunque lo tenga)
                 burn_price = ((current_price * total_quantity_open) - margin)/total_quantity_open
@@ -2732,8 +2736,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     # caso cuando existen solamente orden open con Stop Loss ejecutados
                     if total_amount_lost_open < margin:
                             burn_price = 0
-                            remaining_margin = margin - total_amount_lost_open
-                            burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
+                            #remaining_margin = margin - total_amount_lost_open
+                            #burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
                     else:
                         # caso cuando existen solamente ordenes abiertas con Stop loss pero esta orden en cuestion no llega a ejecutar su SL
                         total_quantity_open_sl_up -= quantity
@@ -2745,8 +2749,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                                  total_quantity_open_without_sl + total_quantity_open_sl_down)
                         show_amount_lost = False
 
+                # Se muestra el monto perdido y el magen sobrante, para los casos en que se ejecuta el SL
                 if show_amount_lost:
                     burn_price_message += f"Monto perdido (SL ejecutado): {round(amount_lost_sl, 2)} USDT\n"
+                    remaining_margin = margin - total_amount_lost_open
+                    burn_price_message += f"Margen sobrante: {round(remaining_margin, 2)}\n"
                 # Mostramos precio liquidacion para esta orden en cuestion
                 burn_price_message += f"PRECIO LIQUIDACION: {round(burn_price, 4)} USDT\n"
                 # Condicional para el último elemento (para que No se dibuje la linea divisoria de asteriscos)
@@ -2776,7 +2783,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     amount_order = order.get('amount_usdt')
                     show_amount_lost = False
 
-                    burn_price_message += f"\nPrice entry BL: {price_entry} USDT\n"
+                    burn_price_message += f"\nPrecio entrada: {price_entry} USDT\n"
 
                     if price_entry < burn_price:  # si la orden tiene precio de entrada por debajo del precio de liquidacion
                         list_entry_prices_outside.append(price_entry)  # se agrega a una lista de ordenes fuera de alcance
@@ -2822,9 +2829,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                             # pero hay que chequear si el margen alcanza, sino la orden pasaria a un estado de SL DOWN
                             if total_amount_lost_buy_limits < margin:
                                 burn_price = 0
-                                #amount_lost_sl = (price_entry - price_sl) * quantity_order
-                                remaining_margin = margin - total_amount_lost_open - total_amount_lost_buy_limits
-                                burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
+                                #remaining_margin = margin - total_amount_lost_open - total_amount_lost_buy_limits
+                                #burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
                             else:
                                 # se vuelve a calcular burn price pero la ultima orden quedaria en un estado de stop loss DOWN
                                 amount_lost_sl = (price_entry - price_sl) * quantity_order
@@ -2840,6 +2846,9 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
                         if show_amount_lost:
                             burn_price_message += f"Monto perdido (SL ejecutado): {round(amount_lost_sl, 2)} USDT\n"
+                            remaining_margin = margin - total_amount_lost_open - total_amount_lost_buy_limits
+                            burn_price_message += f"Margen sobrante: {round(remaining_margin, 2)}\n"
+
                         burn_price_message += f"PRECIO LIQUIDACION: {round(burn_price, 4)}\n"
                         burn_price_message += "".center(50, '*')
 
@@ -2902,7 +2911,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         total_amount_buy_limits += amount
                         show_amount_lost = False
 
-                        burn_price_message += f"\nPrice entry BL: {price_entry} USDT\n"
+                        burn_price_message += f"\nPrecio entrada: {price_entry} USDT\n"
 
                         # Verificamos si el precio de entrada de la orden en cuestion queda por debajo del precio de liquidacion
                         if price_entry < burn_price:
@@ -2941,8 +2950,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                             if total_amount_lost_buy_limits < margin:
                                 # aqui todas las ordenes buy limits existentes, ejecuntan su SL y sobra margen (No hay riesgo de liquidacion)
                                 burn_price = 0
-                                remaining_margin = margin - total_amount_lost_buy_limits
-                                burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
+                                #remaining_margin = margin - total_amount_lost_buy_limits
+                                #burn_price_message += f"Margin sobrante: {round(remaining_margin, 2)}\n"
 
                             else:
                                 # se vuelve a calcular burn price pero la ultima orden quedaria en un estado de stop loss DOWN
@@ -2957,7 +2966,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                                 show_amount_lost = False
 
                         if show_amount_lost:
-                            burn_price_message += f"Monto perdido por SL ejecutado: {round(amount_lost_sl, 2)} USDT\n"
+                            burn_price_message += f"Monto perdido (SL ejecutado): {round(amount_lost_sl, 2)} USDT\n"
+                            remaining_margin = margin - total_amount_lost_buy_limits
+                            burn_price_message += f"Margen sobrante: {round(remaining_margin, 2)}\n"
+
                         burn_price_message += f"PRECIO LIQUIDACION: {round(burn_price, 4)}\n"
                         burn_price_message += "".center(50, '*')
 
@@ -3670,8 +3682,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Calcular Precio de Liquidación", "command": self.calculate_burn_price_with_stop_loss},
             {"text": "Generar Niveles de Ventas", "command": self.generate_sales_cloud},
             {"text": "Ver Ordenes Abiertas", "command": self.render_open_orders},
-            {"text": "Promediar Ordenes", "command": self.mostrar_promediar_ordenes_form},
-            {"text": "Ayuda", "command": self.help}
+            {"text": "Promediar Ordenes", "command": self.mostrar_promediar_ordenes_form}
         ]
 
         for i, button_info in enumerate(buttons_config):
@@ -4028,8 +4039,204 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Metodo para refrescar la GUI que muestra las órdenes
         self.create_asset_orders_section()
 
-    def help(self):
-        self.show_info_messagebox(self, "Ayuda", "Falta implementar tutoriales y manual de usuario\nPróximamente!")
+    def show_help(self):
+        help_dialog = tk.Toplevel(self)
+        help_dialog.title("Manual de Usuario, Tutoriales y Preguntas Frecuentes")
+        help_dialog.geometry("1100x700")
+        help_dialog.resizable(True, True)
+
+        # Opcional: Centrar la ventana de ayuda sobre la principal
+        # help_dialog.transient(self) # Hace que la ventana de ayuda se cierre si la principal se minimiza
+        # help_dialog.grab_set()      # para ser modal y que bloquee la principal
+        self.center_toplevel_on_parent(help_dialog, self)  #Función para centrar
+
+        # --- Contenido de la Ventana de Ayuda ---
+
+        # se crea un Notebook (pestañas) para organizar secciones
+        notebook = ttk.Notebook(help_dialog)
+        notebook.pack(expand=True, fill="both", padx=10, pady=10)
+
+        # --- Pestaña 1: Manual de Usuario ----
+        manual_frame = ttk.Frame(notebook)
+        notebook.add(manual_frame, text="Manual de Usuario")  # se agrega el frame 'manual_text' al notebook
+
+        # Se crea un Text widget para texto largo y scroll
+        manual_text = tk.Text(manual_frame, wrap="word", padx=10, pady=10)
+        manual_text.pack(side="left", fill="both", expand=True)
+
+        manual_scrollbar = ttk.Scrollbar(manual_frame, command=manual_text.yview)
+        manual_scrollbar.pack(side="right", fill="y")
+        manual_text.config(yscrollcommand=manual_scrollbar.set)
+
+        manual_content = """
+        Bienvenido al Manual de Usuario.
+
+        1.  Introducción:
+            CryptoTrade Leverage Pro, es una herramienta diseñada para la gestión y el análisis de tus operaciones 
+            apalancadas de criptoactivos.
+            Esta plataforma te ofrece una perspectiva visual y empírica de la relación dinámica entre tu cartera, 
+            los márgenes operativos y el nivel de apalancamiento. 
+            Su funcionalidad central y más crítica es el cálculo preciso del precio de liquidación, proporcionando 
+            una visión clara y anticipada de la posición de tu cartera frente a las fluctuaciones del mercado.
+            
+            Considera esta aplicación como tu calculadora científica especializada en el trading de criptoactivos 
+            apalancados. Te permitirá evaluar la viabilidad de tus órdenes "buy limit" y comprender exactamente dónde 
+            se encuentra tu cartera en relación con las condiciones actuales del mercado, facilitando una toma de 
+            decisiones informada y estratégica.            
+
+        2.  Funcionalidades Principales:
+            - Mide apalancamiento
+            - Gestiona margen para activos
+            - Unificacion de todas las ordenes abiertas
+            - Calcula GRID de compras pendiente de forma escalonadas (DCA)
+            - Calcula GRID de ventas de toma de ganancias, de forma escalonada
+            - Calcula precio de liquidacion (considerando todas las ordenes abiertas y BUY LIMITS con sus respesctivos Stop Loss)
+            - Promediar dos o mas ordenes
+               
+        3.  Requerimientos:
+            - Tener una cuenta en el broker QUANTFURY (es gratuita, sin gastos de mantenimiento)
+              Monto mínimo de depósito para comenzar a operar en Quantfury es de $50 USD o 50 USDT (que es Tether, 
+              una stablecoin atada al dólar).
+              Alternativas para fondear tu cuenta con criptoactivos: BTC, ETH, LTC, DAI, DASH, LINK, SOL.
+               
+            - TradingView (para dibujar lineas: ordenes abiertas, buy limits, ventas y stop out (precio de liquidacion))
+              Recomendable tener sesion abierta asi quedan guardadas
+        
+        4. Descargo de Responsabilidad y Advertencia de Riesgo:
+            Importante: La aplicación CryptoTrade Leverage Pro es una herramienta de análisis y cálculo, y bajo ninguna 
+            circunstancia debe interpretarse como asesoramiento financiero o de inversión. 
+            Su propósito es asistir en la visualización y el cálculo de parámetros relacionados con las operaciones de 
+            criptoactivos apalancadas, proporcionando información y una perspectiva analítica.
+
+            El trading con criptoactivos apalancados implica un riesgo significativo de pérdida de capital, y no es 
+            adecuado para todos los inversores. 
+            Las operaciones en los mercados financieros, y particularmente con productos apalancados, pueden resultar 
+            en pérdidas totales del capital invertido.
+
+            Toda decisión de inversión y operación que el usuario realice es de su entera y exclusiva responsabilidad. 
+            La información, cálculos y análisis proporcionados por esta aplicación son puramente informativos y no 
+            garantizan ganancias ni predicen movimientos futuros del mercado. 
+            Los desarrolladores de esta aplicación no asumen ninguna responsabilidad por las pérdidas o daños que 
+            puedan surgir del uso de la misma o de las decisiones tomadas basándose en la información que proporciona.
+
+            Se recomienda encarecidamente buscar asesoramiento profesional independiente antes de tomar cualquier 
+            decisión de inversión.
+
+        """
+        manual_text.insert("1.0", manual_content)  # se inserta el contenido en el Text widget
+        manual_text.config(state="disabled")  # se desabilita la edicion del texto
+
+        # --- Pestaña 2: Tutoriales (con imágenes) ---
+        tutorials_frame = ttk.Frame(notebook)
+        notebook.add(tutorials_frame, text="Tutoriales")
+
+        # Se crea un Canvas con Scrollbar para el contenido de la pestaña (crucial para cargar varias imagenes)
+        canvas = tk.Canvas(tutorials_frame)
+        canvas.pack(side="left", fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(tutorials_frame, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side="right", fill="y")
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+        # Ajusta el área desplazable del canvas cuando cambia de tamaño el frame interno
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        # Este frame contendrá todas tus imágenes y textos, y es el que se desplaza
+        scrollable_frame = ttk.Frame(canvas)
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        # Usar un diccionario para almacenar las referencias de TODAS las imágenes
+        # Así evitamos sobrescribir y que las imágenes desaparezcan.
+        # se inicializa self.image_refs = {} en el constructor __init__
+        if not hasattr(self, 'image_refs'):
+            self.image_refs = {}
+
+        # Label para titulo de imagen 1
+        label1 = tk.Label(scrollable_frame, text='Calcular Orden Madre', font=("Arial", 14, 'bold'))
+        label1.pack(pady=15)
+
+        # Texto explicativo para la imagen 1
+        desc1_text = """
+                Para calcular la Orden Madre:
+                1. Ve a la app de Quantfury y abre el activo que tienes posición abierta.
+                2. Completa el formulario con los siguientes datos, como se muestra en pantalla.
+                """
+        description_label1 = tk.Label(scrollable_frame, text=desc1_text.strip(), justify="left", wraplength=550,
+                                      font=("Arial", 10))
+        description_label1.pack(pady=5, padx=20, anchor="w")
+
+        # --- Cargar y mostrar la Imagen 1: Calcular Orden Madre ---
+        try:
+            img1_pil = Image.open("images/calcular_orden_madre.png")
+            # Redimensiona el tamaño de la imagen
+            img1_pil = img1_pil.resize((1100, 600), Image.LANCZOS)  # LANCZOS es un filtro de alta calidad que produce buenos resultados visuales, reduciendo el efecto "pixelado" o borroso
+            self.image_refs['orden_madre'] = ImageTk.PhotoImage(img1_pil)  # se guarda la referencia con un nombre único
+
+            # Creación de Label y asignación de la imagen
+            # Usamos 'scrollable_frame' como padre para que se desplace
+            # 'compound="top"' para que el texto 'Calcular Orden Madre:' aparezca encima de la imagen
+            label1 = tk.Label(scrollable_frame, image=self.image_refs['orden_madre'])
+            label1.pack(pady=15)
+
+        except FileNotFoundError:
+            tk.Label(scrollable_frame, text="Error: Imagen no encontrada.", fg="red").pack(
+                pady=20)
+        except Exception as e:
+            tk.Label(scrollable_frame, text=f"Error al cargar imagen 1: {e}", fg="red").pack(pady=20)
+
+        # --- Cargar y mostrar la Imagen 2: Medición de Apalancamiento ---
+
+        # Label para titulo de imagen 2
+        label1 = tk.Label(scrollable_frame, text='Apalancamiento', font=("Arial", 14, 'bold'))
+        label1.pack(pady=15)
+        # Texto descriptivo para la imagen
+        desc2_text = """
+                Esta sección ilustra los diferentes niveles de apalancamiento
+                """
+        description_label2 = tk.Label(scrollable_frame, text=desc2_text.strip(), justify="left", wraplength=550,
+                                      font=("Arial", 10))
+        description_label2.pack(pady=5, padx=20, anchor="w")
+
+        try:
+            img2_pil = Image.open("images/apalancamiento.jpg")
+            img2_pil = img2_pil.resize((1100, 600), Image.LANCZOS)
+            self.image_refs['apalancamiento'] = ImageTk.PhotoImage(img2_pil)
+
+            # Creación de Label y asignación de la imagen
+            label2 = tk.Label(scrollable_frame,image=self.image_refs['apalancamiento'])
+            label2.pack(pady=15)
+
+        except FileNotFoundError:
+            tk.Label(scrollable_frame, text="Error: Imagen no encontrada.", fg="red").pack(pady=20)
+        except Exception as e:
+            tk.Label(scrollable_frame, text=f"Error al cargar imagen 2: {e}", fg="red").pack(pady=20)
+
+        # --- Pestaña 3: Preguntas Frecuentes (FAQ)---
+        faq_frame = ttk.Frame(notebook)
+        notebook.add(faq_frame, text="FAQs")
+        faq_label = tk.Label(faq_frame, text="Proximamante preguntas frecuentes y sus respuestas!", font=("Arial", 12, 'bold'))
+        faq_label.pack(pady=20)
+
+        # Botón para cerrar la ventana de ayuda
+        close_button = ttk.Button(help_dialog, text="Cerrar Ayuda", command=help_dialog.destroy)
+        close_button.pack(pady=10)
+
+        # Si se usa grab_set(), esto es necesario para esperar a que la ventana se cierre
+        # self.wait_window(help_dialog)
+
+    def center_toplevel_on_parent(self, toplevel_window, parent_window):
+        """Función para centrar la Toplevel sobre la ventana principal.
+        la use en el metodo 'show_help' """
+        toplevel_window.update_idletasks()
+        parent_x = parent_window.winfo_x()
+        parent_y = parent_window.winfo_y()
+        parent_width = parent_window.winfo_width()
+        parent_height = parent_window.winfo_height()
+        toplevel_width = toplevel_window.winfo_width()
+        toplevel_height = toplevel_window.winfo_height()
+        x = parent_x + (parent_width // 2) - (toplevel_width // 2)
+        y = parent_y + (parent_height // 2) - (toplevel_height // 2)
+        toplevel_window.geometry(f'+{x}+{y}')
 
 
 if __name__ == "__main__":

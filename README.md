@@ -50,7 +50,7 @@ Esta herramienta está diseñada para:
 CryptoTrade Leverage Pro ofrece un conjunto de funciones, organizadas de manera intuitiva a través de una Interfaz Gráfica de Usuario (GUI):
 
 ### MENÚ PRINCIPAL:
-!(images/menu_principal.png)
+![Menu principal](images/menu_principal.png)
 
 * **Agregar nuevo criptoactivo**: Incorpora nuevos activos a tu portafolio para un seguimiento personalizado.
 * **Mostrar márgenes**: Visualiza los márgenes actuales de tus posiciones abiertas.
@@ -70,7 +70,7 @@ CryptoTrade Leverage Pro ofrece un conjunto de funciones, organizadas de manera 
 El menú de activos, ubicado en el panel superior, te brinda acceso rápido a la información de cada activo que agregues. Al seleccionar un activo, el menú principal se reemplaza por el menú secundario, que ofrece las siguientes opciones:
 
 ### MENÚ SECUNDARIO:
-!(images/menu_secundario.png)
+![Menú secundario y panel superior](images/menu_secundario.png)
 
 * **Volver al menú principal**: Regresa al menú principal para gestionar la cartera general.
 * **Abrir TradingView**: Abre el par de trading del activo seleccionado (frente a USDT, con la cotización de Binance) en una nueva pestaña del navegador predeterminado. Aquí se dibujarán las líneas horizontales de las distintas órdenes.

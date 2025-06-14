@@ -50,7 +50,7 @@ Esta herramienta está diseñada para:
 CryptoTrade Leverage Pro ofrece un conjunto de funciones, organizadas de manera intuitiva a través de una Interfaz Gráfica de Usuario (GUI):
 
 ### MENÚ PRINCIPAL:
-!(images/menu_principal)
+!(images/menu_principal.png)
 
 * **Agregar nuevo criptoactivo**: Incorpora nuevos activos a tu portafolio para un seguimiento personalizado.
 * **Mostrar márgenes**: Visualiza los márgenes actuales de tus posiciones abiertas.
@@ -70,6 +70,7 @@ CryptoTrade Leverage Pro ofrece un conjunto de funciones, organizadas de manera 
 El menú de activos, ubicado en el panel superior, te brinda acceso rápido a la información de cada activo que agregues. Al seleccionar un activo, el menú principal se reemplaza por el menú secundario, que ofrece las siguientes opciones:
 
 ### MENÚ SECUNDARIO:
+!(images/menu_secundario.png)
 
 * **Volver al menú principal**: Regresa al menú principal para gestionar la cartera general.
 * **Abrir TradingView**: Abre el par de trading del activo seleccionado (frente a USDT, con la cotización de Binance) en una nueva pestaña del navegador predeterminado. Aquí se dibujarán las líneas horizontales de las distintas órdenes.
@@ -96,6 +97,21 @@ El panel superior de la interfaz muestra:
 * Un botón para acceder al sitio web de Quantfury: Te dirige a la plataforma de trading de Quantfury.
 
 ---
+
+## Galería del Proyecto
+![Tipos de ordenes y precio de liquidación](images/tipos_ordenes.png)
+![Actualización de margenes](images/actualizar_margenes.png)
+![Ver cartera](images/ver_cartera.png)
+![Niveles de apalancamiento](images/apalancamiento.png)
+![Tabla de Precios de Liquidación](images/tabla_precios_liquidacion.png)
+![Donanción](images/donacion.png)
+![Calculo de Orden Madre](images/calcular_orden_madre2.png)
+![Generar Buy Limits](images/generar_buy_limits.png)
+![Calcular Precio Liquidación](images/calcular_precio_liquidacion.png)
+![Generar niveles de ventas (ordenes Target)](images/generar_ventas.png)
+![Ver ordenes abiertas](images/ver_ordenes_abiertas.png)
+![Promediar 2 o más ordenes abiertas](images/promediar_ordenes.png)
+
 
 ## Otras Consideraciones Técnicas
 

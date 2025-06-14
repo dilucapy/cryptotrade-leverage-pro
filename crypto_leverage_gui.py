@@ -4166,7 +4166,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # --- Cargar y mostrar la Imagen 1: Tipos de Ordenes ---
         try:
-            img1_pil = Image.open("images/tipos_ordenes.jpg")
+            img1_pil = Image.open("images/tipos_ordenes.png")
             # Redimensiona el tamaño de la imagen
             img1_pil = img1_pil.resize((1200, 600),
                                        Image.LANCZOS)  # LANCZOS es un filtro de alta calidad que produce buenos resultados visuales, reduciendo el efecto "pixelado" o borroso
@@ -4231,7 +4231,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         description_label3.pack(pady=5, padx=20, anchor="w")
 
         try:
-            img3_pil = Image.open("images/apalancamiento.jpg")
+            img3_pil = Image.open("images/apalancamiento.png")
             img3_pil = img3_pil.resize((1100, 600), Image.LANCZOS)
             self.image_refs['apalancamiento'] = ImageTk.PhotoImage(img3_pil)
 

@@ -50,6 +50,7 @@ Esta herramienta está diseñada para:
 CryptoTrade Leverage Pro ofrece un conjunto de funciones, organizadas de manera intuitiva a través de una Interfaz Gráfica de Usuario (GUI):
 
 ### MENÚ PRINCIPAL:
+!(images/menu_principal)
 
 * **Agregar nuevo criptoactivo**: Incorpora nuevos activos a tu portafolio para un seguimiento personalizado.
 * **Mostrar márgenes**: Visualiza los márgenes actuales de tus posiciones abiertas.

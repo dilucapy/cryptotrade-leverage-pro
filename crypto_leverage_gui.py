@@ -4042,7 +4042,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     def show_help(self):
         help_dialog = tk.Toplevel(self)
         help_dialog.title("Manual de Usuario, Tutoriales y Preguntas Frecuentes")
-        help_dialog.geometry("1100x700")
+        help_dialog.geometry("1200x700")
         help_dialog.resizable(True, True)
 
         # Opcional: Centrar la ventana de ayuda sobre la principal
@@ -4076,11 +4076,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             apalancadas de criptoactivos.
             Esta plataforma te ofrece una perspectiva visual y empírica de la relación dinámica entre tu cartera, 
             los márgenes operativos y el nivel de apalancamiento. 
-            Su funcionalidad central y más crítica es el cálculo preciso del precio de liquidación, proporcionando 
-            una visión clara y anticipada de la posición de tu cartera frente a las fluctuaciones del mercado.
+            Su funcionalidad central y más crítica es el cálculo preciso del precio de liquidación, lo que 
+            proporciona una visión clara e inmediata del nivel de riesgo asumido."
             
             Considera esta aplicación como tu calculadora científica especializada en el trading de criptoactivos 
-            apalancados. Te permitirá evaluar la viabilidad de tus órdenes "buy limit" y comprender exactamente dónde 
+            apalancados. Te permitirá evaluar la viabilidad de tus órdenes "buy limits" y comprender exactamente dónde 
             se encuentra tu cartera en relación con las condiciones actuales del mercado, facilitando una toma de 
             decisiones informada y estratégica.            
 
@@ -4090,17 +4090,21 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             - Unificacion de todas las ordenes abiertas
             - Calcula GRID de compras pendiente de forma escalonadas (DCA)
             - Calcula GRID de ventas de toma de ganancias, de forma escalonada
-            - Calcula precio de liquidacion (considerando todas las ordenes abiertas y BUY LIMITS con sus respesctivos Stop Loss)
+            - Calcula precio de liquidacion (considerando todas las ordenes abiertas y BUY LIMITS con sus respesctivos 
+              Stop Loss)
             - Promediar dos o mas ordenes
                
         3.  Requerimientos:
-            - Tener una cuenta en el broker QUANTFURY (es gratuita, sin gastos de mantenimiento)
-              Monto mínimo de depósito para comenzar a operar en Quantfury es de $50 USD o 50 USDT (que es Tether, 
-              una stablecoin atada al dólar).
-              Alternativas para fondear tu cuenta con criptoactivos: BTC, ETH, LTC, DAI, DASH, LINK, SOL.
+            - Tener una cuenta en el broker QUANTFURY (es gratuita y sin gastos de mantenimiento)
+              EL monto mínimo de depósito para comenzar a operar en Quantfury es de $50 USD o 50 USDT 
+              (USDT: es Tether, una stablecoin atada al dólar).
+              Otra alternativa para fondear tu cuenta es con criptoactivos: BTC, ETH, LTC, DAI, DASH, LINK, SOL.
                
-            - TradingView (para dibujar lineas: ordenes abiertas, buy limits, ventas y stop out (precio de liquidacion))
-              Recomendable tener sesion abierta asi quedan guardadas
+            - TradingView (plataforma integral de gráficos y análisis técnico que permite a traders visualizar los 
+              mercados). Nos va a permitir dibujar lineas horizontales para marcar: ordenes abiertas, buy limits, 
+              ventas de tomas de ganancia y stop out (precio de liquidacion)
+              Es recomendable tener sesion abierta asi quedan guardadas las marcas que agregemos 
+              (con la versión gratuita alcanza)
         
         4. Descargo de Responsabilidad y Advertencia de Riesgo:
             Importante: La aplicación CryptoTrade Leverage Pro es una herramienta de análisis y cálculo, y bajo ninguna 
@@ -4152,30 +4156,25 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.image_refs = {}
 
         # Label para titulo de imagen 1
-        label1 = tk.Label(scrollable_frame, text='Calcular Orden Madre', font=("Arial", 14, 'bold'))
+        label1 = tk.Label(scrollable_frame, text='Tipos de Ordenes y precio de Liquidacion', font=("Arial", 14, 'bold'))
         label1.pack(pady=15)
 
         # Texto explicativo para la imagen 1
-        desc1_text = """
-                Para calcular la Orden Madre:
-                1. Ve a la app de Quantfury y abre el activo que tienes posición abierta.
-                2. Completa el formulario con los siguientes datos, como se muestra en pantalla.
-                """
-        description_label1 = tk.Label(scrollable_frame, text=desc1_text.strip(), justify="left", wraplength=550,
-                                      font=("Arial", 10))
-        description_label1.pack(pady=5, padx=20, anchor="w")
+        desc1_text = "Aqui vemos dibujadas los distintos tipos de ordenes en Trading View y el precio de liquidacion para dicho activo"
+        description_label1 = tk.Label(scrollable_frame, text=desc1_text.strip(), justify="left", font=("Arial", 10))
+        description_label1.pack(pady=5, padx=5, anchor="w", fill="x", expand=True)
 
-        # --- Cargar y mostrar la Imagen 1: Calcular Orden Madre ---
+        # --- Cargar y mostrar la Imagen 1: Tipos de Ordenes ---
         try:
-            img1_pil = Image.open("images/calcular_orden_madre.png")
+            img1_pil = Image.open("images/tipos_ordenes.jpg")
             # Redimensiona el tamaño de la imagen
-            img1_pil = img1_pil.resize((1100, 600), Image.LANCZOS)  # LANCZOS es un filtro de alta calidad que produce buenos resultados visuales, reduciendo el efecto "pixelado" o borroso
-            self.image_refs['orden_madre'] = ImageTk.PhotoImage(img1_pil)  # se guarda la referencia con un nombre único
+            img1_pil = img1_pil.resize((1200, 600),
+                                       Image.LANCZOS)  # LANCZOS es un filtro de alta calidad que produce buenos resultados visuales, reduciendo el efecto "pixelado" o borroso
+            self.image_refs['tipos_ordenes'] = ImageTk.PhotoImage(img1_pil)  # se guarda la referencia con un nombre único
 
             # Creación de Label y asignación de la imagen
             # Usamos 'scrollable_frame' como padre para que se desplace
-            # 'compound="top"' para que el texto 'Calcular Orden Madre:' aparezca encima de la imagen
-            label1 = tk.Label(scrollable_frame, image=self.image_refs['orden_madre'])
+            label1 = tk.Label(scrollable_frame, image=self.image_refs['tipos_ordenes'])
             label1.pack(pady=15)
 
         except FileNotFoundError:
@@ -4184,27 +4183,61 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         except Exception as e:
             tk.Label(scrollable_frame, text=f"Error al cargar imagen 1: {e}", fg="red").pack(pady=20)
 
-        # --- Cargar y mostrar la Imagen 2: Medición de Apalancamiento ---
 
         # Label para titulo de imagen 2
-        label1 = tk.Label(scrollable_frame, text='Apalancamiento', font=("Arial", 14, 'bold'))
-        label1.pack(pady=15)
-        # Texto descriptivo para la imagen
+        label2 = tk.Label(scrollable_frame, text='Calcular Orden Madre', font=("Arial", 14, 'bold'))
+        label2.pack(pady=15)
+
+        # Texto explicativo para la imagen 2
         desc2_text = """
-                Esta sección ilustra los diferentes niveles de apalancamiento
+                Para calcular la Orden Madre:
+                1. Ve a la app de Quantfury y abre el activo que tienes posición abierta.
+                2. Completa el formulario con los siguientes datos, como se muestra en pantalla.
                 """
         description_label2 = tk.Label(scrollable_frame, text=desc2_text.strip(), justify="left", wraplength=550,
                                       font=("Arial", 10))
         description_label2.pack(pady=5, padx=20, anchor="w")
 
+        # --- Cargar y mostrar la Imagen 2: Calcular Orden Madre ---
         try:
-            img2_pil = Image.open("images/apalancamiento.jpg")
-            img2_pil = img2_pil.resize((1100, 600), Image.LANCZOS)
-            self.image_refs['apalancamiento'] = ImageTk.PhotoImage(img2_pil)
+            img2_pil = Image.open("images/calcular_orden_madre.png")
+            # Redimensiona el tamaño de la imagen
+            img2_pil = img2_pil.resize((1100, 600), Image.LANCZOS)  # LANCZOS es un filtro de alta calidad que produce buenos resultados visuales, reduciendo el efecto "pixelado" o borroso
+            self.image_refs['orden_madre'] = ImageTk.PhotoImage(img2_pil)  # se guarda la referencia con un nombre único
 
             # Creación de Label y asignación de la imagen
-            label2 = tk.Label(scrollable_frame,image=self.image_refs['apalancamiento'])
+            # Usamos 'scrollable_frame' como padre para que se desplace
+            # 'compound="top"' para que el texto 'Calcular Orden Madre:' aparezca encima de la imagen
+            label2 = tk.Label(scrollable_frame, image=self.image_refs['orden_madre'])
             label2.pack(pady=15)
+
+        except FileNotFoundError:
+            tk.Label(scrollable_frame, text="Error: Imagen no encontrada.", fg="red").pack(
+                pady=20)
+        except Exception as e:
+            tk.Label(scrollable_frame, text=f"Error al cargar imagen 1: {e}", fg="red").pack(pady=20)
+
+        # --- Cargar y mostrar la Imagen 3: Medición de Apalancamiento ---
+
+        # Label para titulo de imagen 3
+        label3 = tk.Label(scrollable_frame, text='Apalancamiento', font=("Arial", 14, 'bold'))
+        label3.pack(pady=15)
+        # Texto descriptivo para la imagen
+        desc3_text = """
+                Esta sección ilustra los diferentes niveles de apalancamiento
+                """
+        description_label3 = tk.Label(scrollable_frame, text=desc3_text.strip(), justify="left", wraplength=550,
+                                      font=("Arial", 10))
+        description_label3.pack(pady=5, padx=20, anchor="w")
+
+        try:
+            img3_pil = Image.open("images/apalancamiento.jpg")
+            img3_pil = img3_pil.resize((1100, 600), Image.LANCZOS)
+            self.image_refs['apalancamiento'] = ImageTk.PhotoImage(img3_pil)
+
+            # Creación de Label y asignación de la imagen
+            label3 = tk.Label(scrollable_frame, image=self.image_refs['apalancamiento'])
+            label3.pack(pady=15)
 
         except FileNotFoundError:
             tk.Label(scrollable_frame, text="Error: Imagen no encontrada.", fg="red").pack(pady=20)

@@ -644,7 +644,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         a métodos de la clase (por ej., self.add_new_symbol)."""
 
         primary_buttons_config = [
-            {"text": "+ Nuevo Símbolo ", "command": self.add_new_symbol},
+            {"text": "+ Nuevo Activo ", "command": self.add_new_symbol},
             {"text": "Mostrar MARGENES", "command": self.show_margins},
             {"text": "Actualizar MARGENES", "command": self.update_margins},
             {"text": "Ver Cartera", "command": self.show_open_positions},
@@ -791,6 +791,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     self.create_asset_buttons()  # Actualiza los botones de activos en el 'top panel'
                     self.show_info_messagebox(self, "Éxito", f"Símbolo '{new_symbol}' agregado.")
                     add_symbol_window.destroy()  # llama al metodo para destruir la instacia de toplevel
+                    self.update_asset_info_display()  # se actualiza el info display
             else:
                 self.show_error_messagebox(self, "Por favor, introduce un símbolo.")
 
@@ -1429,7 +1430,13 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             self.asset_info_frame.config(bg='lightgray')  # establecemos bg (gris claro) al asset_info_label_frame
 
         else:
-            self.info_label.config(text="Seleccione un activo para ver su información.")
+            # logica para mostrar texto segun corresponda
+            if self.data:
+                show_text = "Seleccione un activo para ver su información."
+            else:
+                show_text = "¡Bienvenido!... Añade tu primer activo para empezar a gestionarlo"
+
+            self.info_label.config(text=show_text)
 
     def create_asset_info_section(self):
         """Crea y configura la sección de la GUI donde se muestra la información detallada de un activo seleccionado.
@@ -1449,8 +1456,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.asset_info_frame = Frame(self.right_panel)  # Empaquetar este frame en right_panel
         self.asset_info_frame.pack(pady=5, fill=X)
 
+        # logica para mostrar texto segun corresponda
+        if self.data:
+            show_text = "Seleccione un activo para ver su información."
+        else:
+            show_text = "¡Bienvenido!... Añade tu primer activo para empezar a gestionarlo"
+
         self.info_label = Label(self.asset_info_frame,  # Etiqueta que se actualiza dinamicamente
-                                text="Seleccione un activo para ver su información.",
+                                text=show_text,
                                 font=('Arial', 12, 'bold'), anchor="center", pady=5)
         self.info_label.pack()
 

@@ -2540,7 +2540,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         try:
             response = requests.get(url)
             response.raise_for_status()  # Lanza una excepción para códigos de error HTTP (4xx o 5xx)
-            data = response.json()  #  toma la respuesta que recibiste de la API y la convierte en una estructura de datos de Python (generalmente un diccionario o una lista de diccionarios)
+            data = response.json()  # toma la respuesta que recibiste de la API y la convierte en una estructura de datos de Python (generalmente un diccionario o una lista de diccionarios)
             return float(data['price'])
         except requests.exceptions.HTTPError as e:
             if response.status_code == 400:

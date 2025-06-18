@@ -13,9 +13,7 @@ import os
 from PIL import Image, ImageTk  # Importa Pillow para manejar imágenes
 import pyperclip  # Importa la librería pyperclip para el portapapeles
 from tkinter import scrolledtext # Importamos scrolledtext para mensajes largos
-
-# ruta del archivo JSON 
-filename = 'assets_data.json'
+import sys
 
 # Colores para usar
 mandarina_atomica = '#FEB285'
@@ -23,6 +21,26 @@ azul_palido = '#AACCEE'
 burlywood = 'burlywood'
 persian_pink = '#E887C5'
 
+# --- Función para obtener la ruta correcta de los recursos ---
+# Se creó específicamente para resolver el problema de que el ejecutable
+# no encontraba la ruta de los recursos (imágenes, archivos JSON, etc.) empaquetados por PyInstaller.
+def resource_path(relative_path):
+    """Obtiene la ruta absoluta a un recurso, funciona tanto en desarrollo
+    como cuando la app está empaquetada por PyInstaller."""
+    try:
+        # PyInstaller crea un atributo _MEIPASS para el path temporal
+        base_path = sys._MEIPASS
+    except Exception:
+        # Modo desarrollo (cuando ejecutas directamente desde un script Python, no desde el ejecutable de PyInstaller)
+        # Determinar la 'ruta base' de tus archivos de recursos cuando tu aplicación se está ejecutando en modo de desarrollo
+        #  En los sistemas de archivos, un solo punto . se refiere al directorio de trabajo actual desde donde se está ejecutando el script.
+        # asegura de que la 'base_path' sea siempre la carpeta donde reside tu script principal
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# ruta del archivo JSON (adaptada para PyInstaller)
+filename = resource_path('assets_data.json')
 
 class CustomInfoDialog(tk.Toplevel):
     """Una ventana de diálogo personalizada para mostrar mensajes informativos al usuario.
@@ -168,7 +186,8 @@ class CustomAskFloatDialog(tk.Toplevel):
             self.result = float(self.entry.get())
             self.destroy()
         except ValueError:
-            self.master.show_error_messagebox(self.master, "Por favor, ingrese un número válido.")
+            # aca use el messagebox.showerror estándar de Tkinter
+            messagebox.showerror("Error de Entrada", "Por favor, ingrese un número válido.")
             self.entry.focus_set()
 
     def cancel(self):
@@ -400,7 +419,7 @@ class PromediarOrdenesForm(tk.Toplevel):
 
         self.destroy()
 
-""" Utilizar clases para gestionar el estado y la lógica de tu GUI es una práctica
+""" Utilizar clases para gestionar el estado y la lógica de la GUI es una práctica
  fundamental para construir aplicaciones más complejas y mantenibles"""
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
@@ -440,11 +459,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Diccionario para almacenar direcciones y rutas de QR
         self.crypto_info = {
-            "Bitcoin (BTC)": {"address": "34G4JhdkiP9zKo5fbKS96YJSkLc7bXY5dH", "qr_path": "images/qr_btc.png"},
-            "Ethereum (ETH)": {"address": "0xa19deb3582c3e99f06637b0aad47c8034ada0874", "qr_path": "images/qr_eth.png"},
-            "USDT (Tether)": {"address": "0x3c332e33e0399aea38c3e393781ecff04226e8bf", "qr_path": "images/qr_usdt.png"},
-            "Litecoin (LTC)": {"address": "MSbwoT48KJDoA1JQaaAVerXDJdXps6f6Nj", "qr_path": "images/qr_ltc.png"},
-            "Solana (SOL)": {"address": "3ezjYS8M5ySPixm2N46qFPbTM9BuJi1w1rWpvXz28QDJ", "qr_path": "images/qr_sol.png"},
+            "Bitcoin (BTC)": {"address": "34G4JhdkiP9zKo5fbKS96YJSkLc7bXY5dH", "qr_path": resource_path("images/qr_btc.png")},
+            "Ethereum (ETH)": {"address": "0xa19deb3582c3e99f06637b0aad47c8034ada0874", "qr_path": resource_path("images/qr_eth.png")},
+            "USDT (Tether)": {"address": "0x3c332e33e0399aea38c3e393781ecff04226e8bf", "qr_path": resource_path("images/qr_usdt.png")},
+            "Litecoin (LTC)": {"address": "MSbwoT48KJDoA1JQaaAVerXDJdXps6f6Nj", "qr_path": resource_path("images/qr_ltc.png")},
+            "Solana (SOL)": {"address": "3ezjYS8M5ySPixm2N46qFPbTM9BuJi1w1rWpvXz28QDJ", "qr_path": resource_path("images/qr_sol.png")},
             "Argentine Peso (ARS)": {"address": "gustavo.dilu", "qr_path": None}
         }
         self.developer_email = "dilucapython@gmail.com"  # correo del desarrollador
@@ -462,7 +481,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                 data = json.load(f)
                 return data
         except FileNotFoundError:
-            self.show_info_messagebox("Información", f"No se encontró el archivo: {filename}. Iniciando con datos vacíos.")
+            self.show_info_messagebox(self, "Información", f"No se encontró el archivo: {filename}. Iniciando con datos vacíos.")
             return {}
         except json.JSONDecodeError:
             self.show_error_messagebox(self, f"El archivo {filename} no tiene un formato JSON válido.")
@@ -536,7 +555,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.title_label = Label(self.top_row_frame, text='Herramienta de Gestión de Operaciones Apalancadas de Criptomonedas', fg='#333333', font=('Dosis', 16, 'bold'), bg='burlywood', width=59)
         self.title_label.grid(row=0, column=0, columnspan=5, pady=5, sticky="w")
         # label Codigo de invitacion de quantfury
-        label_invitacion= tk.Label(self.top_row_frame, text="Código Invitacion Quantfury:", font=('Dosis', 12, 'bold'), anchor='w',
+        label_invitacion = tk.Label(self.top_row_frame, text="Código Invitacion Quantfury:", font=('Dosis', 12, 'bold'), anchor='w',
                                    bg='#000a1d', fg='#00cdc3')
         label_invitacion.grid(row=0, column=5, columnspan=3, sticky="wns", pady=15, padx=(1, 0))
 
@@ -546,8 +565,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         invitacion_entry.config(state='readonly', font=('Dosis', 12, 'bold'), width=10)
         invitacion_entry.grid(row=0, column=8, sticky="ns", pady=15)
 
-        # Botón para Copiar codigo de invitacion
-        #self.copiar_icono = None  # Placeholder para el icono
+        # Funcion y Botón para Copiar codigo de invitacion
         def copiar_al_portapapeles(widget_entry):
             codigo_invitacion = widget_entry.get()
             self.clipboard_clear()
@@ -582,7 +600,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Boton quantfury (con imagen), dirige a la web
         try:
-            self.quantfury_imagen = tk.PhotoImage(file='images/image_quantfury.png')
+            self.quantfury_imagen = tk.PhotoImage(file=resource_path('images/image_quantfury.png'))
             self.boton_quantfury = tk.Button(self.top_row_frame,
                                              image=self.quantfury_imagen,
                                              padx=3,
@@ -635,8 +653,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # crea seccion de iformación del activo (símbolo, precio, margin)
         self.create_asset_info_section()
-        #self.create_asset_orders_section()  # crea seccion de ordenes del activo
-        #self.create_secondary_menu_buttons_section()  # crea seccion de menu secundario con botones para llamar a otros metodos
 
     def create_primary_menu_buttons(self):
         """Método para crear los botones del menú primario.
@@ -1480,13 +1496,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             sales_quantity = 0
         else:
             sales_quantity = (amount_to_reduce * total_quantity_open) / total_amount_open
-            # Redondear cantidad segun sea el activo seleccionado
-            """if self.selected_asset == 'BTC':
-                sales_quantity_rounded = round(sales_quantity, 8)
-            elif self.selected_asset == 'ETH':
-                sales_quantity_rounded = round(sales_quantity, 6)
-            else:
-                sales_quantity_rounded = round(sales_quantity, 4)"""
 
         return sales_quantity
 
@@ -1530,7 +1539,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             if order['target']:
                 automatic_target_creation = True
-                print("se ingreso en automatizacion target")
 
             if is_mother:
                 # verificar si existe una 'orden madre' en 'open_orders'
@@ -1644,7 +1652,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # y si se han recopilado datos de la nueva orden en el atributo 'self.new_order_data'.
         if active_symbol in self.data and self.new_order_data:
             # Si ambas condiciones son verdaderas, procede a agregar la nueva orden.
-            # Llama al método 'self.add_new_order', pasando:
+            # se llama al método 'self.add_new_order', pasando:
             #   - Los datos actuales del activo seleccionado ('self.data[active_symbol]').
             #   - El símbolo del activo activo ('active_symbol').
             #   - El tipo de orden ('order_type').
@@ -2018,8 +2026,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
     def get_orders_for_asset(self, symbol, order_type):
         """Obtiene las órdenes del activo seleccionado y del tipo especificado."""
-        #print(f"get_orders_for_asset - Symbol: '{symbol}', Data for symbol: '{self.data.get(symbol)}'")  # Linea par depurar error
-        #print(f"Order type: {order_type}")  # Linea par depurar error
         if symbol in self.data:
             if order_type == "open":
                 return self.data[symbol].get('open_orders', [])
@@ -2243,14 +2249,11 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                     # Recrear los widgets con la lista de activos actualizada
                     self.create_widgets()
 
-                    #self.show_info_messagebox(self, "Acción Exitosa", f"El activo '{symbol}' ha sido eliminado.")
-
                 else:
                     self.show_error_messagebox(self, f"El activo '{symbol}' no existe en los datos.")
 
             else:
                 pass
-                #self.show_info_messagebox(self, "Eliminación Cancelada", f"Se mantuvo el activo '{symbol}'.")
 
         else:
             self.show_error_messagebox(self, "Por favor, seleccione un activo para eliminar.")
@@ -2488,8 +2491,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
             current_price = self.get_price(symbol)
             if initial_level > current_price or final_level > current_price:
-                self.show_error_messagebox(self,
-                                           "Los niveles de precios deben ser menor al precio actual!")
+                self.show_error_messagebox(self, "Los niveles de precios deben ser menor al precio actual!")
                 form_window.destroy()
                 return
 
@@ -3452,7 +3454,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
                         self.data[symbol]["sell_take_profit"] = sales_cloud
                         self.save_data()
                         self.create_asset_orders_section()  # Actualizar la sección de órdenes
-                        #self.show_info_messagebox(self, "Niveles VENTAS de Toma de Ganancias Guardada", "Los Niveles de VENTAS han sido guardado!")
+
 
                 else:
                     self.show_error_messagebox(self, f"El símbolo '{symbol}' ya no existe en los datos.")
@@ -3511,8 +3513,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             non_mother_percentages = [(current_price - price) / price for price in non_mother_prices]
             non_mother_quantity = [order['quantity'] for order in non_mother_orders]
             non_mother_profits = [(current_price - price) * quantity for price, quantity in zip(non_mother_prices, non_mother_quantity)]
-            """non_mother_profits = [amount_usdt * percentage for amount_usdt, percentage in
-                                  zip(non_mother_amounts_usdt, non_mother_percentages)]"""
 
         total_non_mother_profits = round(sum(non_mother_profits), 2)
 
@@ -3545,8 +3545,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             margen_porcentual = 0.6  # 60% de margen
             y_max = abs(mother_profit) * (1 + margen_porcentual)
             y_min = -y_max
-            #print(f"y_min MO: {y_min}")
-            #print(f"y_max MO: {y_max}")
             ax1.set_ylim(y_min, y_max)
 
             # Línea horizontal del beneficio (con etiqueta)
@@ -3680,7 +3678,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # Bloque para intentar cargar la imagen del logo de Trading View
         try:
-            self.tradingview_logo = tk.PhotoImage(file='images/image_tradingview.png')
+            self.tradingview_logo = tk.PhotoImage(file=resource_path('images/image_tradingview.png'))
 
         except tk.TclError as e:
             print(f"Error al cargar el icono de TradingView: {e}")
@@ -3992,11 +3990,8 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         cuando varia la cantidad total de ordenes abiertas (tanto si se elimina una open order
         o si se agrega una)"""
         quantity_open = self.calculate_total_open_quantity()
-        print(quantity_open)
         amount_open = self.calculate_open_amount_of_selected_asset()
-        print(amount_open)
         quantity_sales = self.calculate_total_sales_quantity()
-        print(quantity_sales)
 
         data_asset = self.data[symbol]
         # Actualizamos la cantidad de cada orden segun cantidad y monto de ordenes abiertas
@@ -4179,7 +4174,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # --- Cargar y mostrar la Imagen 1: Tipos de Ordenes ---
         try:
-            img1_pil = Image.open("images/tipos_ordenes.png")
+            img1_pil = Image.open(resource_path("images/tipos_ordenes.png"))
             # Redimensiona el tamaño de la imagen
             img1_pil = img1_pil.resize((1200, 600),
                                        Image.LANCZOS)  # LANCZOS es un filtro de alta calidad que produce buenos resultados visuales, reduciendo el efecto "pixelado" o borroso
@@ -4213,7 +4208,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
         # --- Cargar y mostrar la Imagen 2: Calcular Orden Madre ---
         try:
-            img2_pil = Image.open("images/calcular_orden_madre.png")
+            img2_pil = Image.open(resource_path("images/calcular_orden_madre.png"))
             # Redimensiona el tamaño de la imagen
             img2_pil = img2_pil.resize((1100, 600), Image.LANCZOS)  # LANCZOS es un filtro de alta calidad que produce buenos resultados visuales, reduciendo el efecto "pixelado" o borroso
             self.image_refs['orden_madre'] = ImageTk.PhotoImage(img2_pil)  # se guarda la referencia con un nombre único
@@ -4244,7 +4239,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         description_label3.pack(pady=5, padx=20, anchor="w")
 
         try:
-            img3_pil = Image.open("images/apalancamiento.png")
+            img3_pil = Image.open(resource_path("images/apalancamiento.png"))
             img3_pil = img3_pil.resize((1100, 600), Image.LANCZOS)
             self.image_refs['apalancamiento'] = ImageTk.PhotoImage(img3_pil)
 

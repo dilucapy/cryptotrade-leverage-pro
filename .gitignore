@@ -7,3 +7,18 @@ pruebas.py
 
 # Archivo de comando GIT
 comandos_GIT.txt
+
+# Ignorar directorios de PyInstaller
+build/
+dist/
+
+# Ignorar archivo de especificación de PyInstaller
+*.spec
+
+# Ignorar entorno virtual de Python
+venv/
+.venv/
+
+# Ignorar archivos temporales o de caché de Python
+__pycache__/
+*.pyc

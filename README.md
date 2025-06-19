@@ -175,16 +175,20 @@ Se proporcionará documentación completa para facilitar la instalación y el us
 
 ### Guía paso a paso para la instalación:
 
-1.  Descarga el archivo ejecutable desde la sección "**Releases**" de este repositorio en GitHub.
-2.  Ejecuta el archivo descargado.
-3.  Sigue las instrucciones del instalador.
+1.  Descarga el archivo comprimido (.zip) de la aplicación desde la sección "Releases" de este repositorio en GitHub. Este archivo contendrá el ejecutable principal.
+2.  Descomprime el archivo .zip en la ubicación deseada de tu computadora (por ejemplo, en tu escritorio o en una carpeta de programas). 
+3.  Ejecuta el archivo crypto_leverage_gui.exe (el cual encontrarás dentro de la carpeta descomprimida) haciendo doble clic en él.
 
 ### Configuración y puesta en marcha:
+1. Abre la aplicación CryptoTrade Leverage Pro.
 
-1.  Abre la aplicación CryptoTrade Leverage Pro.
-2.  Explora los menús y las opciones para familiarizarte con la interfaz.
-3.  Configura tus activos y parámetros de trading según tus preferencias.
-4.  Utiliza las herramientas de análisis y gestión de riesgos para optimizar tus operaciones.
+2. Explora los menús y las opciones para familiarizarte con la interfaz.
+
+3. Configura tus activos y parámetros de trading según tus preferencias.
+
+4. Utiliza las herramientas de análisis y gestión de riesgos para optimizar tus operaciones.
+
+Nota importante: Actualmente, los datos de los activos y órdenes no se guardan automáticamente entre sesiones al cerrar la aplicación. Este es un aspecto en desarrollo que se implementará en futuras versiones para asegurar la persistencia de tus configuraciones.
 
 ---
 

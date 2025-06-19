@@ -472,6 +472,10 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # Sirve para cargar las imagenes de tutoriales para canva de la pestaña del widget notebook
         self.image_refs = {}
 
+        # Vincula el evento de cierre de ventana (cuando el usuario hace clic en la X)
+        # al método on_closing para guardar los datos antes de salir.
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
     def load_data(self, filename):
         """Carga los datos desde un archivo JSON. Devuelve un diccionario,
         incluso si el archivo no se encuentra (diccionario vacío)
@@ -668,7 +672,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
             {"text": "Precios de Liquidación", "command": self.calculate_and_show_all_burning_prices},
             {"text": "Donación", "command": self.open_donation_window},
             {"text": "Manual de Usuario", "command": self.show_help},
-            {"text": "Salir", "command": self.quit}
+            {"text": "Salir", "command": self.exit_app}
         ]
         for config in primary_buttons_config:
             button = Button(self.primary_menu, text=config["text"], font=('Dosis', 12, 'bold'), bd=1, fg='white', bg='azure4', width=24, relief=RAISED, pady=10, cursor='hand2', command=config["command"])
@@ -4278,6 +4282,14 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         x = parent_x + (parent_width // 2) - (toplevel_width // 2)
         y = parent_y + (parent_height // 2) - (toplevel_height // 2)
         toplevel_window.geometry(f'+{x}+{y}')
+
+    def on_closing(self):
+        """Maneja el evento de cierre de ventana, guardando los datos."""
+        self.save_data()
+        self.destroy()  # Cierra la ventana
+    def exit_app(self):
+        self.on_closing()  # guarda los datos y cierra la ventana
+
 
 
 if __name__ == "__main__":

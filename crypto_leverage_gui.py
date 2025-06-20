@@ -476,6 +476,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         # a la función on_closing para guardar los datos antes de salir.
         self.protocol("WM_DELETE_WINDOW", self.exit_app)
 
+
     def load_data(self, filename):
         """Carga los datos desde un archivo JSON. Devuelve un diccionario,
         incluso si el archivo no se encuentra (diccionario vacío)

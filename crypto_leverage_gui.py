@@ -14,6 +14,7 @@ from PIL import Image, ImageTk  # Importa Pillow para manejar imágenes
 import pyperclip  # Importa la librería pyperclip para el portapapeles
 from tkinter import scrolledtext # Importamos scrolledtext para mensajes largos
 import sys
+import appdirs
 
 # Colores para usar
 mandarina_atomica = '#FEB285'
@@ -424,11 +425,29 @@ class PromediarOrdenesForm(tk.Toplevel):
 class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
     """Clase AssetManagerGUI: Toda la lógica y los widgets de tu GUI están ahora
     dentro de esta clase."""
-    def __init__(self, filename):
+    def __init__(self):
         super().__init__()  # Llama al constructor de la clase padre (tk.Tk)
 
-        self.filename = filename  # Archivo de datos
-        self.data = self.load_data(self.filename)  # Carga los datos iniciales desde el archivo
+        # --- Pasos para que el ejecutable del usario persistan los datos almacenados
+        # 1. Definir nombre de la aplicación y autor (es importante para la ruta)
+        app_name = "CryptoLeveragePro"
+        app_author = "GustavoDiLuca"
+
+        # 2. Obtener la ruta de la carpeta de datos del usuario
+        # Ejemplo en Windows: C:\Users\Username\AppData\Local\CryptoLeveragePro
+        # appdirs maneja las diferencias entre sistemas operativos automáticamente
+        user_data_dir = appdirs.user_data_dir(appname=app_name, appauthor=app_author)
+
+        # 3. Crear el directorio si no existe
+        os.makedirs(user_data_dir, exist_ok=True)
+
+        # 4. Definir la ruta completa al archivo JSON de datos del usuario
+        self.user_data_filepath = os.path.join(user_data_dir, 'user_assets_data.json')
+        # Esta nueva variable es ahora la única y correcta ruta para el archivo JSON donde se guardarán y
+        # cargarán los datos persistentes del usuario. (antes era self.filename)
+        #self.filename = filename  # Archivo de datos
+        #self.data = self.load_data(self.filename)  # Carga los datos iniciales desde el archivo (antes era asi)
+        self.data = self.load_data()  # Carga los datos desde la ubicación persistente  (ahora es asi)
         # Ordenar las órdenes si se cargaron los datos correctamente.
         if self.data:
             self.order_orders(self.data)
@@ -437,7 +456,6 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.state('zoomed')  # Maximizar la ventana
         self.resizable(False, False)  # Impide el redimensionamiento de la ventana.
         self.config(bg='#D5A572')  # Establece el color de background.
-
 
         # Configuración para la selección única de botones de activo
         self.selected_asset = tk.StringVar()  # Almacena el símbolo del activo actualmente seleccionado
@@ -477,22 +495,22 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         self.protocol("WM_DELETE_WINDOW", self.exit_app)
 
 
-    def load_data(self, filename):
-        """Carga los datos desde un archivo JSON. Devuelve un diccionario,
-        incluso si el archivo no se encuentra (diccionario vacío)
+    def load_data(self):
+        """Carga los datos desde el archivo JSON de datos del usuario. Devuelve un diccionario,
+        incluso si el archivo no se encuentra devuelve un diccionario vacío
         o muestra un error al usuario si falla la carga."""
         try:
-            with open(filename, 'r') as f:
+            with open(self.user_data_filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data
         except FileNotFoundError:
-            self.show_info_messagebox(self, "Información", f"No se encontró el archivo: {filename}. Iniciando con datos vacíos.")
+            self.show_info_messagebox(self, "Bienvenido", f"Archivo de datos no encontrado.\nSe creará un nuevo archivo en:\n{self.user_data_filepath}\nEsto es normal para el primer uso.\nSus cambios se guardarán automáticamente.")
             return {}
         except json.JSONDecodeError:
-            self.show_error_messagebox(self, f"El archivo {filename} no tiene un formato JSON válido.")
+            self.show_error_messagebox(self, f"El archivo {self.user_data_filepath} no tiene un formato JSON válido.")
             return {}
         except Exception as e:
-            self.show_error_messagebox(self, f"Ocurrió un error al cargar {filename}: {e}")
+            self.show_error_messagebox(self, f"Ocurrió un error al cargar {self.user_data_filepath}: {e}")
             return {}
 
     def order_orders(self, data):
@@ -1629,17 +1647,18 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
         if active_symbol in data:
             data[active_symbol] = data_asset
             try:
-                with open(self.filename, 'w') as f:
+                with open(self.user_data_filepath, 'w', encoding='utf-8') as f:
                     json.dump(data, f, indent=4)
-                print(f"Datos para '{active_symbol}' guardados correctamente en '{self.filename}'.")
+                print(f"Datos para '{active_symbol}' guardados correctamente en '{self.user_data_filepath}'.")
             except Exception as e:
-                print(f"Error al guardar los datos en '{self.filename}': {e}")
+                print(f"Error al guardar los datos en '{self.user_data_filepath}': {e}")
         else:
             print(f"Error: Activo '{active_symbol}' no encontrado en los datos.")
 
     def save_data(self):
+        """Guarda los datos actuales en el archivo JSON de datos del usuario."""
         try:
-            with open(self.filename, 'w') as file:
+            with open(self.user_data_filepath, 'w') as file:
                 json.dump(self.data, file, indent=4)
             print("Datos guardados correctamente.")
         except Exception as e:
@@ -4292,7 +4311,7 @@ class AssetManagerGUI(tk.Tk):  # Hereda de tk.Tk
 
 if __name__ == "__main__":
     # Crear una instancia de la clase de GUI
-    gui = AssetManagerGUI(filename)
+    gui = AssetManagerGUI()
 
     # Iniciar el loop principal de Tkinter (mantiene la ventana abierta y responde a los eventos)
     gui.mainloop()

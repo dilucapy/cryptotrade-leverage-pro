@@ -189,11 +189,6 @@ Se proporcionará documentación completa para facilitar la instalación y el us
 
 4. Utiliza las herramientas de análisis y gestión de riesgos para optimizar tus operaciones.
 
-Nota importante: Actualmente, los datos de los activos y órdenes no se guardan automáticamente entre sesiones al cerrar la aplicación. Este es un aspecto en desarrollo que se implementará en futuras versiones para asegurar la persistencia de tus configuraciones.
-
-**Nota importante:** Actualmente, los datos de los activos y órdenes no se guardan automáticamente entre sesiones al cerrar la aplicación
-Este es un aspecto en desarrollo que se implementará en futuras versiones para asegurar la persistencia de tus configuraciones.
-
 ---
 
 ## ¡Pruébalo y Comparte Tu Opinión!
